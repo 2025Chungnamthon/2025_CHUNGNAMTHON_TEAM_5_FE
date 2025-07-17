@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   FaHome,
   FaUsers,
@@ -104,52 +104,87 @@ const TabItem = styled.div`
   flex-direction: column;
   align-items: center;
   font-size: 12px;
-  color: #6b7280;
+  color: ${props => props.isActive ? '#2dd4bf' : '#6b7280'};
+  cursor: pointer;
+  transition: color 0.2s;
+
   svg {
     font-size: 22px;
     margin-bottom: 2px;
   }
+
   &:hover {
     color: #2dd4bf;
   }
 `;
 
 export default function Layout() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 현재 경로에 따른 활성 탭 확인
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  // 네비게이션 핸들러
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
   return (
-    <AppContainer>
-      <Header>
-        <LogoRow>
-          <LogoImg src="/logo.png" alt="Cheon:On 로고" />
-        </LogoRow>
-        <PointBadge>
-          <PointCircle>P</PointCircle>
-          <PointValue>1,620p</PointValue>
-        </PointBadge>
-      </Header>
-      <Content>
-        <Outlet />
-      </Content>
-      <TabBar>
-        <TabItem>
-          <FaHome />홈
-        </TabItem>
-        <TabItem>
-          <FaUsers />
-          모임
-        </TabItem>
-        <TabItem>
-          <FaMapMarkerAlt />
-          지도
-        </TabItem>
-        <TabItem>
-          <FaCommentDots />
-          채팅
-        </TabItem>
-        <TabItem>
-          <FaUser />
-          MY
-        </TabItem>
-      </TabBar>
-    </AppContainer>
+      <AppContainer>
+        <Header>
+          <LogoRow>
+            <LogoImg src="/logo.png" alt="Cheon:On 로고" />
+          </LogoRow>
+          <PointBadge>
+            <PointCircle>P</PointCircle>
+            <PointValue>1,620p</PointValue>
+          </PointBadge>
+        </Header>
+        <Content>
+          <Outlet />
+        </Content>
+        <TabBar>
+          <TabItem
+              isActive={isActive('/')}
+              onClick={() => handleNavigation('/')}
+          >
+            <FaHome />홈
+          </TabItem>
+          <TabItem
+              isActive={isActive('/meetings')}
+              onClick={() => handleNavigation('/meetings')}
+          >
+            <FaUsers />
+            모임
+          </TabItem>
+          <TabItem
+              isActive={isActive('/map')}
+              onClick={() => handleNavigation('/map')}
+          >
+            <FaMapMarkerAlt />
+            지도
+          </TabItem>
+          <TabItem
+              isActive={isActive('/chat')}
+              onClick={() => handleNavigation('/chat')}
+          >
+            <FaCommentDots />
+            채팅
+          </TabItem>
+          <TabItem
+              isActive={isActive('/mypage')}
+              onClick={() => handleNavigation('/mypage')}
+          >
+            <FaUser />
+            MY
+          </TabItem>
+        </TabBar>
+      </AppContainer>
   );
 }
