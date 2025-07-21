@@ -7,18 +7,19 @@ const SectionContainer = styled.div`
   background: #fff;
   border-radius: 28px;
   box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
-  padding: 18px 20px 12px 20px;
-  margin-bottom: 24px;
+  padding: 0 0 8px 0;
+  margin-bottom: 14px;
 `;
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
+  padding: 18px 18px 12px 18px;
 `;
 const SectionTitle = styled.h2`
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111;
 `;
 const SectionArrow = styled(FiChevronRight)`
@@ -29,8 +30,7 @@ const SectionArrow = styled(FiChevronRight)`
 const GroupCard = styled.div`
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
-  padding: 8px 10px 8px 0;
+  padding: 4px 18px;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -38,8 +38,8 @@ const GroupCard = styled.div`
   width: 100%;
 `;
 const GroupImage = styled.img`
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: 14px;
   object-fit: cover;
   background: #f3f4f6;
@@ -49,11 +49,12 @@ const GroupInfo = styled.div`
   flex: 1 1 0%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
   max-width: 100%;
   white-space: normal;
   word-break: break-all;
+  padding-right: 8px;
 `;
 const GroupTitle = styled.div`
   font-weight: 800;
@@ -100,7 +101,7 @@ const groupList = [
     image:
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
     title: "30대 초반 맛집 투어 모임",
-    desc: "30대 환영 ~ 인스타 맛집 다니고 싶...",
+    desc: "30대 환영 ~ 인스타 맛집 다니고 싶으신 분들 어쩌고 저쩌고 우오아아아아아아",
     tags: [
       { type: "location", text: "성정동" },
       { type: "all", text: "전체" },
@@ -109,7 +110,7 @@ const groupList = [
   {
     image: "https://www.ekn.kr/mnt/file/202412/20241223001203509_1.png",
     title: "신불당 보드게임 카페 다녀요",
-    desc: "보드게임 좋아하시는 분 주말에 모여...",
+    desc: "보드게임 좋아하시는 분 주말에 모여서 저랑 놀고 어쩌고 저쩌고 느그 남천동 살제",
     tags: [
       { type: "location", text: "성정동" },
       { type: "weekday", text: "평일" },
@@ -119,7 +120,7 @@ const groupList = [
     image:
       "https://img.kr.gcp-karroter.net/community/community/20240824/14c3cfff-9a94-45d5-a578-d0ddf80ee338.jpeg?q=95&s=1200x630&t=cover",
     title: "분위기 좋은 카페 다니실 분 ~",
-    desc: "분좋카 많이 아시는 분 환영 들어오세...",
+    desc: "분좋카 많이 아시는 분 환영 들어오세 어쩌고 저쩌고 우오아아아아아아",
     tags: [
       { type: "location", text: "성정동" },
       { type: "weekend", text: "주말" },

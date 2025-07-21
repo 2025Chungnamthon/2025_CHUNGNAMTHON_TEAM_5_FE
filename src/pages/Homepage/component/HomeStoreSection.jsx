@@ -7,7 +7,7 @@ const StoreSectionContainer = styled.div`
   border-radius: 28px;
   box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
   padding: 18px 20px 18px 20px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 `;
 const StoreSectionHeader = styled.div`
   display: flex;
@@ -16,7 +16,7 @@ const StoreSectionHeader = styled.div`
   margin-bottom: 18px;
 `;
 const StoreSectionTitle = styled.h2`
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   font-family: "Inter", sans-serif;
   color: #111;
