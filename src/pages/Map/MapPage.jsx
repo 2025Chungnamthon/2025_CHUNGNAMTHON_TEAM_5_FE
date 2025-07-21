@@ -42,7 +42,6 @@ const MapContainer = styled.div`
 
 const MapPage = () => {
     const {
-        stores,
         filteredStores,
         selectedStore,
         currentLocation,

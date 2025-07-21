@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// 임시 더미 데이터 (실제 API 연동 전까지 사용)
+// 개발용 더미 데이터
 const DUMMY_STORES = [
     {
         id: 1,
@@ -64,7 +64,7 @@ class StoreApiService {
         this.baseURL = API_BASE_URL;
     }
 
-    // 공통 요청 처리 함수
+    // 공통 API 요청 처리 함수
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const config = {
@@ -82,22 +82,23 @@ class StoreApiService {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error(`API 요청 실패 [${endpoint}]:`, error);
+            const responseData = await response.json();
+            return responseData;
+        } catch (requestError) {
+            console.error(`API 요청 실패 [${endpoint}]:`, requestError);
 
             // 개발 환경에서는 더미 데이터 반환
-            if (process.env.NODE_ENV === 'development') {
+            const isDevelopment = import.meta.env.MODE === 'development';
+            if (isDevelopment) {
                 console.log('개발 환경: 더미 데이터 사용');
                 return this.getDummyData(endpoint);
             }
 
-            throw error;
+            throw requestError;
         }
     }
 
-    // 더미 데이터 반환 (개발용)
+    // 더미 데이터 반환 함수
     getDummyData(endpoint) {
         if (endpoint.includes('/stores')) {
             return {
@@ -120,9 +121,11 @@ class StoreApiService {
             const queryParams = new URLSearchParams(params).toString();
             const endpoint = `/stores${queryParams ? `?${queryParams}` : ''}`;
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
-            // API 실패 시 더미 데이터 반환
+        } catch (apiError) {
             console.log('API 연결 실패, 더미 데이터 사용');
+            // API 에러 정보 출력 (사용되지 않는 변수 문제 해결)
+            console.debug('API 에러 상세:', apiError.message);
+
             return {
                 success: true,
                 data: DUMMY_STORES,
@@ -143,8 +146,11 @@ class StoreApiService {
             const queryParams = new URLSearchParams(params).toString();
             const endpoint = `/stores/nearby?${queryParams}`;
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
-            // 거리 계산해서 더미 데이터 필터링
+        } catch (searchError) {
+            console.log('주변 검색용 더미 데이터 사용');
+            console.debug('검색 에러:', searchError.message);
+
+            // 거리 계산하여 더미 데이터 필터링
             const filteredStores = DUMMY_STORES.filter(store => {
                 const distance = this.calculateDistance(latitude, longitude, store.latitude, store.longitude);
                 return distance <= radius;
@@ -170,7 +176,10 @@ class StoreApiService {
             const queryParams = new URLSearchParams(params).toString();
             const endpoint = `/stores/search?${queryParams}`;
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
+        } catch (queryError) {
+            console.log('검색용 더미 데이터 사용');
+            console.debug('쿼리 에러:', queryError.message);
+
             // 더미 데이터에서 검색
             const filteredStores = DUMMY_STORES.filter(store =>
                 store.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -196,8 +205,11 @@ class StoreApiService {
         try {
             const endpoint = `/stores/${storeId}`;
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
-            const store = DUMMY_STORES.find(s => s.id === parseInt(storeId));
+        } catch (detailError) {
+            console.log('상세 정보용 더미 데이터 사용');
+            console.debug('상세 조회 에러:', detailError.message);
+
+            const store = DUMMY_STORES.find(s => s.id === parseInt(storeId, 10));
             return {
                 success: true,
                 data: store || null
@@ -211,7 +223,10 @@ class StoreApiService {
             const queryParams = new URLSearchParams({category, ...params}).toString();
             const endpoint = `/stores/category?${queryParams}`;
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
+        } catch (categoryError) {
+            console.log('카테고리 검색용 더미 데이터 사용');
+            console.debug('카테고리 에러:', categoryError.message);
+
             const filteredStores = DUMMY_STORES.filter(store =>
                 store.category.toLowerCase().includes(category.toLowerCase())
             );
@@ -223,12 +238,15 @@ class StoreApiService {
         }
     }
 
-    // 가맹점 카테고리 목록 조회
+    // 카테고리 목록 조회
     async getCategories() {
         try {
             const endpoint = '/stores/categories';
             return await this.request(endpoint, {method: 'GET'});
-        } catch (error) {
+        } catch (categoriesError) {
+            console.log('카테고리 목록용 더미 데이터 사용');
+            console.debug('카테고리 목록 에러:', categoriesError.message);
+
             const categories = [...new Set(DUMMY_STORES.map(store => store.category))];
             return {
                 success: true,
@@ -240,14 +258,14 @@ class StoreApiService {
     // 두 지점 간 거리 계산 (미터 단위)
     calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // 지구 반지름 (미터)
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const phi1 = lat1 * Math.PI / 180;
+        const phi2 = lat2 * Math.PI / 180;
+        const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+        const deltaLambda = (lon2 - lon1) * Math.PI / 180;
 
-        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c;
