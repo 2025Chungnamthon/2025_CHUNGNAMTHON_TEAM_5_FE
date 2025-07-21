@@ -7,6 +7,7 @@ import {
   FaMapMarkerAlt,
   FaCommentDots,
   FaUser,
+  FaCloud,
 } from "react-icons/fa";
 
 const MOBILE_MAX_WIDTH = 430;
@@ -66,19 +67,17 @@ const TabItem = styled.div`
   flex-direction: column;
   align-items: center;
   font-size: 12px;
-  color: ${(props) => (props.isActive ? "#2dd4bf" : "#6b7280")};
+  color: ${(props) => (props.isActive ? "#23272F" : "#B0B5BB")};
   cursor: pointer;
   transition: all 0.2s;
   padding: 8px 0;
+  font-weight: ${(props) => (props.isActive ? "600" : "400")};
 
   svg {
-    font-size: 22px;
-    margin-bottom: 2px;
-  }
-
-  &:hover {
-    color: #2dd4bf;
-    transform: translateY(-2px); // 호버 시 살짝 위로 떠오르는 효과
+    font-size: 24px;
+    margin-bottom: 4px;
+    color: ${(props) => (props.isActive ? "#23272F" : "#B0B5BB")};
+    transition: color 0.2s;
   }
 `;
 
@@ -115,13 +114,6 @@ export default function Layout() {
             <FaHome />홈
           </TabItem>
           <TabItem
-            isActive={isActive("/meetings")}
-            onClick={() => handleNavigation("/meetings")}
-          >
-            <FaUsers />
-            모임
-          </TabItem>
-          <TabItem
             isActive={isActive("/map")}
             onClick={() => handleNavigation("/map")}
           >
@@ -129,18 +121,18 @@ export default function Layout() {
             지도
           </TabItem>
           <TabItem
-            isActive={isActive("/chat")}
-            onClick={() => handleNavigation("/chat")}
+            isActive={isActive("/meetings")}
+            onClick={() => handleNavigation("/meetings")}
           >
-            <FaCommentDots />
-            채팅
+            <FaCloud />
+            모임
           </TabItem>
           <TabItem
             isActive={isActive("/mypage")}
             onClick={() => handleNavigation("/mypage")}
           >
             <FaUser />
-            MY
+            My
           </TabItem>
         </TabBar>
       </AppContainer>
