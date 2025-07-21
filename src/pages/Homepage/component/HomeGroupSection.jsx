@@ -26,15 +26,6 @@ const SectionArrow = styled(FiChevronRight)`
   font-size: 26px;
   cursor: pointer;
 `;
-const SectionArrowButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-`;
 const GroupCard = styled.div`
   background: #fff;
   border-radius: 18px;
@@ -134,14 +125,7 @@ const HomeGroupSection = () => (
   <SectionContainer>
     <SectionHeader>
       <SectionTitle>직접 모여 소통해요</SectionTitle>
-      <SectionArrowButton
-        aria-label="더보기"
-        onClick={() => {
-          /* TODO: implement show more */
-        }}
-      >
-        <SectionArrow />
-      </SectionArrowButton>
+      <SectionArrow />
     </SectionHeader>
     <GroupCard>
       <GroupImage
