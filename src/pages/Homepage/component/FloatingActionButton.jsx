@@ -23,6 +23,9 @@ const FabButton = styled.button`
   outline: none;
   cursor: pointer;
   transition: background 0.18s, box-shadow 0.18s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
   &:active {
     background: #5fa89e;
     box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);

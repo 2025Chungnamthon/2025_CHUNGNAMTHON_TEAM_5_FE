@@ -11,72 +11,36 @@ import {
 
 const MOBILE_MAX_WIDTH = 430;
 
+// 전체 앱을 감싸는 최상위 컨테이너 (모바일 앱 프레임 역할)
+const RootContainer = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f5f5; // 앱 프레임 바깥 배경색
+  display: flex;
+  justify-content: center;
+`;
+
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
   max-width: ${MOBILE_MAX_WIDTH}px;
   margin: 0 auto;
-  background: #fafbfc;
-  box-shadow: 0 0 16px rgba(0, 0, 0, 0.04);
+  background: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08); // 앱 프레임 그림자 강화
   position: relative;
-`;
-
-const Header = styled.header`
-  background-color: #fff;
-  padding: 20px 20px 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: "Inter", sans-serif;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-`;
-
-const LogoRow = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const LogoImg = styled.img`
-  width: 254px;
-  height: 30px;
-  display: block;
-`;
-
-const PointBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  box-shadow: none;
-`;
-
-const PointCircle = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: #fdd756;
-  color: #d18000;
-  font-weight: 700;
-  font-size: 18px;
-  border-radius: 50%;
-`;
-
-const PointValue = styled.span`
-  color: #6b7280;
-  font-size: 18px;
-  font-weight: 500;
-  margin-left: 2px;
+  overflow-x: hidden; // 가로 스크롤 방지
 `;
 
 const Content = styled.main`
   flex: 1;
   padding: 0 0 80px 0;
-  background: transparent;
+  background: #fff;
   min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const TabBar = styled.nav`
@@ -84,19 +48,17 @@ const TabBar = styled.nav`
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 100vw;
+  width: 100%;
   max-width: ${MOBILE_MAX_WIDTH}px;
   margin: 0 auto;
   background: #fff;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
-  border-top: none;
   display: flex;
   justify-content: space-around;
   align-items: center;
   height: 64px;
   z-index: 99;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+  padding-bottom: env(safe-area-inset-bottom); // iOS 하단 안전영역 대응
 `;
 
 const TabItem = styled.div`
@@ -104,9 +66,10 @@ const TabItem = styled.div`
   flex-direction: column;
   align-items: center;
   font-size: 12px;
-  color: ${props => props.isActive ? '#2dd4bf' : '#6b7280'};
+  color: ${(props) => (props.isActive ? "#2dd4bf" : "#6b7280")};
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  padding: 8px 0;
 
   svg {
     font-size: 22px;
@@ -115,6 +78,7 @@ const TabItem = styled.div`
 
   &:hover {
     color: #2dd4bf;
+    transform: translateY(-2px); // 호버 시 살짝 위로 떠오르는 효과
   }
 `;
 
@@ -122,69 +86,64 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 현재 경로에 따른 활성 탭 확인
   const isActive = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === "/") {
+      return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
 
-  // 네비게이션 핸들러
   const handleNavigation = (path) => {
     navigate(path);
   };
 
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
   return (
+    <RootContainer>
       <AppContainer>
-        <Header>
-          <LogoRow>
-            <LogoImg src="/logo.png" alt="Cheon:On 로고" />
-          </LogoRow>
-          <PointBadge>
-            <PointCircle>P</PointCircle>
-            <PointValue>1,620p</PointValue>
-          </PointBadge>
-        </Header>
         <Content>
           <Outlet />
         </Content>
         <TabBar>
           <TabItem
-              isActive={isActive('/')}
-              onClick={() => handleNavigation('/')}
+            isActive={isActive("/")}
+            onClick={() => handleNavigation("/")}
           >
             <FaHome />홈
           </TabItem>
           <TabItem
-              isActive={isActive('/meetings')}
-              onClick={() => handleNavigation('/meetings')}
+            isActive={isActive("/meetings")}
+            onClick={() => handleNavigation("/meetings")}
           >
             <FaUsers />
             모임
           </TabItem>
           <TabItem
-              isActive={isActive('/map')}
-              onClick={() => handleNavigation('/map')}
+            isActive={isActive("/map")}
+            onClick={() => handleNavigation("/map")}
           >
             <FaMapMarkerAlt />
             지도
           </TabItem>
           <TabItem
-              isActive={isActive('/chat')}
-              onClick={() => handleNavigation('/chat')}
+            isActive={isActive("/chat")}
+            onClick={() => handleNavigation("/chat")}
           >
             <FaCommentDots />
             채팅
           </TabItem>
           <TabItem
-              isActive={isActive('/mypage')}
-              onClick={() => handleNavigation('/mypage')}
+            isActive={isActive("/mypage")}
+            onClick={() => handleNavigation("/mypage")}
           >
             <FaUser />
             MY
           </TabItem>
         </TabBar>
       </AppContainer>
+    </RootContainer>
   );
 }

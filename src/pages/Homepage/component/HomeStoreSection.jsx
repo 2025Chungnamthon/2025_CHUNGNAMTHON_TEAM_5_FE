@@ -57,28 +57,12 @@ const StoreName = styled.div`
   text-overflow: ellipsis;
   max-width: 90px;
 `;
-const StoreSectionArrowButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-`;
 
 const HomeStoreSection = () => (
   <StoreSectionContainer>
     <StoreSectionHeader>
       <StoreSectionTitle>이번 주 제휴 업체</StoreSectionTitle>
-      <StoreSectionArrowButton
-        aria-label="더보기"
-        onClick={() => {
-          /* TODO: implement show more */
-        }}
-      >
-        <StoreSectionArrow />
-      </StoreSectionArrowButton>
+      <StoreSectionArrow />
     </StoreSectionHeader>
     <StoreScrollRow>
       <StoreCard>
