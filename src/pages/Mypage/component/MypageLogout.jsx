@@ -3,20 +3,28 @@ import styled from "styled-components";
 import { logout, removeTokenFromStorage } from "../../../utils/auth";
 
 const LogoutBtn = styled.button`
-  background: none;
+  background: transparent;
   color: #bdbdbd;
   font-size: 14px;
   font-weight: 500;
   border: none;
+  border-radius: 0;
+  box-shadow: none;
   margin: 16px 0 0 24px;
   cursor: pointer;
   padding: 0;
-  box-shadow: none;
-  transition: color 0.2s ease, transform 0.2s ease;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 
   &:hover {
-    color: #ff4d4f; /* 빨간색 */
-    transform: translateY(-1px);
+    color: #ff4d4f;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: none;
   }
 `;
 

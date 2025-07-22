@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 
 const StoreSectionContainer = styled.div`
@@ -9,29 +10,40 @@ const StoreSectionContainer = styled.div`
   padding: 18px 20px 18px 20px;
   margin-bottom: 14px;
 `;
+
 const StoreSectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
 `;
+
 const StoreSectionTitle = styled.h2`
   font-size: 20px;
   font-weight: 700;
   font-family: "Inter", sans-serif;
   color: #111;
 `;
+
 const StoreSectionArrow = styled(FiChevronRight)`
   color: #bdbdbd;
   font-size: 26px;
   cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #9ca3af;
+    transform: translateX(2px);
+  }
 `;
+
 const StoreScrollRow = styled.div`
   display: flex;
   overflow-x: auto;
   gap: 18px;
   padding-bottom: 2px;
 `;
+
 const StoreCard = styled.div`
   display: flex;
   flex-direction: column;
@@ -39,6 +51,7 @@ const StoreCard = styled.div`
   min-width: 90px;
   max-width: 90px;
 `;
+
 const StoreImage = styled.img`
   width: 90px;
   height: 90px;
@@ -47,6 +60,7 @@ const StoreImage = styled.img`
   background: #f3f4f6;
   margin-bottom: 8px;
 `;
+
 const StoreName = styled.div`
   font-size: 15px;
   color: #181818;
@@ -58,43 +72,51 @@ const StoreName = styled.div`
   max-width: 90px;
 `;
 
-const HomeStoreSection = () => (
-  <StoreSectionContainer>
-    <StoreSectionHeader>
-      <StoreSectionTitle>이번 주 제휴 업체</StoreSectionTitle>
-      <StoreSectionArrow />
-    </StoreSectionHeader>
-    <StoreScrollRow>
-      <StoreCard>
-        <StoreImage
-          src="https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
-          alt="한결가지칼국수"
-        />
-        <StoreName>한결가지칼국수</StoreName>
-      </StoreCard>
-      <StoreCard>
-        <StoreImage
-          src="https://static.doeat.me/store-food/1092/6d987a0d-2c57-4808-b5a9-423f43efca27.png"
-          alt="배포 갈비"
-        />
-        <StoreName>배포 갈비</StoreName>
-      </StoreCard>
-      <StoreCard>
-        <StoreImage
-          src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80"
-          alt="더홀릭보드카페"
-        />
-        <StoreName>더홀릭보드카페</StoreName>
-      </StoreCard>
-      <StoreCard>
-        <StoreImage
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
-          alt="샤브올데이"
-        />
-        <StoreName>샤브올데이</StoreName>
-      </StoreCard>
-    </StoreScrollRow>
-  </StoreSectionContainer>
-);
+const HomeStoreSection = () => {
+  const navigate = useNavigate();
+
+  const handleArrowClick = () => {
+    navigate("/affiliated-stores");
+  };
+
+  return (
+    <StoreSectionContainer>
+      <StoreSectionHeader>
+        <StoreSectionTitle>이번 주 제휴 업체</StoreSectionTitle>
+        <StoreSectionArrow onClick={handleArrowClick} />
+      </StoreSectionHeader>
+      <StoreScrollRow>
+        <StoreCard>
+          <StoreImage
+            src="https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+            alt="한결가지칼국수"
+          />
+          <StoreName>한결가지칼국수</StoreName>
+        </StoreCard>
+        <StoreCard>
+          <StoreImage
+            src="https://static.doeat.me/store-food/1092/6d987a0d-2c57-4808-b5a9-423f43efca27.png"
+            alt="배포 갈비"
+          />
+          <StoreName>배포 갈비</StoreName>
+        </StoreCard>
+        <StoreCard>
+          <StoreImage
+            src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80"
+            alt="더홀릭보드카페"
+          />
+          <StoreName>더홀릭보드카페</StoreName>
+        </StoreCard>
+        <StoreCard>
+          <StoreImage
+            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
+            alt="샤브올데이"
+          />
+          <StoreName>샤브올데이</StoreName>
+        </StoreCard>
+      </StoreScrollRow>
+    </StoreSectionContainer>
+  );
+};
 
 export default HomeStoreSection;

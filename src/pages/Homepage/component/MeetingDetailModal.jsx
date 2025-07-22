@@ -79,7 +79,7 @@ const AuthorName = styled.div`
 
 const MeetingTitle = styled.h2`
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111;
   margin-bottom: 4px;
   line-height: 1.4;

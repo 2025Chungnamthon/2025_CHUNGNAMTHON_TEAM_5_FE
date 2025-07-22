@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import HomeGroupSection from "./component/HomeGroupSection";
 import HomeRankingSection from "./component/HomeRankingSection";
 import HomeStoreSection from "./component/HomeStoreSection";
+import HomeCardSection from "./component/HomeCardSection";
 import FloatingActionButton from "./component/FloatingActionButton";
 import ActionMenu from "./component/ActionMenu";
 import Header from "./component/Header";
@@ -25,6 +26,7 @@ function Homepage() {
       <HomeGroupSection />
       <HomeRankingSection />
       <HomeStoreSection />
+      <HomeCardSection />
 
       <FloatingActionButton
         onClick={handleFloatingButtonClick}
