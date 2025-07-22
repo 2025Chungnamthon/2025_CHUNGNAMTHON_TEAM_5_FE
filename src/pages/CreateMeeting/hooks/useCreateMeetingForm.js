@@ -12,6 +12,9 @@ const INITIAL_FORM_STATE = {
     image_url: ""
 };
 
+// 초기 지역 옵션 (검색 + 기본 3개)
+const INITIAL_LOCATION_OPTIONS = ["검색", "두정동", "부성1동", "부성2동"];
+
 const validateForm = (formData) => {
     const errors = {};
 
@@ -52,6 +55,7 @@ export const useCreateMeetingForm = () => {
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [selectedLocation, setSelectedLocation] = useState("");
     const [selectedSchedule, setSelectedSchedule] = useState("");
+    const [locationOptions, setLocationOptions] = useState(INITIAL_LOCATION_OPTIONS);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -62,9 +66,31 @@ export const useCreateMeetingForm = () => {
         }
     };
 
+    const updateLocationOptions = (newLocation) => {
+        if (newLocation === "검색") return; // 검색 버튼은 무시
+
+        setLocationOptions(prev => {
+            // "검색"을 제외한 현재 지역들
+            const currentLocations = prev.slice(1);
+
+            // 이미 존재하는 지역인지 확인
+            const existingIndex = currentLocations.indexOf(newLocation);
+
+            if (existingIndex !== -1) {
+                // 이미 존재하는 경우: 순서 변경 없이 그대로 유지
+                return prev;
+            } else {
+                // 새로운 지역인 경우: 맨 앞에 추가하고 3개만 유지
+                const updatedLocations = [newLocation, ...currentLocations].slice(0, 3);
+                return ["검색", ...updatedLocations];
+            }
+        });
+    };
+
     const handleLocationSelect = (location) => {
         setSelectedLocation(location);
         updateFormData('location', location);
+        updateLocationOptions(location);
     };
 
     const handleScheduleSelect = (schedule) => {
@@ -93,7 +119,7 @@ export const useCreateMeetingForm = () => {
             const submitData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
-                location: formData.location.trim(),
+                location: formData.location.trim(),  // 한글 그대로 전송
                 openchat_url: formData.openchat_url?.trim() || "",
                 schedule: formData.schedule.trim(),
                 image_url: formData.image_url || "https://imageurl"
@@ -129,6 +155,7 @@ export const useCreateMeetingForm = () => {
         formData,
         selectedLocation,
         selectedSchedule,
+        locationOptions,
         isLoading,
         errors,
         updateFormData,

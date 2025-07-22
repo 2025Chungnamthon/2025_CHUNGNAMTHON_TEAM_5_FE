@@ -1,8 +1,9 @@
 // CreateMeetingPage.jsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { FiArrowLeft, FiCamera } from "react-icons/fi";
 import { TextAreaInput } from "./component/FormInput";
+import LocationSearchModal from "./component/LocationSearchModal";
 import { useCreateMeetingForm } from "./hooks/useCreateMeetingForm";
 
 const MOBILE_MAX_WIDTH = 430;
@@ -211,7 +212,6 @@ const LoadingSpinner = styled.div`
     }
 `;
 
-const LOCATION_OPTIONS = ["검색", "두정동", "부성1동", "부성2동"];
 const SCHEDULE_OPTIONS = [
     { value: "ALL", label: "전체" },
     { value: "WEEKDAY", label: "평일" },
@@ -219,10 +219,13 @@ const SCHEDULE_OPTIONS = [
 ];
 
 const CreateMeetingPage = () => {
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
     const {
         formData,
         selectedLocation,
         selectedSchedule,
+        locationOptions, // 동적 지역 옵션 사용
         isLoading,
         errors,
         updateFormData,
@@ -236,10 +239,15 @@ const CreateMeetingPage = () => {
 
     const handleLocationClick = (location) => {
         if (location === "검색") {
-            console.log("검색 기능 준비 중...");
+            setIsLocationModalOpen(true);
             return;
         }
         handleLocationSelect(location);
+    };
+
+    const handleLocationModalSelect = (location) => {
+        handleLocationSelect(location);
+        setIsLocationModalOpen(false);
     };
 
     return (
@@ -294,7 +302,7 @@ const CreateMeetingPage = () => {
                     <SectionTitle>활동 동네</SectionTitle>
                     <SubText>주로 어디서 활동을 하나요?</SubText>
                     <TagContainer>
-                        {LOCATION_OPTIONS.map((location) => (
+                        {locationOptions.map((location) => (
                             <Tag
                                 key={location}
                                 $selected={selectedLocation === location}
@@ -349,6 +357,13 @@ const CreateMeetingPage = () => {
                     )}
                 </SubmitButton>
             </Content>
+
+            {/* 지역 검색 모달 */}
+            <LocationSearchModal
+                isOpen={isLocationModalOpen}
+                onClose={() => setIsLocationModalOpen(false)}
+                onLocationSelect={handleLocationModalSelect}
+            />
         </PageContainer>
     );
 };
