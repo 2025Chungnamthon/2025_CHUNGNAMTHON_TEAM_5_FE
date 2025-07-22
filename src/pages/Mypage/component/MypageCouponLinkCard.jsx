@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 const Card = styled.div`
   background: #fff;
@@ -20,6 +21,8 @@ const Card = styled.div`
 `;
 
 const MypageCouponLinkCard = ({ onClick, isGuest = false }) => {
+  const navigate = useNavigate();
+
   const handleClick = () => {
     if (isGuest) {
       if (onClick) {
@@ -27,8 +30,10 @@ const MypageCouponLinkCard = ({ onClick, isGuest = false }) => {
       } else {
         alert("로그인 후 이용해주세요.");
       }
+    } else {
+      // 로그인된 사용자는 쿠폰 페이지로 이동
+      navigate("/coupon");
     }
-    // 로그인된 사용자는 기존 동작 유지
   };
 
   return <Card onClick={handleClick}>쿠폰 교환하러 가기</Card>;

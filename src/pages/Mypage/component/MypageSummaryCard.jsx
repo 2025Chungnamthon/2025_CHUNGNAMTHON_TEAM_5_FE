@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import { PiTicketFill } from "react-icons/pi";
 
 const Card = styled.div`
@@ -62,27 +63,54 @@ const IconCircle = styled.div`
   margin-right: 8px;
 `;
 
-const MypageSummaryCard = ({ point, couponCount, isGuest = false }) => (
-  <Card>
-    <Row>
-      <RowLeft>
-        <PointCircle isGuest={isGuest}>P</PointCircle>
-        <Label>포인트</Label>
-      </RowLeft>
-      <Value isGuest={isGuest}>
-        {isGuest ? "0p" : `${point.toLocaleString()}p`}
-      </Value>
-    </Row>
-    <Row>
-      <RowLeft>
-        <IconCircle isGuest={isGuest}>
-          <PiTicketFill color={isGuest ? "#cbd5e1" : "white"} size={18} />
-        </IconCircle>
-        <Label>쿠폰</Label>
-      </RowLeft>
-      <Value isGuest={isGuest}>{isGuest ? "0장" : `${couponCount}장`}</Value>
-    </Row>
-  </Card>
-);
+const ClickableRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+  transition: all 0.2s ease;
+
+  &:hover {
+    ${(props) =>
+      props.clickable &&
+      `
+      transform: translateY(-1px);
+      opacity: 0.8;
+    `}
+  }
+`;
+
+const MypageSummaryCard = ({ point, couponCount, isGuest = false }) => {
+  const navigate = useNavigate();
+
+  const handlePointClick = () => {
+    if (!isGuest) {
+      navigate("/point-history");
+    }
+  };
+
+  return (
+    <Card>
+      <ClickableRow clickable={!isGuest} onClick={handlePointClick}>
+        <RowLeft>
+          <PointCircle isGuest={isGuest}>P</PointCircle>
+          <Label>포인트</Label>
+        </RowLeft>
+        <Value isGuest={isGuest}>
+          {isGuest ? "0p" : `${point.toLocaleString()}p`}
+        </Value>
+      </ClickableRow>
+      <Row>
+        <RowLeft>
+          <IconCircle isGuest={isGuest}>
+            <PiTicketFill color={isGuest ? "#cbd5e1" : "white"} size={18} />
+          </IconCircle>
+          <Label>쿠폰</Label>
+        </RowLeft>
+        <Value isGuest={isGuest}>{isGuest ? "0장" : `${couponCount}장`}</Value>
+      </Row>
+    </Card>
+  );
+};
 
 export default MypageSummaryCard;
