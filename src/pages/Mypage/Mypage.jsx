@@ -1,9 +1,15 @@
 import React from "react";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+
+// 기존 컴포넌트들 (게스트 모드 지원)
 import MypageHeader from "./component/MypageHeader";
 import MypageSummaryCard from "./component/MypageSummaryCard";
 import MypageCouponLinkCard from "./component/MypageCouponLinkCard";
 import MypageLogout from "./component/MypageLogout";
-import styled from "styled-components";
+
+// 인증 유틸리티
+import { isAuthenticated } from "../../utils/auth";
 
 const PageContainer = styled.div`
   background: #f3f6f7;
@@ -16,6 +22,9 @@ const Section = styled.div`
 `;
 
 const MyPage = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = isAuthenticated();
+
   // 더미 데이터 (실제 연동 시 API/Context 사용)
   const user = {
     name: "김천안",
@@ -24,16 +33,31 @@ const MyPage = () => {
     couponCount: 4,
   };
 
+  const handleGuestCouponClick = () => {
+    navigate("/login");
+  };
+
   return (
     <PageContainer>
-      <MypageHeader name={user.name} profileImg={user.profileImg} />
+      <MypageHeader
+        name={user.name}
+        profileImg={user.profileImg}
+        isGuest={!isLoggedIn}
+      />
       <Section>
-        <MypageSummaryCard point={user.point} couponCount={user.couponCount} />
+        <MypageSummaryCard
+          point={user.point}
+          couponCount={user.couponCount}
+          isGuest={!isLoggedIn}
+        />
       </Section>
       <Section>
-        <MypageCouponLinkCard />
+        <MypageCouponLinkCard
+          onClick={handleGuestCouponClick}
+          isGuest={!isLoggedIn}
+        />
+        {isLoggedIn && <MypageLogout />}
       </Section>
-      <MypageLogout />
     </PageContainer>
   );
 };

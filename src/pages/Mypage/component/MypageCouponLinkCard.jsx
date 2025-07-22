@@ -19,6 +19,19 @@ const Card = styled.div`
   }
 `;
 
-const MypageCouponLinkCard = () => <Card>쿠폰 교환하러 가기</Card>;
+const MypageCouponLinkCard = ({ onClick, isGuest = false }) => {
+  const handleClick = () => {
+    if (isGuest) {
+      if (onClick) {
+        onClick();
+      } else {
+        alert("로그인 후 이용해주세요.");
+      }
+    }
+    // 로그인된 사용자는 기존 동작 유지
+  };
+
+  return <Card onClick={handleClick}>쿠폰 교환하러 가기</Card>;
+};
 
 export default MypageCouponLinkCard;

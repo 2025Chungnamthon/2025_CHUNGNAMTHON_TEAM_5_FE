@@ -33,50 +33,54 @@ const Label = styled.span`
 const Value = styled.span`
   font-size: 16px;
   font-weight: 700;
-  color: #222222;
+  color: ${(props) => (props.isGuest ? "#cbd5e1" : "#222222")};
 `;
 
-const IconCircle = styled.div`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: ${({ color }) => color || "#eee"};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 8px;
-`;
 const PointCircle = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: #fdd756;
-  color: #d18000;
+  background: ${(props) => (props.isGuest ? "#f1f5f9" : "#fdd756")};
+  color: ${(props) => (props.isGuest ? "#cbd5e1" : "#d18000")};
   font-weight: 700;
   font-size: 16px;
   border-radius: 50%;
   margin-right: 8px;
   position: relative;
 `;
-const MypageSummaryCard = ({ point, couponCount }) => (
+
+const IconCircle = styled.div`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: ${(props) => (props.isGuest ? "#f1f5f9" : "#4F8DFD")};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+`;
+
+const MypageSummaryCard = ({ point, couponCount, isGuest = false }) => (
   <Card>
     <Row>
       <RowLeft>
-        <PointCircle>P</PointCircle>
+        <PointCircle isGuest={isGuest}>P</PointCircle>
         <Label>포인트</Label>
       </RowLeft>
-      <Value>{point.toLocaleString()}p</Value>
+      <Value isGuest={isGuest}>
+        {isGuest ? "0p" : `${point.toLocaleString()}p`}
+      </Value>
     </Row>
     <Row>
       <RowLeft>
-        <IconCircle color="#4F8DFD">
-          <PiTicketFill color="white" size={18} />
+        <IconCircle isGuest={isGuest}>
+          <PiTicketFill color={isGuest ? "#cbd5e1" : "white"} size={18} />
         </IconCircle>
         <Label>쿠폰</Label>
       </RowLeft>
-      <Value>{couponCount}장</Value>
+      <Value isGuest={isGuest}>{isGuest ? "0장" : `${couponCount}장`}</Value>
     </Row>
   </Card>
 );
