@@ -1,3 +1,4 @@
+// LocationSelector.jsx - 업데이트된 지역 선택 컴포넌트
 import React from "react";
 import styled from "styled-components";
 
@@ -27,10 +28,10 @@ const LocationTag = styled.button`
     }
 `;
 
-// 천안시 주요 동네들 (실제 데이터)
-const LOCATION_OPTIONS = ["검색", "두정동", "부성동", "부성2동", "성정동", "신부동", "불당동"];
+// 업데이트된 지역 옵션 (이미지와 동일하게)
+const LOCATION_OPTIONS = ["검색", "두정동", "부성1동", "부성2동"];
 
-const LocationSelector = ({selectedLocation, onLocationSelect}) => {
+const LocationSelector = ({ selectedLocation, onLocationSelect }) => {
     const handleLocationClick = (location) => {
         if (location === "검색") {
             // 검색 기능은 나중에 구현
