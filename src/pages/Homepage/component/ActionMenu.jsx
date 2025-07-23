@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { FiUsers, FiCamera } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import ReceiptPage from "../../ReceiptPage/ReceiptPage";
 
 const Overlay = styled.div`
   position: fixed;
@@ -48,6 +49,7 @@ const MenuItem = styled.button`
 
 export default function ActionMenu({ onClose }) {
   const navigate = useNavigate();
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   const handleCreateGroup = () => {
     console.log("모임 생성하기 클릭 - /create-meeting으로 이동");
@@ -57,21 +59,31 @@ export default function ActionMenu({ onClose }) {
 
   const handleCertifyReceipt = () => {
     console.log("영수증 인증하기 클릭");
-    alert("영수증 인증 기능 준비 중입니다!");
+    setIsReceiptOpen(true);
+  };
+  const handleReceiptClose = () => {
+
+    setIsReceiptOpen(false);
     onClose();
   };
 
   return (
-    <>
-      <Overlay onClick={onClose} />
-      <Menu>
-        <MenuItem onClick={handleCreateGroup}>
-          <FiUsers /> 모임 생성하기
-        </MenuItem>
-        <MenuItem onClick={handleCertifyReceipt}>
-          <FiCamera /> 영수증 인증하기
-        </MenuItem>
-      </Menu>
-    </>
+      <>
+        <Overlay onClick={onClose} />
+        <Menu>
+          <MenuItem onClick={handleCreateGroup}>
+            <FiUsers /> 모임 생성하기
+          </MenuItem>
+          <MenuItem onClick={handleCertifyReceipt}>
+            <FiCamera /> 영수증 인증하기
+          </MenuItem>
+        </Menu>
+
+        {/* 영수증 인증 플로우 */}
+        <ReceiptPage
+            isOpen={isReceiptOpen}
+            onClose={handleReceiptClose}
+        />
+      </>
   );
 }
