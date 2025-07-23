@@ -1,15 +1,23 @@
 // API 기본 설정
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+// JWT 토큰 가져오기 함수
+const getAuthToken = () => {
+    return localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+};
+
 // API 요청 헬퍼 함수
 const apiRequest = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
+    const token = getAuthToken();
 
     const config = {
         headers: {
             'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
             ...options.headers
         },
+        credentials: 'include',
         ...options
     };
 
@@ -17,15 +25,29 @@ const apiRequest = async (endpoint, options = {}) => {
         console.log(`API Request: ${options.method || 'GET'} ${url}`);
 
         const response = await fetch(url, config);
-        const data = await response.json();
+
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
 
         console.log(`API Response: ${response.status}`, data);
 
         if (!response.ok) {
-            throw new Error(data.message || `HTTP Error: ${response.status}`);
+            if (response.status === 401) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('token');
+            }
+
+            const errorMessage = typeof data === 'object' ? (data.message || `HTTP Error: ${response.status}`) : data;
+            throw new Error(errorMessage);
         }
 
-        return data;
+        return typeof data === 'object' ? data : { data };
     } catch (error) {
         console.error(`API Request Failed: ${endpoint}`, error);
         throw error;
@@ -47,7 +69,6 @@ export const meetingApi = {
         const searchParams = new URLSearchParams(params);
         const queryString = searchParams.toString();
         const endpoint = queryString ? `/api/meetings?${queryString}` : '/api/meetings';
-
         return await apiRequest(endpoint);
     },
 
@@ -76,35 +97,5 @@ export const meetingApi = {
         return await apiRequest(`/api/meetings/${meetingId}`, {
             method: 'DELETE'
         });
-    }
-};
-
-// 이미지 업로드 API (향후 확장용)
-export const imageApi = {
-    uploadImage: async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        return await apiRequest('/api/images/upload', {
-            method: 'POST',
-            headers: {}, // Content-Type을 자동으로 설정하게 함 (multipart/form-data)
-            body: formData
-        });
-    }
-};
-
-// API 연결 테스트 함수
-export const testApiConnection = async () => {
-    try {
-        console.log('Testing API connection...');
-        console.log('API_BASE_URL:', API_BASE_URL);
-
-        // 간단한 연결 테스트 (모임 목록 조회)
-        const result = await meetingApi.getMeetings();
-        console.log('API connection test successful:', result);
-        return true;
-    } catch (error) {
-        console.error('API connection test failed:', error);
-        return false;
     }
 };

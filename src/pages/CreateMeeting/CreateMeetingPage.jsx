@@ -1,17 +1,17 @@
-import React from "react";
+// CreateMeetingPage.jsx
+import React, { useState } from "react";
 import styled from "styled-components";
-import {FiArrowLeft, FiCamera} from "react-icons/fi";
-import {TextInput, TextAreaInput, SearchTextInput} from "./component/FormInput";
-import LocationSelector from "./component/LocationSelector";
-import MemberCounter from "./component/MemberCounter";
-import {useCreateMeetingForm} from "./hooks/useCreateMeetingForm";
+import { FiArrowLeft, FiCamera } from "react-icons/fi";
+import { TextAreaInput } from "./component/FormInput";
+import LocationSearchModal from "./component/LocationSearchModal";
+import { useCreateMeetingForm } from "./hooks/useCreateMeetingForm";
 
 const MOBILE_MAX_WIDTH = 430;
 
 const PageContainer = styled.div`
     max-width: ${MOBILE_MAX_WIDTH}px;
     margin: 0 auto;
-    background: #fafbfc;
+    background: #fff;
     min-height: 100vh;
     padding: 0;
 `;
@@ -22,7 +22,6 @@ const Header = styled.div`
     display: flex;
     align-items: center;
     gap: 16px;
-    border-bottom: 1px solid #f3f4f6;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -55,36 +54,14 @@ const HeaderTitle = styled.h1`
     margin: 0;
 `;
 
-const ProgressBar = styled.div`
-    width: 100%;
-    height: 3px;
-    background: #f3f4f6;
-    position: relative;
-    overflow: hidden;
-`;
-
-const ProgressFill = styled.div`
-    height: 100%;
-    background: linear-gradient(90deg, #80c7bc, #5fa89e);
-    width: ${props => props.progress}%;
-    transition: width 0.3s ease;
-`;
-
 const Content = styled.div`
-    padding: 24px 20px;
+    padding: 0 20px 80px 20px;
     display: flex;
     flex-direction: column;
     gap: 32px;
-    padding-bottom: 80px;
 `;
 
-const LocationSection = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-`;
-
-const ImageSection = styled.div`
+const FormSection = styled.div`
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -95,6 +72,63 @@ const SectionTitle = styled.h3`
     font-weight: 600;
     color: #333;
     margin: 0;
+`;
+
+const LineInput = styled.input`
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #d1d5db;
+    padding: 12px 0 12px 8px;
+    font-size: 16px;
+    color: #333;
+
+    &::placeholder {
+        color: #9ca3af;
+    }
+
+    &:focus {
+        outline: none;
+        border-bottom-color: #80c7bc;
+    }
+`;
+
+const CharCounter = styled.div`
+    text-align: right;
+    font-size: 14px;
+    color: #9ca3af;
+    margin-top: 4px;
+`;
+
+const SubText = styled.p`
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+`;
+
+const TagContainer = styled.div`
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+`;
+
+const Tag = styled.button`
+    background: ${props => props.$selected ? '#80c7bc' : '#f3f4f6'};
+    color: ${props => props.$selected ? '#fff' : '#6b7280'};
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: ${props => props.$selected ? '#5fa89e' : '#e5e7eb'};
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
 `;
 
 const ImageUploadButton = styled.button`
@@ -131,9 +165,9 @@ const ImageUploadText = styled.span`
     font-weight: 500;
 `;
 
-const ImageUploadSubText = styled.span`
+const ErrorText = styled.span`
+    color: #ef4444;
     font-size: 12px;
-    color: #9ca3af;
     margin-top: 4px;
 `;
 
@@ -173,110 +207,149 @@ const LoadingSpinner = styled.div`
     animation: spin 1s linear infinite;
 
     @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 `;
 
-const ErrorText = styled.span`
-    color: #ef4444;
-    font-size: 12px;
-    margin-top: 4px;
-`;
+const SCHEDULE_OPTIONS = [
+    { value: "ALL", label: "전체" },
+    { value: "WEEKDAY", label: "평일" },
+    { value: "WEEKEND", label: "주말" }
+];
 
 const CreateMeetingPage = () => {
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
     const {
-        // 상태
         formData,
         selectedLocation,
+        selectedSchedule,
+        locationOptions, // 동적 지역 옵션 사용
         isLoading,
         errors,
-        isFormValid,
-        formProgress,
-
-        // 액션
         updateFormData,
         handleLocationSelect,
-        handleMemberCountChange,
+        handleScheduleSelect,
         handleImageUpload,
         handleSubmit,
-        handleBack
+        handleBack,
+        canSubmit
     } = useCreateMeetingForm();
+
+    const handleLocationClick = (location) => {
+        if (location === "검색") {
+            setIsLocationModalOpen(true);
+            return;
+        }
+        handleLocationSelect(location);
+    };
+
+    const handleLocationModalSelect = (location) => {
+        handleLocationSelect(location);
+        setIsLocationModalOpen(false);
+    };
 
     return (
         <PageContainer>
             <Header>
                 <BackButton onClick={handleBack}>
-                    <FiArrowLeft/>
+                    <FiArrowLeft />
                 </BackButton>
                 <HeaderTitle>모임 만들기</HeaderTitle>
             </Header>
 
-            <ProgressBar>
-                <ProgressFill progress={formProgress}/>
-            </ProgressBar>
-
             <Content>
-                <TextInput
-                    title="모임명"
-                    placeholder="분위기 좋은 카페 투어 가실 분"
-                    value={formData.title}
-                    onChange={(e) => updateFormData('title', e.target.value)}
-                    maxLength={50}
-                />
-                {errors.title && <ErrorText>{errors.title}</ErrorText>}
+                {/* 모임명 */}
+                <FormSection>
+                    <SectionTitle>모임명</SectionTitle>
+                    <LineInput
+                        placeholder="분위기 좋은 카페 투어 가실 분"
+                        value={formData.title}
+                        onChange={(e) => updateFormData('title', e.target.value)}
+                        maxLength={20}
+                    />
+                    <CharCounter>{formData.title?.length || 0}/20</CharCounter>
+                    {errors.title && <ErrorText>{errors.title}</ErrorText>}
+                </FormSection>
 
+                {/* 모임 소개 */}
                 <TextAreaInput
                     title="모임 소개"
-                    placeholder="내용을 입력해주세요"
+                    placeholder="활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요."
                     value={formData.description}
                     onChange={(e) => updateFormData('description', e.target.value)}
                     maxLength={500}
+                    showCounter
+                    error={errors.description}
                 />
-                {errors.description && <ErrorText>{errors.description}</ErrorText>}
 
-                <LocationSection>
-                    <SearchTextInput
-                        title="활동 동네"
-                        placeholder="동네를 검색하세요"
-                        value={formData.location}
-                        onChange={(e) => updateFormData('location', e.target.value)}
+                {/* 카카오톡 오픈채팅방 링크 */}
+                <FormSection>
+                    <SectionTitle>카카오톡 오픈채팅방 링크</SectionTitle>
+                    <LineInput
+                        placeholder="https://open.kakao.com/o/gq9lWjlh"
+                        value={formData.openchat_url}
+                        onChange={(e) => updateFormData('openchat_url', e.target.value)}
+                        maxLength={200}
                     />
+                    <CharCounter>{formData.openchat_url?.length || 0}/200</CharCounter>
+                    {errors.openchat_url && <ErrorText>{errors.openchat_url}</ErrorText>}
+                </FormSection>
+
+                {/* 활동 동네 */}
+                <FormSection>
+                    <SectionTitle>활동 동네</SectionTitle>
+                    <SubText>주로 어디서 활동을 하나요?</SubText>
+                    <TagContainer>
+                        {locationOptions.map((location) => (
+                            <Tag
+                                key={location}
+                                $selected={selectedLocation === location}
+                                onClick={() => handleLocationClick(location)}
+                            >
+                                {location}
+                            </Tag>
+                        ))}
+                    </TagContainer>
                     {errors.location && <ErrorText>{errors.location}</ErrorText>}
-                    <LocationSelector
-                        selectedLocation={selectedLocation}
-                        onLocationSelect={handleLocationSelect}
-                    />
-                </LocationSection>
+                </FormSection>
 
-                <MemberCounter
-                    count={formData.maxMember}
-                    onCountChange={handleMemberCountChange}
-                    min={2}
-                    max={10}
-                />
-                {errors.maxMember && <ErrorText>{errors.maxMember}</ErrorText>}
+                {/* 활동 일자 */}
+                <FormSection>
+                    <SectionTitle>활동 일자</SectionTitle>
+                    <SubText>주로 언제 활동을 하나요?</SubText>
+                    <TagContainer>
+                        {SCHEDULE_OPTIONS.map((option) => (
+                            <Tag
+                                key={option.value}
+                                $selected={selectedSchedule === option.value}
+                                onClick={() => handleScheduleSelect(option.value)}
+                            >
+                                {option.label}
+                            </Tag>
+                        ))}
+                    </TagContainer>
+                    {errors.schedule && <ErrorText>{errors.schedule}</ErrorText>}
+                </FormSection>
 
-                <ImageSection>
+                {/* 대표 사진 */}
+                <FormSection>
                     <SectionTitle>대표 사진 (선택)</SectionTitle>
                     <ImageUploadButton onClick={handleImageUpload}>
-                        <FiCamera/>
+                        <FiCamera />
                         <ImageUploadText>사진 추가하기</ImageUploadText>
-                        <ImageUploadSubText>모임을 더 매력적으로 소개해보세요</ImageUploadSubText>
                     </ImageUploadButton>
-                </ImageSection>
+                </FormSection>
 
+                {/* 제출 버튼 */}
                 <SubmitButton
                     onClick={handleSubmit}
-                    disabled={!isFormValid || isLoading}
+                    disabled={!canSubmit || isLoading}
                 >
                     {isLoading ? (
                         <>
-                            <LoadingSpinner/>
+                            <LoadingSpinner />
                             생성 중...
                         </>
                     ) : (
@@ -284,6 +357,13 @@ const CreateMeetingPage = () => {
                     )}
                 </SubmitButton>
             </Content>
+
+            {/* 지역 검색 모달 */}
+            <LocationSearchModal
+                isOpen={isLocationModalOpen}
+                onClose={() => setIsLocationModalOpen(false)}
+                onLocationSelect={handleLocationModalSelect}
+            />
         </PageContainer>
     );
 };
