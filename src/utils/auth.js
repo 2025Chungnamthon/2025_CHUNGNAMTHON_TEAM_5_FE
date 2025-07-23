@@ -31,6 +31,34 @@ export const getTokenFromCookie = (cookieName = "token") => {
   }
 };
 
+// localStorage에서 토큰 가져오기
+export const getTokenFromStorage = () => {
+  try {
+    return localStorage.getItem("token");
+  } catch (error) {
+    console.error("localStorage에서 토큰 추출 실패:", error);
+    return null;
+  }
+};
+
+// 토큰을 localStorage에 저장
+export const setTokenToStorage = (token) => {
+  try {
+    localStorage.setItem("token", token);
+  } catch (error) {
+    console.error("토큰 저장 실패:", error);
+  }
+};
+
+// 토큰을 localStorage에서 제거
+export const removeTokenFromStorage = () => {
+  try {
+    localStorage.removeItem("token");
+  } catch (error) {
+    console.error("토큰 제거 실패:", error);
+  }
+};
+
 // URL 또는 쿠키에서 토큰 추출 (fallback 로직)
 export const getTokenFromUrlOrCookie = () => {
   const urlToken = getTokenFromUrl();
@@ -73,26 +101,26 @@ export const isTokenValid = (token) => {
 
 // 현재 사용자 정보 가져오기
 export const getCurrentUser = () => {
-  const token = apiService.getToken();
+  const token = getTokenFromStorage();
   return token && isTokenValid(token) ? decodeToken(token) : null;
 };
 
 // 로그인 상태 확인
 export const isAuthenticated = () => {
-  const token = apiService.getToken();
+  const token = getTokenFromStorage();
   return token && isTokenValid(token);
 };
 
 // 로그아웃
 export const logout = () => {
-  apiService.removeToken();
+  removeTokenFromStorage();
   window.location.href = "/login";
 };
 
 // 소셜 로그인 시작
 export const startSocialLogin = (provider) => {
-  const loginUrl = apiService.getSocialLoginUrl(provider);
-  window.location.href = loginUrl;
+  // 임시로 로그인 페이지로 이동
+  window.location.href = "/login";
 };
 
 // URL 파라미터 정리

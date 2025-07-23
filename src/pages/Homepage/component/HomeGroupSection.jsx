@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import TagBadge from "../../../components/TagBadge";
 import MeetingDetailModal from "./MeetingDetailModal";
@@ -11,6 +12,7 @@ const SectionContainer = styled.div`
   padding: 0 0 8px 0;
   margin-bottom: 14px;
 `;
+
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
@@ -18,16 +20,25 @@ const SectionHeader = styled.div`
   margin-bottom: 8px;
   padding: 18px 18px 12px 18px;
 `;
+
 const SectionTitle = styled.h2`
   font-size: 20px;
   font-weight: 700;
   color: #111;
 `;
+
 const SectionArrow = styled(FiChevronRight)`
   color: #bdbdbd;
   font-size: 26px;
   cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #9ca3af;
+    transform: translateX(2px);
+  }
 `;
+
 const GroupCard = styled.div`
   background: #fff;
   border-radius: 16px;
@@ -38,6 +49,7 @@ const GroupCard = styled.div`
   gap: 12px;
   width: 100%;
 `;
+
 const GroupImage = styled.img`
   width: 68px;
   height: 68px;
@@ -46,6 +58,7 @@ const GroupImage = styled.img`
   background: #f3f4f6;
   flex-shrink: 0;
 `;
+
 const GroupInfo = styled.div`
   flex: 1 1 0%;
   display: flex;
@@ -57,8 +70,9 @@ const GroupInfo = styled.div`
   word-break: break-all;
   padding-right: 8px;
 `;
+
 const GroupTitle = styled.div`
-  font-weight: 800;
+  font-weight: 700;
   font-size: 16px;
   color: #181818;
   margin-bottom: 2px;
@@ -66,6 +80,7 @@ const GroupTitle = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
+
 const GroupDesc = styled.div`
   font-size: 13px;
   color: #6b7280;
@@ -74,12 +89,14 @@ const GroupDesc = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
+
 const TagRow = styled.div`
   display: flex;
   align-items: center;
   gap: 0;
   margin-bottom: 2px;
 `;
+
 const ViewButton = styled.button`
   background: #f3f4f6;
   color: #222;
@@ -136,8 +153,13 @@ const groupList = [
 ];
 
 const HomeGroupSection = () => {
+  const navigate = useNavigate();
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleArrowClick = () => {
+    navigate("/meetings");
+  };
 
   const handleViewClick = (group) => {
     setSelectedMeeting(group);
@@ -153,7 +175,7 @@ const HomeGroupSection = () => {
     <SectionContainer>
       <SectionHeader>
         <SectionTitle>직접 모여 소통해요</SectionTitle>
-        <SectionArrow />
+        <SectionArrow onClick={handleArrowClick} />
       </SectionHeader>
       {groupList.map((group, idx) => (
         <GroupCard key={idx}>
