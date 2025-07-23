@@ -7,8 +7,8 @@ import CreateMeetingPage from "../pages/CreateMeeting/CreateMeetingPage";
 import MapPage from "../pages/Map/MapPage";
 import Loginpage from "../pages/Loginpage/Loginpage";
 import MyPage from "../pages/Mypage/Mypage";
-import CouponPage from "../pages/Coupon/CouponPage";
-import PointHistoryPage from "../pages/PointHistory/PointHistoryPage";
+import CouponPage from "../pages/Mypage/Coupon/CouponPage";
+import PointHistoryPage from "../pages/Mypage/PointHistory/PointHistoryPage";
 import AffiliatedStoresPage from "../pages/AffiliatedStores/AffiliatedStoresPage";
 // import NotFound from "../pages/NotFound";
 
