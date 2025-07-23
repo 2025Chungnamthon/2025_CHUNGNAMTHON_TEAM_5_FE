@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 // 기존 컴포넌트들 (게스트 모드 지원)
 import MypageHeader from "./component/MypageHeader";
 import MypageSummaryCard from "./component/MypageSummaryCard";
-import MypageCouponLinkCard from "./component/MypageCouponLinkCard";
 import MypageLogout from "./component/MypageLogout";
 
 // 인증 유틸리티
 import { isAuthenticated } from "../../utils/auth";
+import { getUserPoints, getCouponCount } from "../../utils/couponData";
 
 const PageContainer = styled.div`
   background: #f3f6f7;
@@ -21,6 +21,24 @@ const Section = styled.div`
   margin-bottom: 20px;
 `;
 
+const CouponLinkCard = styled.div`
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
+  padding: 20px 24px;
+  margin: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: #f9f9f9;
+    transform: translateY(-2px);
+  }
+`;
+
 const MyPage = () => {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
@@ -29,12 +47,16 @@ const MyPage = () => {
   const user = {
     name: "김천안",
     profileImg: "https://randomuser.me/api/portraits/men/1.jpg",
-    point: 1620,
-    couponCount: 4,
+    point: getUserPoints(),
+    couponCount: getCouponCount(),
   };
 
   const handleGuestCouponClick = () => {
-    navigate("/login");
+    if (isLoggedIn) {
+      navigate("/coupon");
+    } else {
+      navigate("/login");
+    }
   };
 
   return (
@@ -52,10 +74,9 @@ const MyPage = () => {
         />
       </Section>
       <Section>
-        <MypageCouponLinkCard
-          onClick={handleGuestCouponClick}
-          isGuest={!isLoggedIn}
-        />
+        <CouponLinkCard onClick={handleGuestCouponClick}>
+          쿠폰 교환하러 가기
+        </CouponLinkCard>
         {isLoggedIn && <MypageLogout />}
       </Section>
     </PageContainer>
