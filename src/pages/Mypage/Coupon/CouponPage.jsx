@@ -3,12 +3,12 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
-import PointDisplay from "../../components/PointDisplay";
+import PointDisplay from "../../../components/PointDisplay";
 import {
   getExchangeCoupons,
   getMyCoupons,
   getUserPoints,
-} from "../../utils/couponData";
+} from "../../../utils/couponData";
 
 const PageContainer = styled.div`
   background: #ffffff;
