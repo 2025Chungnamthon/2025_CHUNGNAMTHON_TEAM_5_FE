@@ -5,10 +5,12 @@ import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
 import PointDisplay from "../../../components/PointDisplay";
 import {
-  getExchangeCoupons,
-  getMyCoupons,
-  getUserPoints,
-} from "../../../utils/couponData";
+  useExchangeCoupons,
+  useMyCoupons,
+  useUserPoints,
+  useExchangeCoupon,
+} from "../../../hooks/useCoupons";
+import { useUIStore } from "../../../stores/uiStore";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -169,29 +171,75 @@ const ExchangeButton = styled.button`
   &:active {
     transform: scale(0.98);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const LoadingText = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
 `;
 
 const CouponPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("exchange"); // "exchange" 또는 "my-coupons"
+  const { tabs, setTab } = useUIStore();
+  const activeTab = tabs.coupon || "exchange";
+
+  // 새로운 훅들 사용
+  const { data: exchangeCouponsData, isLoading: exchangeLoading } =
+    useExchangeCoupons();
+  const { data: myCouponsData, isLoading: myCouponsLoading } = useMyCoupons();
+  const { data: userPointsData, isLoading: pointsLoading } = useUserPoints();
+  const exchangeCouponMutation = useExchangeCoupon();
 
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
+    setTab("coupon", tab);
   };
 
   const handleExchange = (couponId) => {
-    // 실제 교환 로직 구현 필요
-    alert(`${couponId}번 쿠폰을 교환하시겠습니까?`);
+    if (window.confirm(`${couponId}번 쿠폰을 교환하시겠습니까?`)) {
+      exchangeCouponMutation.mutate(couponId, {
+        onSuccess: () => {
+          alert("쿠폰 교환이 완료되었습니다!");
+        },
+        onError: (error) => {
+          alert(`쿠폰 교환에 실패했습니다: ${error.message}`);
+        },
+      });
+    }
   };
 
-  // 쿠폰 데이터 (실제 연동 시 API 사용)
-  const exchangeCoupons = getExchangeCoupons();
-  const myCoupons = getMyCoupons();
-  const userPoints = getUserPoints();
+  // 데이터 추출 (더미 데이터 fallback)
+  const exchangeCoupons = exchangeCouponsData?.data || [];
+  const myCoupons = myCouponsData?.data || [];
+  const userPoints = userPointsData?.data?.points || 1620;
+
+  // 로딩 상태 처리
+  if (exchangeLoading || myCouponsLoading || pointsLoading) {
+    return (
+      <PageContainer>
+        <Header>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <FaArrowLeft />
+            </BackButton>
+          </HeaderLeft>
+          <HeaderRight>
+            <PointDisplay points={userPoints} />
+          </HeaderRight>
+        </Header>
+        <LoadingText>로딩 중...</LoadingText>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -240,8 +288,11 @@ const CouponPage = () => {
                   </CouponPoints>
                   <CouponExpiry>{coupon.expiry}</CouponExpiry>
                 </CouponContent>
-                <ExchangeButton onClick={() => handleExchange(coupon.id)}>
-                  교환
+                <ExchangeButton
+                  onClick={() => handleExchange(coupon.id)}
+                  disabled={exchangeCouponMutation.isPending}
+                >
+                  {exchangeCouponMutation.isPending ? "교환 중..." : "교환"}
                 </ExchangeButton>
               </CouponCard>
             ))
@@ -261,9 +312,7 @@ const CouponPage = () => {
                   </CouponPoints>
                   <CouponExpiry>{coupon.expiry}</CouponExpiry>
                 </CouponContent>
-                <ExchangeButton onClick={() => handleExchange(coupon.id)}>
-                  교환
-                </ExchangeButton>
+                <ExchangeButton disabled>보유 중</ExchangeButton>
               </CouponCard>
             ))}
       </Content>

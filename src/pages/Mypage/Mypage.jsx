@@ -8,8 +8,8 @@ import MypageSummaryCard from "./component/MypageSummaryCard";
 import MypageLogout from "./component/MypageLogout";
 
 // 인증 유틸리티
-import { isAuthenticated } from "../../utils/auth";
-import { getUserPoints, getCouponCount } from "../../utils/couponData";
+import { isAuthenticated } from "../../services/auth";
+import { getUserPoints, getCouponCount } from "../../services/couponData";
 
 const PageContainer = styled.div`
   background: #f3f6f7;
