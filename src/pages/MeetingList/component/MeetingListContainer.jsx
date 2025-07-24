@@ -10,7 +10,15 @@ const ListContainer = styled.div`
     background: #fff;
 `;
 
-const MeetingListContainer = ({ meetings, onMeetingClick, onJoinMeeting }) => {
+const MeetingListContainer = ({
+                                  meetings,
+                                  onMeetingClick,
+                                  onActionClick,
+                                  onLeaveClick,
+                                  showSwipeAction = false,
+                                  swipedCard = null,
+                                  actionButtonText = "보기"
+                              }) => {
     return (
         <ListContainer>
             {meetings.map((meeting) => (
@@ -18,7 +26,11 @@ const MeetingListContainer = ({ meetings, onMeetingClick, onJoinMeeting }) => {
                     key={meeting.meetingId}
                     meeting={meeting}
                     onCardClick={onMeetingClick}
-                    onJoinClick={onJoinMeeting}
+                    onActionClick={onActionClick}
+                    onLeaveClick={onLeaveClick}
+                    showSwipeAction={showSwipeAction}
+                    swiped={swipedCard === meeting.meetingId}
+                    actionButtonText={actionButtonText}
                 />
             ))}
         </ListContainer>
