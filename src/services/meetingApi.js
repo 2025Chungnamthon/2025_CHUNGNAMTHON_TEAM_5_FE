@@ -1,5 +1,5 @@
 // API 기본 설정
-const API_BASE_URL = import.meta.env.AWS_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 // JWT 토큰 가져오기 함수
 const getAuthToken = () => {
