@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { setTokenToStorage } from "../../../utils/auth";
+import { useAuthStore } from "../../../stores/authStore";
 import { FaUser } from "react-icons/fa";
 
 const HeaderWrap = styled.div`
@@ -104,6 +104,7 @@ const GuestHeaderSection = styled.div`
 
 const MypageHeader = ({ name, profileImg, isGuest = false }) => {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
 
   const handleLoginClick = () => {
     navigate("/login");
@@ -113,7 +114,20 @@ const MypageHeader = ({ name, profileImg, isGuest = false }) => {
     e.stopPropagation(); // 이벤트 버블링 방지
     const mockToken =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE5OTk5OTk5OTl9.mock";
-    setTokenToStorage(mockToken);
+
+    // 새로운 Zustand 스토어 사용
+    login(
+      { accessToken: mockToken, refreshToken: null },
+      {
+        id: "1",
+        name: "김천안",
+        email: "test@example.com",
+        profileImage: "https://randomuser.me/api/portraits/men/1.jpg",
+        point: 1620,
+        couponCount: 3,
+      }
+    );
+
     window.location.reload();
   };
 
