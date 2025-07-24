@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useOAuthLogin } from "../../hooks/useAuth";
-import { FaGift, FaCoins, FaStar } from "react-icons/fa";
 
 const PageContainer = styled.div`
   display: flex;
@@ -48,17 +47,10 @@ const SuccessContainer = styled.div`
   width: 100%;
 `;
 
-const SuccessIllustration = styled.div`
-  position: relative;
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const SuccessImage = styled.img`
+  width: 150px;
+  height: 150px;
   margin-bottom: 30px;
-  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
   animation: bounce 2s ease-in-out infinite;
 
   @keyframes bounce {
@@ -74,104 +66,6 @@ const SuccessIllustration = styled.div`
     }
     60% {
       transform: translateY(-5px);
-    }
-  }
-`;
-
-const Character = styled.div`
-  font-size: 80px;
-  position: relative;
-`;
-
-const PartyHorn = styled(FaStar)`
-  position: absolute;
-  top: -20px;
-  right: -30px;
-  font-size: 40px;
-  color: #4a90e2;
-  transform: rotate(-15deg);
-  animation: blow 1s ease-in-out infinite alternate;
-
-  @keyframes blow {
-    0% {
-      transform: rotate(-15deg) scale(1);
-    }
-    100% {
-      transform: rotate(-15deg) scale(1.1);
-    }
-  }
-`;
-
-const Hat = styled.div`
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 30px;
-  background: #4a90e2;
-  border-radius: 50% 50% 0 0;
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70px;
-    height: 8px;
-    background: #4a90e2;
-    border-radius: 4px;
-  }
-`;
-
-const PointIcon = styled(FaCoins)`
-  position: absolute;
-  font-size: 24px;
-  color: #ffd700;
-  animation: float 3s ease-in-out infinite;
-
-  &:nth-child(1) {
-    top: 20px;
-    right: 30px;
-    animation-delay: 0s;
-  }
-  &:nth-child(2) {
-    bottom: 30px;
-    right: 20px;
-    animation-delay: 1s;
-  }
-  &:nth-child(3) {
-    top: 40px;
-    left: 20px;
-    animation-delay: 2s;
-  }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-`;
-
-const GiftIcon = styled(FaGift)`
-  position: absolute;
-  bottom: 20px;
-  left: 30px;
-  font-size: 24px;
-  color: #4caf50;
-  animation: pulse 2s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
     }
   }
 `;
@@ -421,15 +315,7 @@ const CallbackPage = () => {
         ))}
 
         <SuccessContainer>
-          <SuccessIllustration>
-            <Character>😊</Character>
-            <PartyHorn />
-            <Hat />
-            <PointIcon />
-            <PointIcon />
-            <PointIcon />
-            <GiftIcon />
-          </SuccessIllustration>
+          <SuccessImage src="/UI/success.png" alt="성공" />
 
           <SuccessText>로그인 성공!</SuccessText>
 
