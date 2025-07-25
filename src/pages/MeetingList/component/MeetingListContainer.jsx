@@ -17,7 +17,7 @@ const MeetingListContainer = ({
                                   onLeaveClick,
                                   showSwipeAction = false,
                                   swipedCard = null,
-                                  actionButtonText = "보기"
+                                  actionButtonText = "자세히"
                               }) => {
     return (
         <ListContainer>

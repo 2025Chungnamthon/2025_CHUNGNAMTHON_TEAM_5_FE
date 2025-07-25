@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 // import { meetingApi } from "../../api/meetingApi";
-import {getLocationKorean} from "../../utils/locationUtils";
-import TagBadge from "../../components/TagBadge";
+import MeetingCard from "./component/MeetingCard";
+import MeetingDetailModal from "./component/MeetingDetailModal";
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -80,153 +80,7 @@ const SubTab = styled.button`
 const MeetingList = styled.div`
     background: #fff;
     margin-top: 20px;
-    padding-bottom: 10px;
-`;
-
-// 개별 모임 카드 컨테이너 (스와이프 기능을 위한 래퍼)
-const MeetingCardWrapper = styled.div`
-    position: relative;
-    overflow: hidden;
-    background: #fff;
-`;
-
-// 스와이프로 나타나는 삭제 버튼
-const SwipeAction = styled.div`
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    background: #fd5662;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    transform: translateX(${props => props.show ? '0' : '100%'});
-    transition: transform 0.3s ease;
-    z-index: 1;
-`;
-
-const LeaveButton = styled.button`
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0;
-    outline: none;
-
-    &:focus {
-        outline: none;
-    }
-
-    &:active {
-        background: none;
-        color: #fff;
-    }
-`;
-
-// 개별 모임 카드
-const MeetingCard = styled.div`
-    background: #fff;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    transform: translateX(${props => props.swiped ? '-80px' : '0'});
-    position: relative;
-    z-index: 2;
-
-    &:hover {
-        background: #fafafa;
-    }
-`;
-
-// 왕관 이모지
-const CrownIcon = styled.img`
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-    margin-bottom: 3px;
-    vertical-align: middle;
-`;
-
-// 모임 이미지
-const MeetingImage = styled.img`
-    width: 75px;
-    height: 75px;
-    border-radius: 14px;
-    object-fit: cover;
-    background: #f3f4f6;
-    flex-shrink: 0;
-    position: relative;
-`;
-
-// 모임 정보 영역
-const MeetingInfo = styled.div`
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-`;
-
-// 모임 제목
-const MeetingTitle = styled.div`
-    font-size: 16px;
-    font-weight: 600;
-    color: #181818;
-    line-height: 1.3;
-    margin-bottom: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-// 모임 설명
-const MeetingDescription = styled.div`
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.4;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-// 태그 컨테이너
-const TagContainer = styled.div`
-    display: flex;
-    gap: 0;
-    align-items: center;
-`;
-
-// 자세히 버튼
-const ViewButton = styled.button`
-    background: #F2F4F4;
-    color: #222;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    padding: 8px 18px;
-    cursor: pointer;
-    transition: all 0.18s;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.06);
-
-    &:hover {
-        background: #e5e7eb;
-        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);
-    }
-
-    &:active {
-        background: #d1d5db;
-        transform: scale(0.98);
-    }
+    padding-bottom: 100px; /* 하단 탭바 공간 확보 */
 `;
 
 // 로딩/에러/빈 상태 컨테이너들
@@ -281,7 +135,7 @@ const EmptyContainer = styled.div`
     background: #fff;
 `;
 
-// 임시 더미 데이터 (API 응답 구조에 맞춤)
+// 확장된 더미 데이터 (상세 정보 포함)
 const DUMMY_MEETINGS = [
     {
         meetingId: 1,
@@ -290,7 +144,21 @@ const DUMMY_MEETINGS = [
         location: "SEONGJEONG1",
         schedule: "ALL",
         image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
-        isHost: true
+        isHost: true,
+        hostName: "김방장",
+        detailedDescription: `진짜 30대 환영 !!!
+벌써에 돼지코와 맛집으로 저녁 먹어봐 다니실 분 구
+해요 ㅋㅋ 맛집 잘 아시는 분 환영 ~
+
+주로 성정동에서 활동하고, 이야 동네도 좋습니다!
+오래 활동하실 분 오셨으면 좋겠어요
+방 인원 10명으로 제한해주겠습니다
+엄격 들어와주세요 !!!`,
+        rules: [
+            "반말하지 않기",
+            "노쇼하지 않기",
+            "부정적으로 얘기하지 않기"
+        ]
     },
     {
         meetingId: 2,
@@ -299,7 +167,19 @@ const DUMMY_MEETINGS = [
         location: "SEONGJEONG1",
         schedule: "WEEKDAY",
         image_url: "https://www.ekn.kr/mnt/file/202412/20241223001203509_1.png",
-        isHost: false
+        isHost: false,
+        hostName: "보드마스터",
+        detailedDescription: `보드게임 좋아하시는 분들과 함께 즐거운 시간 보내요!
+신불당 근처 보드게임 카페에서 만나서 
+다양한 게임을 해보며 친목을 도모해요.
+
+초보자도 환영하며, 게임 룰 설명해드립니다.
+매주 평일 저녁에 모임 진행합니다.`,
+        rules: [
+            "게임 룰 준수하기",
+            "서로 배려하며 게임하기",
+            "시간 약속 지키기"
+        ]
     },
     {
         meetingId: 3,
@@ -308,7 +188,19 @@ const DUMMY_MEETINGS = [
         location: "SEONGJEONG1",
         schedule: "WEEKEND",
         image_url: "https://img.kr.gcp-karroter.net/community/community/20240824/14c3cfff-9a94-45d5-a578-d0ddf80ee338.jpeg?q=95&s=1200x630&t=cover",
-        isHost: false
+        isHost: false,
+        hostName: "카페러버",
+        detailedDescription: `분위기 좋은 카페를 찾아다니는 모임입니다.
+인스타그램에서 화제가 된 카페들을 중심으로
+주말마다 새로운 곳을 탐방해요.
+
+사진 찍기 좋아하시는 분들 환영!
+같이 예쁜 사진도 찍고 맛있는 디저트도 먹어요.`,
+        rules: [
+            "사진 촬영 시 다른 손님 배려하기",
+            "카페 매너 지키기",
+            "개인 취향 존중하기"
+        ]
     }
 ];
 
@@ -321,49 +213,52 @@ const DUMMY_MY_MEETINGS = [
         schedule: "WEEKEND",
         image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
         isHost: true,
-        status: "JOINED" // JOINED, PENDING
+        hostName: "김방장",
+        status: "JOINED",
+        detailedDescription: `내가 만든 맛집 투어 모임입니다.
+함께 맛있는 음식을 먹으며 즐거운 시간을 보내요!`,
+        rules: [
+            "반말하지 않기",
+            "노쇼하지 않기",
+            "부정적으로 얘기하지 않기"
+        ]
     },
     {
         meetingId: 5,
-        title: "30대 초반 맛집 투어 모임",
-        description: "보드게임 좋아하시는 분 주말에 모여서 저랑 놀고 어쩌고 저쩌고",
+        title: "독서 모임",
+        description: "책 읽고 토론하는 모임입니다",
         location: "SEONGJEONG1",
         schedule: "ALL",
         image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
         isHost: false,
-        status: "JOINED"
+        hostName: "책벌레",
+        status: "JOINED",
+        detailedDescription: `매주 책을 읽고 함께 토론하는 모임입니다.
+다양한 장르의 책을 읽으며 견문을 넓혀요.`,
+        rules: [
+            "책 읽고 참여하기",
+            "다른 의견 존중하기"
+        ]
     },
     {
         meetingId: 6,
-        title: "30대 초반 맛집 투어 모임",
-        description: "보드게임 좋아하시는 분 주말에 모여서 저랑 놀고 어쩌고 저쇼고",
+        title: "등산 모임",
+        description: "주말 등산 함께 해요",
         location: "SEONGJEONG1",
         schedule: "WEEKDAY",
         image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
         isHost: false,
-        status: "PENDING"
+        hostName: "산악인",
+        status: "PENDING",
+        detailedDescription: `주말마다 근교 산을 오르는 등산 모임입니다.
+초보자도 환영하며, 안전한 등산을 위해 준비물을 꼼꼼히 챙겨주세요.`,
+        rules: [
+            "안전 수칙 준수하기",
+            "쓰레기 되가져가기",
+            "체력에 맞는 코스 선택하기"
+        ]
     }
 ];
-
-// 스케줄을 한글로 변환하는 함수
-const getScheduleKorean = (schedule) => {
-    const scheduleMap = {
-        'WEEKDAY': '평일',
-        'WEEKEND': '주말',
-        'ALL': '전체'
-    };
-    return scheduleMap[schedule] || schedule;
-};
-
-// 스케줄에 따른 TagBadge 타입 결정
-const getScheduleTagType = (schedule) => {
-    const typeMap = {
-        'WEEKDAY': 'weekday',
-        'WEEKEND': 'weekend',
-        'ALL': 'all'
-    };
-    return typeMap[schedule] || 'all';
-};
 
 const MeetingListPage = () => {
     const [mainTab, setMainTab] = useState('meetings'); // 'meetings' or 'myMeetings'
@@ -373,6 +268,10 @@ const MeetingListPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [swipedCard, setSwipedCard] = useState(null);
+
+    // 모달 상태
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // 모임 데이터 불러오기
     const fetchMeetings = async () => {
@@ -420,20 +319,48 @@ const MeetingListPage = () => {
 
     // 모임 카드 클릭 핸들러
     const handleMeetingClick = (meetingId) => {
-        console.log(`모임 ${meetingId} 상세 페이지로 이동`);
-        // TODO: 라우터로 상세 페이지 이동
-        // navigate(`/meetings/${meetingId}`);
-        alert(`모임 ${meetingId} 상세 페이지로 이동합니다!`);
+        if (mainTab === 'myMeetings') {
+            // 내 모임에서는 스와이프 기능
+            handleSwipe(meetingId);
+        } else {
+            // 모임 리스트에서는 카드 클릭 시 아무 동작 안 함
+            // 자세히 버튼으로만 모달 열기
+            console.log(`모임 ${meetingId} 카드 클릭 (모달 열지 않음)`);
+        }
     };
 
     // 자세히 버튼 클릭 핸들러
     const handleViewMeeting = (meetingId) => {
         console.log(`모임 ${meetingId} 자세히`);
+
         if (mainTab === 'meetings') {
-            alert(`모임 ${meetingId} 가입 모달이 나중에 여기 나타날 예정입니다!`);
+            // 모임 리스트에서는 상세 모달 열기
+            const meeting = meetings.find(m => m.meetingId === meetingId);
+            if (meeting) {
+                setSelectedMeeting(meeting);
+                setIsModalOpen(true);
+            }
         } else {
-            alert(`모임 ${meetingId} 상세 페이지로 이동합니다!`);
+            // 내 모임에서도 상세 모달 열기
+            const meeting = myMeetings.find(m => m.meetingId === meetingId);
+            if (meeting) {
+                setSelectedMeeting(meeting);
+                setIsModalOpen(true);
+            }
         }
+    };
+
+    // 모달 액션 버튼 클릭 핸들러
+    const handleModalAction = (meetingId) => {
+        console.log(`모임 ${meetingId} 가입 신청`);
+        alert(`모임 ${meetingId}에 가입 신청하시겠습니까?`);
+        setIsModalOpen(false);
+    };
+
+    // 모달 닫기 핸들러
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedMeeting(null);
     };
 
     // 스와이프 핸들러
@@ -448,16 +375,12 @@ const MeetingListPage = () => {
         setSwipedCard(null);
     };
 
-    // 이미지 에러 핸들러
-    const handleImageError = (e) => {
-        e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
-    };
-
     // 재시도 핸들러
     const handleRetry = () => {
         fetchMeetings();
     };
 
+    // 로딩 상태
     if (loading) {
         return (
             <PageContainer>
@@ -474,6 +397,7 @@ const MeetingListPage = () => {
         );
     }
 
+    // 에러 상태
     if (error) {
         return (
             <PageContainer>
@@ -495,6 +419,7 @@ const MeetingListPage = () => {
 
     const currentMeetings = getCurrentMeetings();
 
+    // 빈 상태
     if (currentMeetings.length === 0) {
         return (
             <PageContainer>
@@ -539,6 +464,7 @@ const MeetingListPage = () => {
         );
     }
 
+    // 메인 렌더링
     return (
         <PageContainer>
             <PageHeader>
@@ -577,65 +503,35 @@ const MeetingListPage = () => {
 
             <MeetingList>
                 {currentMeetings.map((meeting) => (
-                    <MeetingCardWrapper key={meeting.meetingId}>
-                        {/* 스와이프 액션 (내 모임일 때만 표시) */}
-                        {mainTab === 'myMeetings' && (
-                            <SwipeAction show={swipedCard === meeting.meetingId}>
-                                <LeaveButton onClick={() => handleLeaveMeeting(meeting.meetingId)}>
-                                    나가기
-                                </LeaveButton>
-                            </SwipeAction>
-                        )}
-
-                        <MeetingCard
-                            swiped={swipedCard === meeting.meetingId}
-                            onClick={() => {
-                                if (mainTab === 'myMeetings') {
-                                    handleSwipe(meeting.meetingId);
-                                } else {
-                                    handleMeetingClick(meeting.meetingId);
-                                }
-                            }}
-                        >
-                            <div style={{position: 'relative'}}>
-                                <MeetingImage
-                                    src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
-                                    alt={meeting.title}
-                                    onError={handleImageError}
-                                />
-                            </div>
-
-                            <MeetingInfo>
-                                <MeetingTitle>
-                                    {meeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장"/>}
-                                    {meeting.title}
-                                </MeetingTitle>
-                                <MeetingDescription>{meeting.description}</MeetingDescription>
-                                <TagContainer>
-                                    <TagBadge
-                                        type="location"
-                                        text={getLocationKorean(meeting.location)}
-                                    />
-                                    <TagBadge
-                                        type={getScheduleTagType(meeting.schedule)}
-                                        text={getScheduleKorean(meeting.schedule)}
-                                        className="last"
-                                    />
-                                </TagContainer>
-                            </MeetingInfo>
-
-                            <ViewButton
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewMeeting(meeting.meetingId);
-                                }}
-                            >
-                                {mainTab === 'myMeetings' && subTab === 'pending' ? '대기중' : '자세히'}
-                            </ViewButton>
-                        </MeetingCard>
-                    </MeetingCardWrapper>
+                    <MeetingCard
+                        key={meeting.meetingId}
+                        meeting={meeting}
+                        onCardClick={handleMeetingClick}
+                        onActionClick={handleViewMeeting}
+                        onLeaveClick={handleLeaveMeeting}
+                        showSwipeAction={mainTab === 'myMeetings'}
+                        swiped={swipedCard === meeting.meetingId}
+                        actionButtonText={
+                            mainTab === 'myMeetings' && subTab === 'pending'
+                                ? '대기중'
+                                : '자세히'
+                        }
+                    />
                 ))}
             </MeetingList>
+
+            {/* 모임 상세 모달 */}
+            <MeetingDetailModal
+                meeting={selectedMeeting}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onAction={handleModalAction}
+                meetingStatus={
+                    mainTab === 'myMeetings'
+                        ? (subTab === 'joined' ? 'joined' : 'pending')
+                        : 'available'
+                }
+            />
         </PageContainer>
     );
 };

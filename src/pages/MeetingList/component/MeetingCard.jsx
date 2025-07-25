@@ -34,13 +34,23 @@ const LeaveButton = styled.button`
     font-weight: 600;
     cursor: pointer;
     padding: 0;
+    outline: none;
+
+    &:focus {
+        outline: none;
+    }
+
+    &:active {
+        background: none;
+        color: #fff;
+    }
 `;
 
 const CardContainer = styled.div`
     background: #fff;
     border-radius: 0;
     box-shadow: none;
-    padding: 16px 0;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -52,7 +62,7 @@ const CardContainer = styled.div`
     z-index: 2;
 
     &:hover {
-        background: #fafbfc;
+        background: #fafafa;
     }
 
     &:last-child {
@@ -61,16 +71,17 @@ const CardContainer = styled.div`
 `;
 
 const CrownIcon = styled.img`
-    width: 16px;
-    height: 16px;
-    margin-right: 6px;
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    margin-bottom: 3px;
     vertical-align: middle;
 `;
 
 const MeetingImage = styled.img`
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
+    width: 75px;
+    height: 75px;
+    border-radius: 14px;
     object-fit: cover;
     background: #f3f4f6;
     flex-shrink: 0;
@@ -81,15 +92,16 @@ const MeetingInfo = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
 `;
 
 const MeetingTitle = styled.div`
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
     color: #181818;
     line-height: 1.3;
+    margin-bottom: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -99,6 +111,7 @@ const MeetingDescription = styled.div`
     font-size: 13px;
     color: #6b7280;
     line-height: 1.4;
+    margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -111,21 +124,21 @@ const TagContainer = styled.div`
 `;
 
 const ActionButton = styled.button`
-    background: #f3f4f6;
+    background: #F2F4F4;
     color: #222;
     border: none;
-    border-radius: 20px;
-    font-size: 13px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 600;
-    padding: 8px 16px;
+    padding: 8px 18px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.18s;
     flex-shrink: 0;
-    box-shadow: none;
+    box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.06);
 
     &:hover {
         background: #e5e7eb;
-        transform: scale(1.05);
+        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);
     }
 
     &:active {
@@ -161,7 +174,7 @@ const MeetingCard = ({
                          onLeaveClick,
                          showSwipeAction = false,
                          swiped = false,
-                         actionButtonText = "보기"
+                         actionButtonText = "자세히"
                      }) => {
 
     const handleActionClick = (e) => {
@@ -178,6 +191,11 @@ const MeetingCard = ({
         onCardClick?.(meeting.meetingId);
     };
 
+    // 이미지 에러 핸들러
+    const handleImageError = (e) => {
+        e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+    };
+
     return (
         <MeetingCardWrapper>
             {/* 스와이프 액션 (필요할 때만 표시) */}
@@ -190,6 +208,14 @@ const MeetingCard = ({
             )}
 
             <CardContainer onClick={handleCardClick} swiped={swiped}>
+                <div style={{position: 'relative'}}>
+                    <MeetingImage
+                        src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
+                        alt={meeting.title}
+                        onError={handleImageError}
+                    />
+                </div>
+
                 <MeetingInfo>
                     <MeetingTitle>
                         {meeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장" />}
