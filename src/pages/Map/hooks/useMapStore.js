@@ -16,6 +16,7 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStores();
+      console.log("가맹점 데이터 로드 성공:", response.data?.content);
       setStores(response.data?.content || []);
     } catch (err) {
       console.error("가맹점 데이터 로드 실패:", err);
