@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { PiTicketFill } from "react-icons/pi";
+import { mypageApi } from "../../../services/mypageApi";
 
 const Card = styled.div`
   background: #ffffff;
@@ -80,14 +81,45 @@ const ClickableRow = styled.div`
   }
 `;
 
-const MypageSummaryCard = ({ point, couponCount, isGuest = false }) => {
+const MypageSummaryCard = ({ isGuest = false }) => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      console.log("[MypageSummaryCard] 요청 시작 - 마이페이지 프로필 불러오기");
+      try {
+        const res = await mypageApi.getMypage();
+        console.log("[MypageSummaryCard] 전체 응답:", res);
+
+        const userData = res;
+        console.log("[MypageSummaryCard] 파싱된 유저 데이터:", userData);
+        if (userData) {
+          setProfile(userData);
+        } else {
+          console.warn(
+            "[MypageSummaryCard] 사용자 데이터가 존재하지 않습니다."
+          );
+        }
+      } catch (err) {
+        console.error(
+          "[MypageSummaryCard] 마이페이지 데이터 불러오기 실패:",
+          err
+        );
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handlePointClick = () => {
     if (!isGuest) {
       navigate("/point-history");
     }
   };
+
+  // 로딩 중이거나 데이터가 없을 때 기본값 표시
+  const currentPoint = profile?.currentPoint || 0;
+  const couponCount = profile?.couponCount || 0;
 
   return (
     <Card>
@@ -97,7 +129,7 @@ const MypageSummaryCard = ({ point, couponCount, isGuest = false }) => {
           <Label>포인트</Label>
         </RowLeft>
         <Value isGuest={isGuest}>
-          {isGuest ? "0p" : `${point.toLocaleString()}p`}
+          {isGuest ? "0p" : `${currentPoint.toLocaleString()}p`}
         </Value>
       </ClickableRow>
       <Row>

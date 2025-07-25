@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/authStore";
 import { FaUser } from "react-icons/fa";
+import { mypageApi } from "../../../services/mypageApi";
 
 const HeaderWrap = styled.div`
   padding: 32px 24px 0 24px;
@@ -102,9 +103,31 @@ const GuestHeaderSection = styled.div`
   }
 `;
 
-const MypageHeader = ({ name, profileImg, isGuest = false }) => {
+const MypageHeader = ({ isGuest = false }) => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      console.log("[MypageHeader] 요청 시작 - 마이페이지 프로필 불러오기");
+      try {
+        const res = await mypageApi.getMypage();
+        console.log("[MypageHeader] 전체 응답:", res);
+
+        const userData = res;
+        console.log("[MypageHeader] 파싱된 유저 데이터:", userData);
+        if (userData) {
+          setProfile(userData);
+        } else {
+          console.warn("[MypageHeader] 사용자 데이터가 존재하지 않습니다.");
+        }
+      } catch (err) {
+        console.error("[MypageHeader] 마이페이지 데이터 불러오기 실패:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLoginClick = () => {
     navigate("/login");
@@ -155,12 +178,42 @@ const MypageHeader = ({ name, profileImg, isGuest = false }) => {
     );
   }
 
+  if (!profile || typeof profile !== "object") {
+    return (
+      <HeaderWrap>
+        <Title>마이페이지</Title>
+        <ProfileRow>
+          <ProfileIcon>
+            <FaUser />
+          </ProfileIcon>
+          <LoginContent>
+            <LoginText>정보를 불러올 수 없습니다.</LoginText>
+            <LoginDescription>
+              다시 시도하거나 새로고침 해주세요.
+            </LoginDescription>
+          </LoginContent>
+        </ProfileRow>
+      </HeaderWrap>
+    );
+  }
+
   return (
     <HeaderWrap>
       <Title>마이페이지</Title>
       <ProfileRow>
-        <ProfileImg src={profileImg} alt={name} />
-        <Name>{name}</Name>
+        {profile?.profileImageUrl ? (
+          <ProfileImg
+            src={profile.profileImageUrl}
+            alt={profile.userName || "프로필 이미지"}
+          />
+        ) : (
+          <ProfileIcon>
+            <FaUser />
+          </ProfileIcon>
+        )}
+        <LoginContent>
+          <LoginText>{profile?.userName || "이름 없음"}</LoginText>
+        </LoginContent>
       </ProfileRow>
     </HeaderWrap>
   );

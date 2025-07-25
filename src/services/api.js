@@ -53,16 +53,20 @@ apiClient.interceptors.response.use(
             }
           );
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+            response.data;
 
-          if (accessToken) {
+          if (newAccessToken) {
             // Zustand 스토어 업데이트
             const { refreshTokens } = await import("../stores/authStore");
-            refreshTokens({ accessToken, refreshToken: newRefreshToken });
+            refreshTokens({
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+            });
           }
 
           // 원래 요청 재시도
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         }
       } catch (refreshError) {

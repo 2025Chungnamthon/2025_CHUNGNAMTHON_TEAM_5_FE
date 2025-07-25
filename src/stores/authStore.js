@@ -70,6 +70,7 @@ export const useAuthStore = create(
           user: user || null,
           error: null,
         });
+        console.log("Logged in. Access Token:", tokens.accessToken);
       },
 
       // 로그아웃 액션
@@ -124,6 +125,32 @@ export const useAuthStore = create(
 );
 
 // 편의 함수들
-export const getAuthToken = () => useAuthStore.getState().accessToken;
+export const getAuthToken = () => {
+  const token = useAuthStore.getState().accessToken;
+  console.log("Access Token retrieved:", token);
+  return token;
+};
 export const isAuthenticated = () => useAuthStore.getState().isAuthenticated;
 export const getCurrentUser = () => useAuthStore.getState().user;
+
+// Zustand 상태를 localStorage에서 복원하는 함수
+export const restoreAuthFromStorage = () => {
+  try {
+    const stored = localStorage.getItem("auth-storage");
+    if (!stored) return;
+
+    const parsed = JSON.parse(stored).state;
+    if (parsed?.accessToken) {
+      useAuthStore.getState().login(
+        {
+          accessToken: parsed.accessToken,
+          refreshToken: parsed.refreshToken,
+        },
+        parsed.user
+      );
+      console.log("🔄 Zustand 상태 복원 완료");
+    }
+  } catch (err) {
+    console.error("❌ Zustand 상태 복원 실패:", err);
+  }
+};
