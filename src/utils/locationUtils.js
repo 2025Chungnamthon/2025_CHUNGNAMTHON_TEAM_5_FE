@@ -1,3 +1,4 @@
+
 export const LOCATION_MAP = {
     // 동남구
     MOKCHEON: '목천동',
