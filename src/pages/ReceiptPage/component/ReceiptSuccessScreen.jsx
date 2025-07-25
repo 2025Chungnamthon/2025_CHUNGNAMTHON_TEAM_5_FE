@@ -26,14 +26,16 @@ const IconContainer = styled.div`
     justify-content: center;
 `;
 
-const MainIcon = styled.div`
-    font-size: 80px;
+const MainIconImage = styled.img`
+    width: 80px;
+    height: 80px;
     z-index: 2;
 `;
 
-const FloatingIcon = styled.div`
+const FloatingImage = styled.img`
     position: absolute;
-    font-size: ${props => props.size || '24px'};
+    width: ${props => props.size || '24px'};
+    height: ${props => props.size || '24px'};
     top: ${props => props.top || '50%'};
     left: ${props => props.left || '50%'};
     transform: translate(-50%, -50%);
@@ -64,7 +66,7 @@ const ReceiptSuccessScreen = ({ onClose }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // 3초 후 홈화면으로 이동
+        // 5초 후 홈화면으로 이동
         const timer = setTimeout(() => {
             onClose(); // 모달 닫기
             navigate('/'); // 홈화면으로 이동
@@ -78,41 +80,14 @@ const ReceiptSuccessScreen = ({ onClose }) => {
         <SuccessScreen>
             <IconContainer>
                 {/* 중앙 메인 아이콘 */}
-                <MainIcon>🥳</MainIcon>
+                <MainIconImage src="/UI/party-face.svg" alt="축하" />
 
-                {/* 떠다니는 이모지들 */}
-                <FloatingIcon top="40%" left="10%" size="30px" delay="0s">💸</FloatingIcon>
+                {/* 돈 아이콘 */}
+                <FloatingImage src="/UI/money.svg" top="40%" left="10%" size="30px" delay="0s" />
 
-                {/* P 아이콘들 */}
-                <FloatingIcon top="10%" left="60%" delay="0.8s">
-                    <div style={{
-                        width: '32px',
-                        height: '32px',
-                        background: '#ffd700',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        color: 'white'
-                    }}>P</div>
-                </FloatingIcon>
-
-                <FloatingIcon top="85%" left="85%" delay="1.2s">
-                    <div style={{
-                        width: '28px',
-                        height: '28px',
-                        background: '#ffd700',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        color: 'white'
-                    }}>P</div>
-                </FloatingIcon>
+                {/* 코인 아이콘 */}
+                <FloatingImage src="/UI/coin.svg" top="10%" left="60%" size="32px" delay="0.8s" />
+                <FloatingImage src="/UI/coin.svg" top="85%" left="85%" size="28px" delay="1.2s" />
             </IconContainer>
 
             <SuccessTitle>인증 성공!</SuccessTitle>

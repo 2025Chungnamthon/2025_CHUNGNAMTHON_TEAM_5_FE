@@ -1,9 +1,9 @@
-// CreateMeetingPage.jsx
 import React, { useState } from "react";
 import styled from "styled-components";
-import { FiArrowLeft, FiCamera } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { TextAreaInput } from "./component/FormInput";
 import LocationSearchModal from "./component/LocationSearchModal";
+import ImageUpload from "./component/ImageUpload";
 import { useCreateMeetingForm } from "./hooks/useCreateMeetingForm";
 
 const MOBILE_MAX_WIDTH = 430;
@@ -131,40 +131,6 @@ const Tag = styled.button`
     }
 `;
 
-const ImageUploadButton = styled.button`
-    background: #f8f9fa;
-    border: 2px dashed #d1d5db;
-    border-radius: 12px;
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-        background: #f3f4f6;
-        border-color: #9ca3af;
-        transform: translateY(-2px);
-    }
-
-    &:active {
-        transform: translateY(0);
-    }
-
-    svg {
-        font-size: 24px;
-        color: #6b7280;
-    }
-`;
-
-const ImageUploadText = styled.span`
-    font-size: 14px;
-    color: #6b7280;
-    font-weight: 500;
-`;
-
 const ErrorText = styled.span`
     color: #ef4444;
     font-size: 12px;
@@ -225,9 +191,11 @@ const CreateMeetingPage = () => {
         formData,
         selectedLocation,
         selectedSchedule,
-        locationOptions, // 동적 지역 옵션 사용
+        locationOptions,
         isLoading,
         errors,
+        selectedImage,
+        imagePreview,
         updateFormData,
         handleLocationSelect,
         handleScheduleSelect,
@@ -333,13 +301,13 @@ const CreateMeetingPage = () => {
                     {errors.schedule && <ErrorText>{errors.schedule}</ErrorText>}
                 </FormSection>
 
-                {/* 대표 사진 */}
+                {/* 대표 사진 - ImageUpload 컴포넌트 사용 */}
                 <FormSection>
                     <SectionTitle>대표 사진 (선택)</SectionTitle>
-                    <ImageUploadButton onClick={handleImageUpload}>
-                        <FiCamera />
-                        <ImageUploadText>사진 추가하기</ImageUploadText>
-                    </ImageUploadButton>
+                    <ImageUpload
+                        onImageChange={handleImageUpload}
+                        error={errors.image}
+                    />
                 </FormSection>
 
                 {/* 제출 버튼 */}

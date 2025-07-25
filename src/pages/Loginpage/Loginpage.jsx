@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { startSocialLogin } from "../../services/auth";
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -30,6 +31,7 @@ const KakaoButton = styled.img`
   width: 310px;
   height: 52px;
   display: block;
+  cursor: pointer;
 `;
 
 const Loginpage = () => {
@@ -42,7 +44,7 @@ const Loginpage = () => {
       <KakaoButton
         src="/UI/kakao.png"
         onClick={() => {
-          /* 소셜 로그인 함수 연결 예정 */
+          startSocialLogin("kakao");
         }}
         alt="카카오톡 아이콘"
       />

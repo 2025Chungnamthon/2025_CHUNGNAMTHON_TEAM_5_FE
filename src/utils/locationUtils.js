@@ -1,4 +1,3 @@
-// 지역 enum을 한글로 변환하는 유틸리티
 
 export const LOCATION_MAP = {
     // 동남구
