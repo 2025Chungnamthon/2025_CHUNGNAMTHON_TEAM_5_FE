@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { meetingApi } from '../../../services/meetingApi';
+import { isAuthenticated } from '../../../services/auth';
 
 const INITIAL_FORM_STATE = {
     title: "",
@@ -11,28 +12,22 @@ const INITIAL_FORM_STATE = {
     image_url: ""
 };
 
-// 초기 지역 옵션 (검색 + 기본 3개)
-const INITIAL_LOCATION_OPTIONS = ["검색", "두정동", "부성1동", "부성2동"];
+// 초기 지역 옵션
+const INITIAL_LOCATION_OPTIONS = ["검색", "성정1동", "부성1동", "부성2동"];
 
 const validateForm = (formData) => {
     const errors = {};
 
     if (!formData.title.trim()) {
         errors.title = "모임명을 입력해주세요.";
-    } else if (formData.title.length > 20) {
-        errors.title = "모임명은 20자 이내로 입력해주세요.";
+    } else if (formData.title.length > 24) {
+        errors.title = "모임명은 24자 이내로 입력해주세요.";
     }
 
     if (!formData.description.trim()) {
         errors.description = "모임 소개를 입력해주세요.";
     } else if (formData.description.length > 500) {
         errors.description = "모임 소개는 500자 이내로 입력해주세요.";
-    }
-
-    if (!formData.openchat_url.trim()) {
-        errors.openchat_url = "카카오톡 오픈채팅방 링크를 입력해주세요.";
-    } else if (formData.openchat_url.length > 200) {
-        errors.openchat_url = "채팅방 링크는 200자 이내로 입력해주세요.";
     }
 
     if (!formData.location.trim()) {
@@ -101,21 +96,28 @@ export const useCreateMeetingForm = () => {
         updateFormData('schedule', schedule);
     };
 
-    // 이미지 업로드 핸들러 수정
+    // 이미지 업로드 핸들러
     const handleImageUpload = (file, preview) => {
         setSelectedImage(file);
         setImagePreview(preview);
 
-        // 실제 프로젝트에서는 여기서 서버에 이미지를 업로드하고 URL을 받아와야 합니다
-        // 현재는 임시로 preview URL을 사용
+        // 실제 프로젝트에서는 여기서 서버에 이미지를 업로드하고 URL을 받아와야 합니다!
+        // 현재는 샘플 이미지 URL 사용
         if (file) {
-            updateFormData('image_url', preview);
+            updateFormData('image_url', "https://example.com/meeting.jpg");
         } else {
             updateFormData('image_url', "");
         }
     };
 
     const handleSubmit = async () => {
+        // 인증 상태 먼저 확인
+        if (!isAuthenticated()) {
+            alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+            navigate('/login');
+            return;
+        }
+
         const validation = validateForm(formData);
 
         if (!validation.isValid) {
@@ -132,21 +134,41 @@ export const useCreateMeetingForm = () => {
             const submitData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
-                location: formData.location.trim(),  // 한글 그대로 전송
-                openchat_url: formData.openchat_url?.trim() || "",
+                location: formData.location.trim(),
                 schedule: formData.schedule.trim(),
-                image_url: formData.image_url || "https://imageurl"
+                openchat_url: formData.openchat_url.trim(),
+                image_url: formData.image_url || "https://example.com/meeting.jpg"
             };
 
             console.log('전송할 데이터:', submitData);
 
             const response = await meetingApi.createMeeting(submitData);
-            alert(`모임이 성공적으로 생성되었습니다! (ID: ${response.data.meetingId})`);
-            navigate('/meetings');
+
+            // 생성된 모임의 ID 추출
+            const meetingId = response.data?.meetingId;
+
+            if (meetingId) {
+                // 성공 메시지와 함께 생성된 모임 상세페이지로 이동
+                alert(`모임이 성공적으로 생성되었습니다!`);
+                navigate(`/meetings/${meetingId}`);
+            } else {
+                // meetingId가 없으면 목록 페이지로
+                alert(`모임이 생성되었습니다!`);
+                navigate('/meetings');
+            }
 
         } catch (error) {
             console.error('모임 생성 오류:', error);
-            alert(error.message || '모임 생성 중 오류가 발생했습니다.');
+
+            // 사용자에게 적절한 에러 메시지 표시
+            if (error.message.includes('로그인')) {
+                alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                navigate('/login');
+            } else if (error.message.includes('네트워크')) {
+                alert('인터넷 연결을 확인해주세요.');
+            } else {
+                alert(error.message || '모임 생성 중 오류가 발생했습니다.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -164,7 +186,8 @@ export const useCreateMeetingForm = () => {
         formData.description.trim() &&
         formData.openchat_url.trim() &&
         formData.location.trim() &&
-        formData.schedule.trim();
+        formData.schedule.trim() &&
+        !isLoading;
 
     return {
         formData,

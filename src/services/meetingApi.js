@@ -1,73 +1,125 @@
-import apiService from "./api.js";
+import { getAuthToken } from './auth';
+import { getLocationCode } from '../utils/locationUtils';
 
-// 모임 관련 API 함수들
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://43.200.175.218:8080';
+
+// 스케줄 변환 (UI 값 -> API 값)
+const SCHEDULE_TO_API_MAP = {
+    'ALL': 'FULL',      // 전체 -> FULL
+    'WEEKDAY': 'WEEKDAY', // 평일 -> WEEKDAY
+    'WEEKEND': 'WEEKEND'  // 주말 -> WEEKEND
+};
+
+// API 요청 헤더 생성
+const getAuthHeaders = () => {
+    const token = getAuthToken();
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+
+// 스케줄을 API 형식으로 변환
+const convertScheduleToAPI = (schedule) => {
+    const converted = SCHEDULE_TO_API_MAP[schedule];
+    if (!converted) {
+        console.warn(`스케줄 '${schedule}'에 대한 API 값을 찾을 수 없습니다.`);
+        return 'FULL'; // 기본값
+    }
+    return converted;
+};
+
+// API 요청 데이터 변환
+const transformMeetingData = (meetingData) => {
+    // 지역명을 코드로 변환 (utils 함수 사용)
+    const locationCode = getLocationCode(meetingData.location);
+
+    // 스케줄을 API 형식으로 변환
+    const apiSchedule = convertScheduleToAPI(meetingData.schedule);
+
+    return {
+        title: meetingData.title,
+        description: meetingData.description,
+        location: locationCode,
+        schedule: apiSchedule,
+        openChatUrl: meetingData.openchat_url || "https://open.kakao.com/o/default", // 필수 필드
+        imageUrl: meetingData.image_url || "https://example.com/default.jpg"
+    };
+};
+
 export const meetingApi = {
     // 모임 생성
     createMeeting: async (meetingData) => {
-        return await apiRequest('/api/meetings', {
-            method: 'POST',
-            body: JSON.stringify({
-                title: meetingData.title,
-                description: meetingData.description,
-                location: meetingData.location,
-                openchat_url: meetingData.openchat_url,
-                schedule: meetingData.schedule,
-                image_url: meetingData.image_url
-            })
-        });
+        try {
+            const requestData = transformMeetingData(meetingData);
+
+            console.log('원본 데이터:', meetingData);
+            console.log('API 요청 데이터:', requestData);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+
+                // HTTP 상태코드별 에러 처리
+                switch (response.status) {
+                    case 401:
+                        throw new Error('로그인이 필요합니다. 다시 로그인해주세요.');
+                    case 403:
+                        throw new Error('권한이 없습니다.');
+                    case 400:
+                        throw new Error(errorData.message || '입력 정보를 확인해주세요.');
+                    case 500:
+                        throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            return result;
+
+        } catch (error) {
+            console.error('모임 생성 API 오류:', error);
+
+            // 네트워크 오류 처리
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+            }
+
+            throw error;
+        }
     },
 
-    // 모임 가입 신청
-    joinMeeting: async (meetingId) => {
-        return await apiRequest(`/api/meetings/${meetingId}/join`, {
-            method: 'POST'
-        });
-    },
+    // 모임 목록 조회
+    getMeetings: async (params = {}) => {
+        try {
+            const queryParams = new URLSearchParams(params);
+            const response = await fetch(`${API_BASE_URL}/api/meetings?${queryParams}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
 
-    // 모임 리스트 조회 (로그인 시 헤더로 토큰 필수)
-    getMeetings: async () => {
-        return await apiRequest('/api/meetings', {
-            method: 'GET'
-        });
-    },
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
 
-    // 모임 정보 상세 조회
-    getMeetingDetail: async (meetingId) => {
-        return await apiRequest(`/api/meetings/${meetingId}`, {
-            method: 'GET'
-        });
-    },
-
-    // 모임 멤버 관리 리스트 조회
-    getMeetingMembers: async (meetingId) => {
-        return await apiRequest(`/api/meetings/${meetingId}/users`, {
-            method: 'GET'
-        });
+            return await response.json();
+        } catch (error) {
+            console.error('모임 목록 조회 API 오류:', error);
+            throw error;
+        }
     }
 };
 
-// 에러 처리를 위한 헬퍼 함수들
-export const handleApiError = (error) => {
-    if (error.message.includes('401')) {
-        // 인증 에러 처리
-        console.error('인증이 필요합니다. 로그인해주세요.');
-        // 로그인 페이지로 리다이렉트 등의 처리
-        return '로그인이 필요합니다.';
-    } else if (error.message.includes('403')) {
-        // 권한 에러 처리
-        console.error('권한이 없습니다.');
-        return '권한이 없습니다.';
-    } else if (error.message.includes('404')) {
-        // 리소스 없음 에러 처리
-        console.error('요청한 리소스를 찾을 수 없습니다.');
-        return '요청한 정보를 찾을 수 없습니다.';
-    } else if (error.message.includes('500')) {
-        // 서버 에러 처리
-        console.error('서버 에러가 발생했습니다.');
-        return '서버 에러가 발생했습니다. 잠시 후 다시 시도해주세요.';
-    } else {
-        // 기타 에러 처리
-        console.error('알 수 없는 에러:', error);
-        return '알 수 없는 에러가 발생했습니다.';
-    }
+// 디버깅용 함수들 export
+export const debugUtils = {
+    convertScheduleToAPI,
+    transformMeetingData,
+    SCHEDULE_TO_API_MAP
 };
