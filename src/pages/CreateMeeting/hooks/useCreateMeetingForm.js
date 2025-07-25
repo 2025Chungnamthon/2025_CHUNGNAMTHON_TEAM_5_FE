@@ -1,4 +1,3 @@
-// useCreateMeetingForm.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { meetingApi } from '../../../services/meetingApi';
@@ -59,6 +58,10 @@ export const useCreateMeetingForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
+    // 이미지 관련 상태 추가
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
     const updateFormData = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         if (errors[field]) {
@@ -98,8 +101,18 @@ export const useCreateMeetingForm = () => {
         updateFormData('schedule', schedule);
     };
 
-    const handleImageUpload = () => {
-        alert("사진 추가 기능 준비 중입니다!");
+    // 이미지 업로드 핸들러 수정
+    const handleImageUpload = (file, preview) => {
+        setSelectedImage(file);
+        setImagePreview(preview);
+
+        // 실제 프로젝트에서는 여기서 서버에 이미지를 업로드하고 URL을 받아와야 합니다
+        // 현재는 임시로 preview URL을 사용
+        if (file) {
+            updateFormData('image_url', preview);
+        } else {
+            updateFormData('image_url', "");
+        }
     };
 
     const handleSubmit = async () => {
@@ -125,6 +138,8 @@ export const useCreateMeetingForm = () => {
                 image_url: formData.image_url || "https://imageurl"
             };
 
+            console.log('전송할 데이터:', submitData);
+
             const response = await meetingApi.createMeeting(submitData);
             alert(`모임이 성공적으로 생성되었습니다! (ID: ${response.data.meetingId})`);
             navigate('/meetings');
@@ -138,7 +153,7 @@ export const useCreateMeetingForm = () => {
     };
 
     const handleBack = () => {
-        if (formData.title || formData.description || formData.location) {
+        if (formData.title || formData.description || formData.location || selectedImage) {
             const confirmLeave = window.confirm("작성 중인 내용이 있습니다. 정말 나가시겠습니까?");
             if (!confirmLeave) return;
         }
@@ -158,6 +173,8 @@ export const useCreateMeetingForm = () => {
         locationOptions,
         isLoading,
         errors,
+        selectedImage,
+        imagePreview,
         updateFormData,
         handleLocationSelect,
         handleScheduleSelect,
