@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useNavigate } from 'react-router-dom';
 // import { meetingApi } from "../../api/meetingApi";
 import MeetingCard from "./component/MeetingCard";
 import MeetingDetailModal from "./component/MeetingDetailModal";
@@ -293,6 +294,7 @@ const DUMMY_MY_MEETINGS = [
 ];
 
 const MeetingListPage = () => {
+    const navigate = useNavigate();
     const [mainTab, setMainTab] = useState('meetings'); // 'meetings' or 'myMeetings'
     const [subTab, setSubTab] = useState('joined'); // 'joined' or 'pending'
     const [meetings, setMeetings] = useState([]);
@@ -405,6 +407,47 @@ const MeetingListPage = () => {
         console.log(`모임 ${meetingId} 나가기`);
         alert(`모임 ${meetingId}에서 나가시겠습니까?`);
         setSwipedCard(null);
+    };
+
+    // 멤버 관리 핸들러 - 새로 추가된 부분
+    const handleManageMembers = (meetingId) => {
+        console.log(`모임 ${meetingId} 멤버 관리`);
+        navigate(`/meetings/${meetingId}/members`);
+        setIsModalOpen(false); // 모달 닫기
+    };
+
+    // 모임 수정 핸들러
+    const handleEditMeeting = (meetingId) => {
+        console.log(`모임 ${meetingId} 수정`);
+        alert(`모임 ${meetingId} 수정 기능은 준비 중입니다.`);
+        setIsModalOpen(false);
+    };
+
+    // 모임 삭제 핸들러
+    const handleDeleteMeeting = (meetingId) => {
+        console.log(`모임 ${meetingId} 삭제`);
+        if (window.confirm(`정말로 모임 ${meetingId}을(를) 삭제하시겠습니까?`)) {
+            alert(`모임 ${meetingId}이(가) 삭제되었습니다.`);
+            setIsModalOpen(false);
+        }
+    };
+
+    // 모임 나가기 핸들러
+    const handleLeaveFromModal = (meetingId) => {
+        console.log(`모임 ${meetingId} 나가기`);
+        if (window.confirm(`정말로 모임 ${meetingId}에서 나가시겠습니까?`)) {
+            alert(`모임 ${meetingId}에서 나가셨습니다.`);
+            setIsModalOpen(false);
+        }
+    };
+
+    // 신청 취소 핸들러
+    const handleCancelApplication = (meetingId) => {
+        console.log(`모임 ${meetingId} 신청 취소`);
+        if (window.confirm(`정말로 모임 ${meetingId} 신청을 취소하시겠습니까?`)) {
+            alert(`모임 ${meetingId} 신청이 취소되었습니다.`);
+            setIsModalOpen(false);
+        }
     };
 
     // 재시도 핸들러
@@ -552,12 +595,17 @@ const MeetingListPage = () => {
                 ))}
             </MeetingList>
 
-            {/* 모임 상세 모달 */}
+            {/* 모임 상세 모달 - 새로 추가된 핸들러들 포함 */}
             <MeetingDetailModal
                 meeting={selectedMeeting}
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onAction={handleModalAction}
+                onEdit={handleEditMeeting}
+                onManageMembers={handleManageMembers}
+                onDelete={handleDeleteMeeting}
+                onLeave={handleLeaveFromModal}
+                onCancelApplication={handleCancelApplication}
                 meetingStatus={
                     mainTab === 'myMeetings'
                         ? (subTab === 'joined' ? 'joined' : 'pending')

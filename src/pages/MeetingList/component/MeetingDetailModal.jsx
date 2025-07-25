@@ -2,7 +2,6 @@ import React, {useState, useRef, useEffect, useCallback, useMemo} from "react";
 import styled from "styled-components";
 import {getLocationKorean} from "../../../utils/locationUtils";
 import TagBadge from "../../../components/TagBadge";
-import MemberManagementPage from "./MemberManagementPage";
 
 const ModalOverlay = styled.div`
     position: fixed;

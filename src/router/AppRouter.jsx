@@ -10,6 +10,8 @@ import MyPage from "../pages/Mypage/Mypage";
 import CouponPage from "../pages/Mypage/Coupon/CouponPage";
 import PointHistoryPage from "../pages/Mypage/PointHistory/PointHistoryPage";
 import AffiliatedStoresPage from "../pages/AffiliatedStores/AffiliatedStoresPage";
+import MemberManagementPage from "../pages/MemberManagement/MemberManagementPage";
+
 // import NotFound from "../pages/NotFound";
 
 // 인증 확인 함수 (실제 구현 필요)
@@ -39,6 +41,7 @@ const AppRouter = () => (
       <Route path="/coupon" element={<CouponPage />} />
       <Route path="/point-history" element={<PointHistoryPage />} />
       <Route path="/affiliated-stores" element={<AffiliatedStoresPage />} />
+      <Route path="/meetings/:meetingId/members" element={<MemberManagementPage />} />
       {/* 필요시 인증이 필요한 라우트들
             <Route path="/protected" element={
                 <PrivateRoute>
