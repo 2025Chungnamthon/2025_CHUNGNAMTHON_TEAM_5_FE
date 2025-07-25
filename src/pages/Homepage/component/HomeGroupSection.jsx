@@ -61,7 +61,7 @@ const GroupImage = styled.img`
 `;
 
 const GroupInfo = styled.div`
-  flex: 1 1 0%;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   gap: 3px;

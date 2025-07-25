@@ -1,4 +1,5 @@
 // 쿠폰 관련 더미 데이터 (실제 연동 시 API로 대체)
+
 export const getExchangeCoupons = () => [
   {
     id: 1,
