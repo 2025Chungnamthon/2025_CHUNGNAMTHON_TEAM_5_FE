@@ -11,14 +11,13 @@ import CouponPage from "../pages/Mypage/Coupon/CouponPage";
 import PointHistoryPage from "../pages/Mypage/PointHistory/PointHistoryPage";
 import AffiliatedStoresPage from "../pages/AffiliatedStores/AffiliatedStoresPage";
 import MemberManagementPage from "../pages/MemberManagement/MemberManagementPage";
-
+import CallbackPage from "../pages/CallbackPage/CallbackPage";
+import { useAuthStore } from "../stores/authStore";
 // import NotFound from "../pages/NotFound";
 
-// 인증 확인 함수 (실제 구현 필요)
+// 인증 확인 함수 (Zustand 스토어 사용)
 function isAuthenticated() {
-  // TODO: 실제 인증 로직 구현
-  // 예시: localStorage에서 토큰 확인
-  return localStorage.getItem("authToken") !== null;
+  return useAuthStore.getState().isAuthenticated;
 }
 
 function PrivateRoute({ children }) {
@@ -34,6 +33,7 @@ const AppRouter = () => (
     <Route element={<Layout />}>
       <Route path="/" element={<Homepage />} />
       <Route path="/login" element={<Loginpage />} />
+      <Route path="/callback" element={<CallbackPage />} />
       <Route path="/meetings" element={<MeetingListPage />} />
       <Route path="/create-meeting" element={<CreateMeetingPage />} />
       <Route path="/mypage" element={<MyPage />} />

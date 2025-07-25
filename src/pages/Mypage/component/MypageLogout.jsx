@@ -1,65 +1,35 @@
 import React from "react";
 import styled from "styled-components";
-import { logout, removeTokenFromStorage } from "../../../utils/auth";
+import { useLogout } from "../../../hooks/useAuth";
 
-const LogoutBtn = styled.button`
-  background: transparent;
-  color: #bdbdbd;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  margin: 16px 0 0 24px;
-  cursor: pointer;
-  padding: 0;
-  outline: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-
-  &:hover {
-    color: #ff4d4f;
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
+const LogoutContainer = styled.div`
+  padding: 0 16px;
 `;
 
-const DevLogoutBtn = styled.button`
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 12px;
+const LogoutText = styled.div`
+  color: #a0a0a0;
+  font-size: 14px;
+  text-align: left;
+  padding: 0 16px 12px 16px;
+  background-color: transparent;
   cursor: pointer;
-  margin: 16px 24px 0 24px;
-
-  &:hover {
-    background: #dc2626;
-  }
 `;
 
 const MypageLogout = () => {
-  const handleLogout = () => {
-    logout();
-  };
+  const logoutMutation = useLogout();
 
-  const handleDevLogout = () => {
-    removeTokenFromStorage();
-    window.location.reload();
+  const handleLogout = () => {
+    if (window.confirm("정말 로그아웃 하시겠습니까?")) {
+      logoutMutation.mutate();
+    }
   };
 
   return (
-    <>
-      <LogoutBtn onClick={handleLogout}>로그아웃</LogoutBtn>
-      <DevLogoutBtn onClick={handleDevLogout}>
-        개발용: 게스트 모드로 전환
-      </DevLogoutBtn>
-    </>
+    <LogoutContainer>
+      <LogoutText onClick={handleLogout}>
+        {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+      </LogoutText>
+    </LogoutContainer>
   );
 };
 
