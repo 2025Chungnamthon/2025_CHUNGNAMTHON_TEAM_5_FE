@@ -70,7 +70,8 @@ export const useAuthStore = create(
           user: user || null,
           error: null,
         });
-        console.log("Logged in. Access Token:", tokens.accessToken);
+        console.log("✅ Logged in. Access Token:", tokens.accessToken);
+        console.log("✅ Logged in User:", user);
       },
 
       // 로그아웃 액션
