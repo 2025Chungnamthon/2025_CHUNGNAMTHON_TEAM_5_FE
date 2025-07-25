@@ -1,9 +1,4 @@
-const SectionTitle = styled.h3`
-    font-size: 16px;
-    font-weight: 600;
-    color: #181818;
-    margin: 0 0 12px 0;
-`;import React from "react";
+import React from "react";
 import styled from "styled-components";
 import { getLocationKorean } from "../../../utils/locationUtils";
 import TagBadge from "../../../components/TagBadge";
@@ -26,8 +21,9 @@ const ModalContainer = styled.div`
     background: #fff;
     border-radius: 20px;
     width: 100%;
-    max-width: 400px;
-    max-height: 80vh;
+    max-width: 380px;
+    height: 70vh;
+    min-height: 500px;
     overflow: hidden;
     position: relative;
     animation: modalSlideUp 0.3s ease-out;
@@ -44,52 +40,39 @@ const ModalContainer = styled.div`
     }
 `;
 
-const ModalHeader = styled.div`
-    position: relative;
-    padding: 0;
+const ModalContent = styled.div`
+    padding: 24px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+`;
+
+const MeetingHeader = styled.div`
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    margin-top: 5px;
 `;
 
 const MeetingImage = styled.img`
-    width: 100%;
-    height: 200px;
+    width: 73px;
+    height: 73px;
+    border-radius: 12px;
     object-fit: cover;
+    flex-shrink: 0;
 `;
 
-const CloseButton = styled.button`
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    border-radius: 30%;
-    width: 32px;
-    height: 32px;
+const MeetingInfo = styled.div`
+    flex: 1;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    cursor: pointer;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 300;
-    z-index: 10;
-
-    &:hover {
-        background: rgba(0, 0, 0, 0.7);
-    }
-`;
-
-const ModalContent = styled.div`
-    padding: 24px;
-`;
-
-const MeetingTitleSection = styled.div`
-    margin-bottom: 20px;
+    gap: 6px;
 `;
 
 const HostInfo = styled.div`
-    font-size: 14px;
+    font-size: 13px;
     color: #666;
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
 `;
@@ -101,10 +84,10 @@ const CrownIcon = styled.img`
 `;
 
 const MeetingTitle = styled.h2`
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     color: #181818;
-    margin: 0 0 12px 0;
+    margin: 0;
     line-height: 1.3;
 `;
 
@@ -112,7 +95,6 @@ const TagContainer = styled.div`
     display: flex;
     gap: 0;
     align-items: center;
-    margin-bottom: 20px;
 `;
 
 const ContentWrapper = styled.div`
@@ -120,11 +102,21 @@ const ContentWrapper = styled.div`
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 16px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+`;
+
+const SectionTitle = styled.h3`
+    font-size: 16px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0 0 12px 0;
 `;
 
 const DescriptionSection = styled.div`
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 
     &:last-child {
         margin-bottom: 0;
@@ -154,17 +146,12 @@ const RulesList = styled.ul`
     }
 `;
 
-const ActionButtonContainer = styled.div`
-    padding: 0;
-    margin-top: 8px;
-`;
-
 const ActionButton = styled.button`
     width: 100%;
     background: ${props => props.disabled ? '#9CA3AF' : '#80C7BC'};
     color: #fff;
     border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     font-size: 16px;
     font-weight: 600;
     padding: 16px;
@@ -172,7 +159,7 @@ const ActionButton = styled.button`
     transition: all 0.2s;
 
     &:hover {
-        background: ${props => props.disabled ? '#9CA3AF' : '#80C7BC'};
+        background: ${props => props.disabled ? '#9CA3AF' : '#6BB8B0'};
     }
 
     &:active {
@@ -207,7 +194,7 @@ const MeetingDetailModal = ({
                                 onAction,
                                 actionButtonText,
                                 isActionDisabled = false,
-                                meetingStatus // 'joined', 'pending', 'available' 등의 상태
+                                meetingStatus
                             }) => {
     if (!isOpen || !meeting) return null;
 
@@ -223,7 +210,6 @@ const MeetingDetailModal = ({
         }
     };
 
-    // 이미지 에러 핸들러
     const handleImageError = (e) => {
         e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
     };
@@ -253,38 +239,32 @@ const MeetingDetailModal = ({
     return (
         <ModalOverlay onClick={handleOverlayClick}>
             <ModalContainer>
-                <ModalHeader>
-                    <MeetingImage
-                        src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
-                        alt={meeting.title}
-                        onError={handleImageError}
-                    />
-                    <CloseButton onClick={onClose}>
-                        ×
-                    </CloseButton>
-                </ModalHeader>
-
                 <ModalContent>
-                    <MeetingTitleSection>
-                        <HostInfo>
-                            {meeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장" />}
-                            @{meeting.hostName || "김방장"}
-                        </HostInfo>
-
-                        <MeetingTitle>{meeting.title}</MeetingTitle>
-
-                        <TagContainer>
-                            <TagBadge
-                                type="location"
-                                text={getLocationKorean(meeting.location)}
-                            />
-                            <TagBadge
-                                type={getScheduleTagType(meeting.schedule)}
-                                text={getScheduleKorean(meeting.schedule)}
-                                className="last"
-                            />
-                        </TagContainer>
-                    </MeetingTitleSection>
+                    <MeetingHeader>
+                        <MeetingImage
+                            src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
+                            alt={meeting.title}
+                            onError={handleImageError}
+                        />
+                        <MeetingInfo>
+                            <HostInfo>
+                                {meeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장" />}
+                                @{meeting.hostName || "김방장"}
+                            </HostInfo>
+                            <MeetingTitle>{meeting.title}</MeetingTitle>
+                            <TagContainer>
+                                <TagBadge
+                                    type="location"
+                                    text={getLocationKorean(meeting.location)}
+                                />
+                                <TagBadge
+                                    type={getScheduleTagType(meeting.schedule)}
+                                    text={getScheduleKorean(meeting.schedule)}
+                                    className="last"
+                                />
+                            </TagContainer>
+                        </MeetingInfo>
+                    </MeetingHeader>
 
                     <ContentWrapper>
                         <DescriptionSection>
@@ -292,7 +272,7 @@ const MeetingDetailModal = ({
                             <DescriptionContent>{meeting.description}</DescriptionContent>
                         </DescriptionSection>
 
-                        {meeting.rules && (
+                        {meeting.rules && meeting.rules.length > 0 && (
                             <DescriptionSection>
                                 <SectionTitle>규칙</SectionTitle>
                                 <RulesList>
@@ -304,14 +284,12 @@ const MeetingDetailModal = ({
                         )}
                     </ContentWrapper>
 
-                    <ActionButtonContainer>
-                        <ActionButton
-                            onClick={handleActionClick}
-                            disabled={buttonConfig.disabled}
-                        >
-                            {buttonConfig.text}
-                        </ActionButton>
-                    </ActionButtonContainer>
+                    <ActionButton
+                        onClick={handleActionClick}
+                        disabled={buttonConfig.disabled}
+                    >
+                        {buttonConfig.text}
+                    </ActionButton>
                 </ModalContent>
             </ModalContainer>
         </ModalOverlay>
