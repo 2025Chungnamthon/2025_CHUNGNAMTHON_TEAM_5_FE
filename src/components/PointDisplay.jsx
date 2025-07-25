@@ -32,15 +32,24 @@ const PointDisplay = ({
   fontSize = "14px",
   iconFontSize = "12px",
   showIcon = true,
+  variant = "default", // "default" or "header"
 }) => {
+  // Header variant uses specific styling for header display
+  const isHeaderVariant = variant === "header";
+
   return (
     <PointContainer>
       {showIcon && (
-        <PointIcon size={size} fontSize={iconFontSize}>
+        <PointIcon
+          size={isHeaderVariant ? "24px" : size}
+          fontSize={isHeaderVariant ? "12px" : iconFontSize}
+        >
           P
         </PointIcon>
       )}
-      <PointText fontSize={fontSize}>{points.toLocaleString()}p</PointText>
+      <PointText fontSize={isHeaderVariant ? "14px" : fontSize}>
+        {points.toLocaleString()}p
+      </PointText>
     </PointContainer>
   );
 };

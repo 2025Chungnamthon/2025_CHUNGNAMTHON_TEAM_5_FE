@@ -3,10 +3,10 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
-import PointDisplay from "../../../components/PointDisplay";
 import { useUIStore } from "../../../stores/uiStore";
 import dayjs from "dayjs";
 import { getAllCoupons, getMyCoupons } from "@/services/couponApi";
+import PointDisplay from "@/components/PointDisplay";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -182,7 +182,7 @@ const LoadingText = styled.div`
 
 const CouponPage = () => {
   const navigate = useNavigate();
-  const { tabs, setTab } = useUIStore();
+  const { tabs, setTab, points, refreshPoints } = useUIStore();
   const activeTab = tabs.coupon || "exchange";
 
   const [exchangeCouponsData, setExchangeCouponsData] = useState([]);
@@ -215,8 +215,13 @@ const CouponPage = () => {
     setTab("coupon", tab);
   };
 
-  // 임시 userPoints 하드코딩 (백엔드 연동 필요 시 추후 적용)
-  const userPoints = 1620;
+  // 전역 포인트 상태 사용
+  useEffect(() => {
+    // 포인트 데이터가 없거나 오래된 경우 새로고침
+    if (points.currentPoints === 0 || !points.lastUpdated) {
+      refreshPoints();
+    }
+  }, [points.currentPoints, points.lastUpdated, refreshPoints]);
 
   // 데이터 가공
   const exchangeCoupons = (exchangeCouponsData || []).map((coupon) => ({
@@ -244,7 +249,7 @@ const CouponPage = () => {
             </BackButton>
           </HeaderLeft>
           <HeaderRight>
-            <PointDisplay points={userPoints} />
+            <PointDisplay points={points.currentPoints || 0} variant="header" />
           </HeaderRight>
         </Header>
         <LoadingText>로딩 중...</LoadingText>
@@ -260,9 +265,8 @@ const CouponPage = () => {
             <FaArrowLeft />
           </BackButton>
         </HeaderLeft>
-
         <HeaderRight>
-          <PointDisplay points={userPoints} />
+          <PointDisplay points={points.currentPoints || 0} variant="header" />
         </HeaderRight>
       </Header>
 

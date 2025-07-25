@@ -3,6 +3,8 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { pointApi } from "@/services/pointApi";
+import PointDisplay from "@/components/PointDisplay";
+import { useUIStore } from "@/stores/uiStore";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -54,25 +56,6 @@ const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-`;
-
-const PointIcon = styled.div`
-  width: 24px;
-  height: 24px;
-  background: #fdd756;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #d18000;
-  font-weight: 700;
-  font-size: 12px;
-`;
-
-const PointText = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: #222;
 `;
 
 const Content = styled.div`
@@ -130,14 +113,13 @@ const EmptyText = styled.p`
 
 const PointHistoryPage = () => {
   const navigate = useNavigate();
+  const { points, refreshPoints } = useUIStore();
 
   const handleBack = () => {
     navigate(-1);
   };
 
   const [pointHistory, setPointHistory] = useState([]);
-
-  const [userPoints, setUserPoints] = useState(0);
 
   const paymentTypeLabels = {
     MEETING_PARTICIPATION: "모임 참여 보상",
@@ -161,18 +143,19 @@ const PointHistoryPage = () => {
 
         setPointHistory(formatted);
 
+        // 전역 포인트 상태도 업데이트
         const total = formatted.reduce(
           (acc, item) => acc + item.changePoint,
           0
         );
-        setUserPoints(total);
+        refreshPoints();
       } catch (error) {
         console.error("포인트 데이터 로드 실패:", error);
       }
     };
 
     fetchPointHistory();
-  }, []);
+  }, [refreshPoints]);
 
   return (
     <PageContainer>
@@ -184,8 +167,7 @@ const PointHistoryPage = () => {
           <Title>포인트 내역</Title>
         </HeaderLeft>
         <HeaderRight>
-          <PointIcon>P</PointIcon>
-          <PointText>{userPoints.toLocaleString()}p</PointText>
+          <PointDisplay points={points.currentPoints || 0} variant="header" />
         </HeaderRight>
       </Header>
 
