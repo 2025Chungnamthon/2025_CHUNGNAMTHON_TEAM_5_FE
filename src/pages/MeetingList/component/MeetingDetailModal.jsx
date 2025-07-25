@@ -138,17 +138,6 @@ const DescriptionContent = styled.div`
     white-space: pre-wrap;
 `;
 
-const Description = styled.div`
-    font-size: 14px;
-    color: #374151;
-    line-height: 1.6;
-    white-space: pre-wrap;
-`;
-
-const RulesSection = styled.div`
-    margin-bottom: 32px;
-`;
-
 const RulesList = styled.ul`
     margin: 0;
     padding-left: 20px;
