@@ -1,7 +1,9 @@
-import React, {useState, useRef, useEffect, useCallback, useMemo} from "react";
+import React, {useState, useRef, useEffect, useMemo} from "react";
 import styled from "styled-components";
 import {getLocationKorean} from "../../../utils/locationUtils";
 import TagBadge from "../../../components/TagBadge";
+import { meetingApi } from "../../../services/meetingApi";
+import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -201,22 +203,6 @@ const DescriptionContent = styled.div`
     white-space: pre-wrap;
 `;
 
-const RulesList = styled.ul`
-    margin: 0;
-    padding-left: 20px;
-
-    li {
-        font-size: 14px;
-        color: #374151;
-        line-height: 1.6;
-        margin-bottom: 4px;
-
-        &:last-child {
-            margin-bottom: 0;
-        }
-    }
-`;
-
 const ActionButton = styled.button`
     width: 100%;
     background: ${props => props.disabled ? '#9CA3AF' : '#80C7BC'};
@@ -238,12 +224,27 @@ const ActionButton = styled.button`
     }
 `;
 
+const LoadingSpinner = styled.div`
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+
 // 스케줄을 한글로 변환하는 함수
 const getScheduleKorean = (schedule) => {
     const scheduleMap = {
         'WEEKDAY': '평일',
         'WEEKEND': '주말',
-        'ALL': '전체'
+        'FULL': '전체'
     };
     return scheduleMap[schedule] || schedule;
 };
@@ -253,7 +254,7 @@ const getScheduleTagType = (schedule) => {
     const typeMap = {
         'WEEKDAY': 'weekday',
         'WEEKEND': 'weekend',
-        'ALL': 'all'
+        'FULL': 'all'
     };
     return typeMap[schedule] || 'all';
 };
@@ -262,19 +263,47 @@ const MeetingDetailModal = ({
                                 meeting,
                                 isOpen,
                                 onClose,
-                                onAction,
-                                actionButtonText,
-                                isActionDisabled = false,
-                                meetingStatus,
-                                // 메뉴 액션 핸들러들
-                                onEdit,
-                                onManageMembers,
-                                onDelete,
-                                onLeave,
-                                onCancelApplication
+                                onRefresh,
+                                meetingStatus = 'available'
                             }) => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const [detailData, setDetailData] = useState(null);
+    const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
+
+    // 현재 표시할 모임 데이터
+    const currentMeeting = detailData || meeting;
+
+    // 커스텀 훅으로 분리된 핸들러들
+    const {
+        actionLoading,
+        handleActionClick,
+        handleMenuAction
+    } = useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
+
+    // 모임 상세 정보 불러오기
+    const fetchMeetingDetail = async () => {
+        if (!meeting?.meetingId) return;
+
+        try {
+            setLoading(true);
+            const response = await meetingApi.getMeetingDetail(meeting.meetingId);
+            console.log('모임 상세 정보:', response);
+            setDetailData(response.data);
+        } catch (error) {
+            console.error('모임 상세 정보 조회 실패:', error);
+            setDetailData(meeting);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 모달 열릴 때 상세 정보 조회
+    useEffect(() => {
+        if (isOpen && meeting?.meetingId) {
+            fetchMeetingDetail();
+        }
+    }, [isOpen, meeting?.meetingId]);
 
     // 드롭다운 외부 클릭 감지
     useEffect(() => {
@@ -293,156 +322,92 @@ const MeetingDetailModal = ({
         };
     }, [showDropdown]);
 
-    // 메뉴 표시 여부 결정 (가입하지 않은 모임에서는 메뉴 숨김)
-    const shouldShowMenu = useMemo(() => meetingStatus !== 'available', [meetingStatus]);
+    // 메뉴 표시 여부 결정
+    const shouldShowMenu = useMemo(() => {
+        return currentMeeting?.isHost || meetingStatus === 'joined' || meetingStatus === 'pending';
+    }, [currentMeeting?.isHost, meetingStatus]);
 
-    // 메뉴 아이템 결정 (최적화: useMemo 사용)
+    // 메뉴 아이템 결정
     const menuItems = useMemo(() => {
-        if (!meeting) return [];
+        if (!currentMeeting) return [];
 
-        if (meeting.isHost) {
-            // 호스트인 경우
+        if (currentMeeting.isHost) {
             return [
-                {
-                    key: 'edit',
-                    label: '수정하기',
-                    icon: '✏️',
-                    action: 'edit'
-                },
-                {
-                    key: 'members',
-                    label: '멤버 관리',
-                    icon: '👥',
-                    action: 'members'
-                },
-                {
-                    key: 'delete',
-                    label: '삭제하기',
-                    icon: '🗑️',
-                    action: 'delete',
-                    danger: true
-                }
+                { key: 'edit', label: '수정하기', icon: '✏️', action: 'edit' },
+                { key: 'members', label: '멤버 관리', icon: '👥', action: 'members' },
+                { key: 'delete', label: '삭제하기', icon: '🗑️', action: 'delete', danger: true }
             ];
         } else if (meetingStatus === 'joined') {
-            // 참여중인 게스트인 경우
             return [
-                {
-                    key: 'leave',
-                    label: '나가기',
-                    icon: '🚪',
-                    action: 'leave',
-                    danger: true
-                }
+                { key: 'leave', label: '나가기', icon: '🚪', action: 'leave', danger: true }
             ];
         } else if (meetingStatus === 'pending') {
-            // 승인 대기 중인 경우
             return [
-                {
-                    key: 'cancel',
-                    label: '신청 취소하기',
-                    icon: '❌',
-                    action: 'cancel',
-                    danger: true
-                }
+                { key: 'cancel', label: '신청 취소하기', icon: '❌', action: 'cancel', danger: true }
             ];
         }
         return [];
-    }, [meeting?.isHost, meetingStatus]);
+    }, [currentMeeting?.isHost, meetingStatus]);
 
-    // 상태에 따른 버튼 텍스트와 비활성화 상태 결정 (최적화: useMemo 사용)
+    // 상태에 따른 버튼 설정
     const buttonConfig = useMemo(() => {
-        if (meetingStatus === 'joined') {
-            return {
-                text: '오픈채팅 참가하기',
-                disabled: false
-            };
+        console.log('🔧 버튼 설정 계산:', {
+            isHost: currentMeeting?.isHost,
+            meetingStatus,
+            meetingId: currentMeeting?.meetingId
+        });
+
+        if (currentMeeting?.isHost) {
+            return { text: '오픈채팅 참가하기', disabled: false, action: 'openChat' };
+        } else if (meetingStatus === 'joined') {
+            return { text: '오픈채팅 참가하기', disabled: false, action: 'openChat' };
         } else if (meetingStatus === 'pending') {
-            return {
-                text: '승인 대기 중이에요',
-                disabled: true
-            };
+            return { text: '승인 대기 중이에요', disabled: true, action: 'none' };
         } else {
-            return {
-                text: actionButtonText || '가입 신청하기',
-                disabled: isActionDisabled
-            };
+            return { text: '가입 신청하기', disabled: false, action: 'join' };
         }
-    }, [meetingStatus, actionButtonText, isActionDisabled]);
+    }, [currentMeeting?.isHost, meetingStatus]);
 
-    // 핸들러들 최적화 (useCallback 사용)
-    const handleOverlayClick = useCallback((e) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    }, [onClose]);
-
-    const handleActionClick = useCallback(() => {
-        if (!isActionDisabled) {
-            onAction?.(meeting.meetingId);
-        }
-    }, [isActionDisabled, onAction, meeting?.meetingId]);
-
-    const handleImageError = useCallback((e) => {
-        e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
-    }, []);
-
-    const handleMenuClick = useCallback((e) => {
-        e.stopPropagation();
-        setShowDropdown(prev => !prev);
-    }, []);
-
-    const handleMenuAction = useCallback((action) => {
-        setShowDropdown(false);
-
-        const actionMap = {
-            edit: onEdit,
-            members: onManageMembers,
-            delete: onDelete,
-            leave: onLeave,
-            cancel: onCancelApplication
-        };
-
-        const handler = actionMap[action];
-        if (handler && meeting?.meetingId) {
-            handler(meeting.meetingId);
-        }
-    }, [meeting?.meetingId, onEdit, onManageMembers, onDelete, onLeave, onCancelApplication]);
-
-    if (!isOpen || !meeting) return null;
+    if (!isOpen || !currentMeeting) return null;
 
     return (
-        <ModalOverlay onClick={handleOverlayClick}>
+        <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
             <ModalContainer>
                 <ModalContent>
                     <MeetingHeader>
                         <MeetingImage
-                            src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
-                            alt={meeting.title}
-                            onError={handleImageError}
+                            src={currentMeeting.imageUrl || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
+                            alt={currentMeeting.title}
+                            onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+                            }}
                         />
                         <MeetingInfo>
                             <HostInfo>
-                                {meeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장"/>}
-                                @{meeting.hostName || "김방장"}
+                                {currentMeeting.isHost && <CrownIcon src="/UI/crown.svg" alt="모임장"/>}
+                                @{currentMeeting.hostName || "호스트"}
                             </HostInfo>
-                            <MeetingTitle>{meeting.title}</MeetingTitle>
+                            <MeetingTitle>{currentMeeting.title}</MeetingTitle>
                             <TagContainer>
                                 <TagBadge
                                     type="location"
-                                    text={getLocationKorean(meeting.location)}
+                                    text={getLocationKorean(currentMeeting.location)}
                                 />
                                 <TagBadge
-                                    type={getScheduleTagType(meeting.schedule)}
-                                    text={getScheduleKorean(meeting.schedule)}
+                                    type={getScheduleTagType(currentMeeting.schedule)}
+                                    text={getScheduleKorean(currentMeeting.schedule)}
                                     className="last"
                                 />
                             </TagContainer>
                         </MeetingInfo>
 
-                        {/* 메뉴 버튼 - 가입하지 않은 모임에서는 숨김 */}
+                        {/* 메뉴 버튼 */}
                         {shouldShowMenu && (
                             <div ref={dropdownRef} style={{position: 'relative'}}>
-                                <MenuButton onClick={handleMenuClick}>
+                                <MenuButton onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowDropdown(prev => !prev);
+                                }}>
                                     ⋯
                                 </MenuButton>
 
@@ -452,7 +417,12 @@ const MeetingDetailModal = ({
                                             <DropdownItem
                                                 key={item.key}
                                                 danger={item.danger}
-                                                onClick={() => handleMenuAction(item.action)}
+                                                onClick={() => {
+                                                    setShowDropdown(false);
+                                                    onClose();
+                                                    handleMenuAction(item.action, detailData);
+                                                }}
+                                                disabled={actionLoading}
                                             >
                                                 <span>{item.icon}</span>
                                                 {item.label}
@@ -465,28 +435,30 @@ const MeetingDetailModal = ({
                     </MeetingHeader>
 
                     <ContentWrapper>
-                        <DescriptionSection>
-                            <SectionTitle>소개글</SectionTitle>
-                            <DescriptionContent>{meeting.description}</DescriptionContent>
-                        </DescriptionSection>
-
-                        {meeting.rules && meeting.rules.length > 0 && (
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                모임 정보를 불러오는 중...
+                            </div>
+                        ) : (
                             <DescriptionSection>
-                                <SectionTitle>규칙</SectionTitle>
-                                <RulesList>
-                                    {meeting.rules.map((rule, index) => (
-                                        <li key={index}>{rule}</li>
-                                    ))}
-                                </RulesList>
+                                <SectionTitle>소개글</SectionTitle>
+                                <DescriptionContent>{currentMeeting.description}</DescriptionContent>
                             </DescriptionSection>
                         )}
                     </ContentWrapper>
 
                     <ActionButton
-                        onClick={handleActionClick}
-                        disabled={buttonConfig.disabled}
+                        onClick={() => handleActionClick(buttonConfig)}
+                        disabled={buttonConfig.disabled || actionLoading}
                     >
-                        {buttonConfig.text}
+                        {actionLoading ? (
+                            <>
+                                <LoadingSpinner />
+                                처리 중...
+                            </>
+                        ) : (
+                            buttonConfig.text
+                        )}
                     </ActionButton>
                 </ModalContent>
             </ModalContainer>

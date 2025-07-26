@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { FiArrowLeft } from "react-icons/fi";
 import { useParams, useNavigate } from "react-router-dom";
+import { meetingApi } from "../../services/meetingApi";
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -113,13 +114,18 @@ const MemberNumber = styled.div`
     min-width: 20px;
 `;
 
-const MemberAvatar = styled.img`
+const MemberAvatar = styled.div`
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
-    background: #f3f4f6;
+    background: ${props => props.bgColor || '#e5e7eb'};
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
 `;
 
 const MemberName = styled.div`
@@ -127,15 +133,6 @@ const MemberName = styled.div`
     font-weight: 500;
     color: #333;
     flex: 1;
-`;
-
-const MemberStatus = styled.span`
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    background: #f3f4f6;
-    padding: 6px 12px;
-    border-radius: 12px;
 `;
 
 const ActionButtons = styled.div`
@@ -174,6 +171,11 @@ const ActionButton = styled.button`
     &:active {
         transform: scale(0.98);
     }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 const BottomButton = styled.button`
@@ -194,8 +196,8 @@ const BottomButton = styled.button`
     margin-top: 24px;
 
     &:hover {
-        background: #5fa89e;
-        transform: translateY(-2px);
+        background: ${props => props.disabled ? '#d1d5db' : '#5fa89e'};
+        transform: ${props => props.disabled ? 'none' : 'translateY(-2px)'};
     }
 `;
 
@@ -210,128 +212,241 @@ const EmptyContainer = styled.div`
     text-align: center;
 `;
 
-// 더미 데이터
-const DUMMY_MEMBERS = {
-    approved: [
-        {
-            memberId: 1,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1494790108755-2616b332e234?w=150&h=150&fit=crop&crop=face",
-            status: "승인"
-        },
-        {
-            memberId: 2,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-            status: "승인"
-        }
-    ],
-    pending: [
-        {
-            memberId: 3,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-        },
-        {
-            memberId: 4,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-        },
-        {
-            memberId: 5,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
-        },
-        {
-            memberId: 6,
-            name: "김천안",
-            avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face"
-        }
-    ]
+const LoadingContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    color: #6b7280;
+    font-size: 14px;
+`;
+
+const ErrorContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    color: #ef4444;
+    font-size: 14px;
+    text-align: center;
+`;
+
+const RetryButton = styled.button`
+    background: #80c7bc;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #5fa89e;
+    }
+`;
+
+// 아바타 색상 생성 함수
+const generateAvatarColor = (userId) => {
+    const colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+        '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+    ];
+    return colors[userId % colors.length];
 };
 
 const MemberManagementPage = () => {
     const { meetingId } = useParams();
     const navigate = useNavigate();
 
-    const [members, setMembers] = useState(DUMMY_MEMBERS);
+    // 상태 관리
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [actionLoading, setActionLoading] = useState(null);
 
-    useEffect(() => {
-        // 실제로는 API 호출을 통해 멤버 데이터를 가져옴
-        console.log(`모임 ${meetingId}의 멤버 데이터 로드`);
+    // 멤버 리스트를 status에 따라 분류
+    const { pendingMembers, approvedMembers } = useMemo(() => {
+        const pending = members.filter(member => member.status === 'REQUESTED');
+        const approved = members.filter(member => member.status === 'PARTICIPATING');
+
+        return {
+            pendingMembers: pending,
+            approvedMembers: approved
+        };
+    }, [members]);
+
+    // 멤버 데이터 불러오기
+    const fetchMembers = useCallback(async () => {
+        if (!meetingId) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+            console.log(`모임 ${meetingId}의 멤버 데이터 로드 시작`);
+
+            const response = await meetingApi.getMeetingMembers(meetingId);
+
+            if (response && response.data) {
+                console.log('멤버 데이터:', response.data);
+                setMembers(response.data);
+            } else {
+                console.warn('멤버 데이터가 없습니다.');
+                setMembers([]);
+            }
+        } catch (err) {
+            console.error('멤버 데이터 로드 실패:', err);
+            setError(err.message || '멤버 정보를 불러오는데 실패했습니다.');
+            setMembers([]);
+        } finally {
+            setLoading(false);
+        }
     }, [meetingId]);
 
-    const handleBack = () => {
+    // 컴포넌트 마운트 시 데이터 로드
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
+
+    const handleBack = useCallback(() => {
         navigate(-1);
-    };
+    }, [navigate]);
 
-    const handleImageError = (e) => {
-        e.target.src = "https://images.unsplash.com/photo-1494790108755-2616b332e234?w=150&h=150&fit=crop&crop=face";
-    };
+    // 멤버 승인 처리
+    const handleApprove = useCallback(async (userId) => {
+        if (actionLoading === userId) return;
 
-    const handleApprove = async (memberId) => {
         try {
-            console.log(`멤버 ${memberId} 승인`);
+            setActionLoading(userId);
+            console.log(`멤버 ${userId} 승인 시작`);
 
-            // 승인 처리 로직
-            const memberToApprove = members.pending.find(m => m.memberId === memberId);
-            if (memberToApprove) {
-                setMembers(prev => ({
-                    approved: [...prev.approved, { ...memberToApprove, status: "승인" }],
-                    pending: prev.pending.filter(m => m.memberId !== memberId)
-                }));
-            }
+            await meetingApi.approveMember(meetingId, userId);
 
             alert("멤버를 승인했습니다.");
+
+            // 멤버 리스트 새로고침
+            await fetchMembers();
         } catch (err) {
             console.error("승인 실패:", err);
-            alert("승인에 실패했습니다.");
+            alert(err.message || "승인에 실패했습니다.");
+        } finally {
+            setActionLoading(null);
         }
-    };
+    }, [meetingId, fetchMembers, actionLoading]);
 
-    const handleReject = async (memberId) => {
-        try {
-            console.log(`멤버 ${memberId} 거절`);
+    // 멤버 거절 처리
+    const handleReject = useCallback(async (userId) => {
+        if (actionLoading === userId) return;
 
-            if (window.confirm("정말로 이 멤버를 거절하시겠습니까?")) {
-                // 거절 처리 로직
-                setMembers(prev => ({
-                    ...prev,
-                    pending: prev.pending.filter(m => m.memberId !== memberId)
-                }));
+        const member = members.find(m => m.userId === userId);
+        const memberName = member?.userNickName || `사용자 ${userId}`;
+
+        if (window.confirm(`정말로 ${memberName}님의 가입 신청을 거절하시겠습니까?`)) {
+            try {
+                setActionLoading(userId);
+                console.log(`멤버 ${userId} 거절 시작`);
+
+                await meetingApi.rejectMember(meetingId, userId);
 
                 alert("멤버를 거절했습니다.");
+
+                // 멤버 리스트 새로고침
+                await fetchMembers();
+            } catch (err) {
+                console.error("거절 실패:", err);
+                alert(err.message || "거절에 실패했습니다.");
+            } finally {
+                setActionLoading(null);
             }
-        } catch (err) {
-            console.error("거절 실패:", err);
-            alert("거절에 실패했습니다.");
         }
-    };
+    }, [meetingId, fetchMembers, actionLoading, members]);
 
-    const handleKick = async (memberId) => {
-        try {
-            console.log(`멤버 ${memberId} 내보내기`);
+    // 멤버 내보내기 처리
+    const handleKick = useCallback(async (userId) => {
+        if (actionLoading === userId) return;
 
-            if (window.confirm("정말로 이 멤버를 내보내시겠습니까?")) {
-                // 내보내기 처리 로직
-                setMembers(prev => ({
-                    ...prev,
-                    approved: prev.approved.filter(m => m.memberId !== memberId)
-                }));
+        const member = members.find(m => m.userId === userId);
+        const memberName = member?.userNickName || `사용자 ${userId}`;
 
-                alert("멤버를 내보냈습니다.");
+        if (window.confirm(`정말로 ${memberName}님을 모임에서 내보내시겠습니까?\n\n내보낸 멤버는 다시 참여할 수 있습니다.`)) {
+            try {
+                setActionLoading(userId);
+                console.log(`멤버 ${userId} 내보내기 시작`);
+
+                await meetingApi.kickMember(meetingId, userId);
+
+                alert(`${memberName}님을 모임에서 내보냈습니다.`);
+
+                // 멤버 리스트 새로고침
+                await fetchMembers();
+            } catch (err) {
+                console.error("내보내기 실패:", err);
+                alert(err.message || "내보내기에 실패했습니다.");
+            } finally {
+                setActionLoading(null);
             }
-        } catch (err) {
-            console.error("내보내기 실패:", err);
-            alert("내보내기에 실패했습니다.");
         }
-    };
+    }, [meetingId, fetchMembers, actionLoading, members]);
 
-    const handleSave = () => {
+    // 저장하기 (현재는 닫기만)
+    const handleSave = useCallback(() => {
         console.log("변경사항 저장");
-        alert("변경사항이 저장되었습니다.");
         navigate(-1);
+    }, [navigate]);
+
+    // 재시도 핸들러
+    const handleRetry = () => {
+        fetchMembers();
     };
+
+    // 메모이제이션된 아바타 컴포넌트
+    const MemberAvatarComponent = useMemo(() => {
+        return ({ userNickName, userId }) => (
+            <MemberAvatar bgColor={generateAvatarColor(userId)}>
+                {userNickName ? userNickName.charAt(0) : '?'}
+            </MemberAvatar>
+        );
+    }, []);
+
+    // 로딩 상태
+    if (loading) {
+        return (
+            <PageContainer>
+                <Header>
+                    <BackButton onClick={handleBack}>
+                        <FiArrowLeft />
+                    </BackButton>
+                    <HeaderTitle>멤버 관리하기</HeaderTitle>
+                </Header>
+                <LoadingContainer>
+                    멤버 정보를 불러오는 중...
+                </LoadingContainer>
+            </PageContainer>
+        );
+    }
+
+    // 에러 상태
+    if (error) {
+        return (
+            <PageContainer>
+                <Header>
+                    <BackButton onClick={handleBack}>
+                        <FiArrowLeft />
+                    </BackButton>
+                    <HeaderTitle>멤버 관리하기</HeaderTitle>
+                </Header>
+                <ErrorContainer>
+                    <div>{error}</div>
+                    <RetryButton onClick={handleRetry}>
+                        다시 시도
+                    </RetryButton>
+                </ErrorContainer>
+            </PageContainer>
+        );
+    }
 
     return (
         <PageContainer>
@@ -347,34 +462,35 @@ const MemberManagementPage = () => {
                 <SectionContainer>
                     <SectionHeader>
                         <SectionTitle>가입 요청</SectionTitle>
-                        <CountBadge>{members.pending.length}</CountBadge>
+                        <CountBadge>{pendingMembers.length}</CountBadge>
                     </SectionHeader>
 
-                    {members.pending.length === 0 ? (
+                    {pendingMembers.length === 0 ? (
                         <EmptyContainer>
                             <div>가입 요청이 없습니다.</div>
                         </EmptyContainer>
                     ) : (
                         <MemberList>
-                            {members.pending.map((member, index) => (
-                                <MemberItem key={member.memberId}>
+                            {pendingMembers.map((member, index) => (
+                                <MemberItem key={member.userId}>
                                     <MemberNumber>{index + 1}</MemberNumber>
-                                    <MemberAvatar
-                                        src={member.avatar}
-                                        alt={member.name}
-                                        onError={handleImageError}
+                                    <MemberAvatarComponent
+                                        userNickName={member.userNickName}
+                                        userId={member.userId}
                                     />
-                                    <MemberName>{member.name}</MemberName>
+                                    <MemberName>{member.userNickName}</MemberName>
                                     <ActionButtons>
                                         <ActionButton
                                             variant="approve"
-                                            onClick={() => handleApprove(member.memberId)}
+                                            onClick={() => handleApprove(member.userId)}
+                                            disabled={actionLoading === member.userId}
                                         >
-                                            승인
+                                            {actionLoading === member.userId ? '처리중' : '승인'}
                                         </ActionButton>
                                         <ActionButton
                                             variant="reject"
-                                            onClick={() => handleReject(member.memberId)}
+                                            onClick={() => handleReject(member.userId)}
+                                            disabled={actionLoading === member.userId}
                                         >
                                             거절
                                         </ActionButton>
@@ -389,40 +505,40 @@ const MemberManagementPage = () => {
                 <SectionContainer>
                     <SectionHeader>
                         <SectionTitle>현재 참여중인 멤버</SectionTitle>
-                        <CountBadge>{members.approved.length}</CountBadge>
+                        <CountBadge>{approvedMembers.length}</CountBadge>
                     </SectionHeader>
 
-                    {members.approved.length === 0 ? (
+                    {approvedMembers.length === 0 ? (
                         <EmptyContainer>
                             <div>참여중인 멤버가 없습니다.</div>
                         </EmptyContainer>
                     ) : (
                         <MemberList>
-                            {members.approved.map((member, index) => (
-                                <MemberItem key={member.memberId}>
+                            {approvedMembers.map((member, index) => (
+                                <MemberItem key={member.userId}>
                                     <MemberNumber>{index + 1}</MemberNumber>
-                                    <MemberAvatar
-                                        src={member.avatar}
-                                        alt={member.name}
-                                        onError={handleImageError}
+                                    <MemberAvatarComponent
+                                        userNickName={member.userNickName}
+                                        userId={member.userId}
                                     />
-                                    <MemberName>{member.name}</MemberName>
+                                    <MemberName>{member.userNickName}</MemberName>
                                     <ActionButton
                                         variant="reject"
-                                        onClick={() => handleKick(member.memberId)}
+                                        onClick={() => handleKick(member.userId)}
+                                        disabled={actionLoading === member.userId}
                                     >
-                                        내보내기
+                                        {actionLoading === member.userId ? '처리중' : '내보내기'}
                                     </ActionButton>
                                 </MemberItem>
                             ))}
                         </MemberList>
                     )}
                 </SectionContainer>
-                <BottomButton onClick={handleSave}>
+
+                <BottomButton onClick={handleSave} disabled={actionLoading !== null}>
                     저장하기
                 </BottomButton>
             </Content>
-
         </PageContainer>
     );
 };
