@@ -34,10 +34,3 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-// 개발 환경에서 캐시 상태를 콘솔에 출력 (선택사항)
-if (import.meta.env.DEV) {
-  queryClient.getQueryCache().subscribe(() => {
-    console.log("Query Cache Updated:", queryClient.getQueryCache().getAll());
-  });
-}

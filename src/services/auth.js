@@ -166,6 +166,11 @@ export const handleOAuthCallback = async () => {
       },
       null
     );
+    // ✅ localStorage에 직접 저장 추가
+    localStorage.setItem("accessToken", accessToken);
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
     cleanUrl();
     return { success: true };
   }
@@ -194,6 +199,11 @@ export const handleOAuthCallback = async () => {
         },
         null
       );
+      // ✅ localStorage에 직접 저장 추가
+      localStorage.setItem("accessToken", data.data.accessToken);
+      if (data.data.refreshToken) {
+        localStorage.setItem("refreshToken", data.data.refreshToken);
+      }
       cleanUrl();
       return { success: true };
     } else {
