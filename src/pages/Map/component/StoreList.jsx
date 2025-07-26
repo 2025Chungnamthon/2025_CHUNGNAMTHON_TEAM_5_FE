@@ -42,21 +42,37 @@ const EmptyText = styled.div`
 `;
 
 const StoreList = React.memo(
-  ({ stores, selectedStore, onStoreSelect, isLoading }) => {
+  ({
+    stores,
+    selectedStore,
+    onStoreSelect,
+    isLoading,
+    searchQuery,
+    isSearchMode,
+  }) => {
+    // stores가 배열이 아닌 경우 빈 배열로 처리
+    const safeStores = Array.isArray(stores) ? stores : [];
+
     if (isLoading) {
       return (
         <ListContainer>
           <DragHandle />
-          <LoadingText>가맹점을 불러오는 중...</LoadingText>
+          <LoadingText>
+            {isSearchMode ? "검색 중..." : "가맹점을 불러오는 중..."}
+          </LoadingText>
         </ListContainer>
       );
     }
 
-    if (!stores || stores.length === 0) {
+    if (!safeStores || safeStores.length === 0) {
       return (
         <ListContainer>
           <DragHandle />
-          <EmptyText>검색 결과가 없습니다.</EmptyText>
+          <EmptyText>
+            {isSearchMode && searchQuery
+              ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
+              : "검색 결과가 없습니다."}
+          </EmptyText>
         </ListContainer>
       );
     }
@@ -65,7 +81,7 @@ const StoreList = React.memo(
       <ListContainer>
         <DragHandle />
         <ListContent>
-          {stores.map((store) => (
+          {safeStores.map((store) => (
             <StoreCard
               key={store.id}
               store={store}

@@ -87,6 +87,8 @@ const MapPage = () => {
     isLoading,
     error: storeError,
     searchQuery,
+    isSearchMode,
+    handleSearchInputChange,
     handleSearch,
     handleStoreSelect,
     handleLocationUpdate,
@@ -112,8 +114,9 @@ const MapPage = () => {
         <HeaderTitle>천안사랑카드 가맹점 조회</HeaderTitle>
         <SearchBar
           value={searchQuery}
-          onChange={handleSearch}
-          placeholder="장소를 검색해보세요"
+          onChange={handleSearchInputChange}
+          onSubmit={handleSearch}
+          placeholder="가맹점을 검색해보세요"
         />
       </Header>
 
@@ -127,14 +130,13 @@ const MapPage = () => {
             </LoadingMessage>
           </LoadingContainer>
         ) : (
-          // <KakaoMap
-          //   stores={filteredStores}
-          //   selectedStore={selectedStore}
-          //   currentLocation={currentLocation}
-          //   onStoreSelect={handleStoreSelect}
-          //   onLocationUpdate={handleLocationUpdate}
-          // />
-          <KakaoMap />
+          <KakaoMap
+            stores={filteredStores}
+            selectedStore={selectedStore}
+            currentLocation={currentLocation}
+            onStoreSelect={handleStoreSelect}
+            onLocationUpdate={handleLocationUpdate}
+          />
         )}
 
         <LocationButton
@@ -147,6 +149,8 @@ const MapPage = () => {
           selectedStore={selectedStore}
           onStoreSelect={handleStoreSelect}
           isLoading={isLoading}
+          searchQuery={searchQuery}
+          isSearchMode={isSearchMode}
         />
       </MapContainer>
 

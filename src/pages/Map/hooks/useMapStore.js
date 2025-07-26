@@ -8,11 +8,13 @@ export const useMapStore = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   // 가맹점 데이터 로드
   const loadStores = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setIsSearchMode(false);
 
     try {
       const response = await storeApi.getStores();
@@ -26,9 +28,59 @@ export const useMapStore = () => {
     }
   }, []);
 
-  // 검색어 기반 필터링
+  // 검색어 입력값 업데이트 (실시간)
+  const handleSearchInputChange = useCallback(
+    (value) => {
+      setSearchQuery(value);
+      if (!value.trim()) {
+        setIsSearchMode(false);
+        loadStores(); // 빈 검색어면 전체 다시 불러오기
+      }
+    },
+    [loadStores]
+  );
+
+  // 키워드로 가맹점 검색 (검색 실행)
+  const searchStoresByKeyword = useCallback(
+    async (keyword) => {
+      if (!keyword.trim()) {
+        loadStores();
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setIsSearchMode(true);
+
+      try {
+        const response = await storeApi.searchStoresByKeyword(keyword);
+        console.log("서버 검색 결과:", response);
+
+        // API 응답 구조에 따라 data 또는 content 사용
+        const searchResults = response.data || response.content || [];
+        setStores(searchResults);
+      } catch (err) {
+        console.error("검색 실패:", err);
+        setError("가맹점 검색에 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [loadStores]
+  );
+
+  // 검색 실행 핸들러
+  const handleSearch = useCallback(
+    (query) => {
+      setSelectedStore(null); // 검색 시 선택 해제
+      searchStoresByKeyword(query);
+    },
+    [searchStoresByKeyword]
+  );
+
+  // 검색어 기반 필터링 (클라이언트 사이드)
   const filteredStores = useMemo(() => {
-    if (!searchQuery.trim()) return stores;
+    if (!searchQuery.trim() || isSearchMode) return stores;
 
     const query = searchQuery.toLowerCase();
     return stores.filter(
@@ -37,13 +89,7 @@ export const useMapStore = () => {
         store.category.toLowerCase().includes(query) ||
         store.address.toLowerCase().includes(query)
     );
-  }, [stores, searchQuery]);
-
-  // 검색 핸들러
-  const handleSearch = useCallback((query) => {
-    setSearchQuery(query);
-    setSelectedStore(null); // 검색 시 선택 해제
-  }, []);
+  }, [stores, searchQuery, isSearchMode]);
 
   // 가맹점 선택 핸들러
   const handleStoreSelect = useCallback((store) => {
@@ -91,6 +137,7 @@ export const useMapStore = () => {
     async (latitude, longitude, radius = 1000) => {
       setIsLoading(true);
       setError(null);
+      setIsSearchMode(false);
 
       try {
         const response = await storeApi.getNearbyStores({
@@ -147,8 +194,10 @@ export const useMapStore = () => {
     searchQuery,
     isLoading,
     error,
+    isSearchMode,
 
     // 액션
+    handleSearchInputChange,
     handleSearch,
     handleStoreSelect,
     handleLocationUpdate,
@@ -156,5 +205,6 @@ export const useMapStore = () => {
     searchNearbyStores,
     getStoreDetail,
     loadStores,
+    searchStoresByKeyword,
   };
 };

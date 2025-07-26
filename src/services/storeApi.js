@@ -309,6 +309,43 @@ class StoreApiService {
       data: categories,
     };
   }
+
+  // 키워드 기반 스토어 검색 (search bar용)
+  async searchStoresByKeyword(keyword) {
+    const token = useAuthStore.getState().accessToken;
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+        }/api/search?keyword=${encodeURIComponent(keyword)}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error("키워드 검색 실패:", error);
+    }
+
+    // 더미 데이터에서 더 정확한 검색
+    const keywordLower = keyword.toLowerCase();
+    const filtered = DUMMY_STORES.filter((store) => {
+      const nameMatch = store.name.toLowerCase().includes(keywordLower);
+      const categoryMatch = store.category.toLowerCase().includes(keywordLower);
+      const addressMatch = store.address.toLowerCase().includes(keywordLower);
+
+      return nameMatch || categoryMatch || addressMatch;
+    });
+
+    console.log(`검색어 "${keyword}"에 대한 결과: ${filtered.length}개`);
+    return {
+      data: filtered,
+    };
+  }
 }
 
 export const storeApi = new StoreApiService();
