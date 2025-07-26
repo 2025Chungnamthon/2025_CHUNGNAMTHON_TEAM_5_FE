@@ -115,7 +115,7 @@ export const meetingApi = {
         }
     },
 
-    // 내 모임 리스트 조회 (새로 추가) - status별 엔드포인트
+    // 내 모임 리스트 조회
     getMyMeetings: async (status = 'approved') => {
         try {
             // status에 따라 엔드포인트 결정
@@ -267,6 +267,105 @@ export const meetingApi = {
             return await response.json();
         } catch (error) {
             console.error('모임 삭제 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 멤버 리스트 조회
+    getMeetingMembers: async (meetingId) => {
+        try {
+            console.log(`모임 ${meetingId} 멤버 리스트 조회 시작`);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/users`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 403:
+                        throw new Error('멤버 리스트를 볼 권한이 없습니다.');
+                    case 404:
+                        throw new Error('모임을 찾을 수 없습니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('멤버 리스트 조회 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('멤버 리스트 조회 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 멤버 승인
+    approveMember: async (meetingId, userId) => {
+        try {
+            console.log(`모임 ${meetingId}에서 사용자 ${userId} 승인 시작`);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/approve/${userId}`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 400:
+                        throw new Error('잘못된 신청 상태입니다.');
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 403:
+                        throw new Error('승인 권한이 없습니다.');
+                    case 404:
+                        throw new Error('존재하지 않는 모임입니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('멤버 승인 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('멤버 승인 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 멤버 거절
+    rejectMember: async (meetingId, userId) => {
+        try {
+            console.log(`모임 ${meetingId}에서 사용자 ${userId} 거절 시작`);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/reject/${userId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 403:
+                        throw new Error('요청 상태가 아닙니다.');
+                    case 404:
+                        throw new Error('존재하지 않는 모임입니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('멤버 거절 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('멤버 거절 API 오류:', error);
             throw error;
         }
     }
