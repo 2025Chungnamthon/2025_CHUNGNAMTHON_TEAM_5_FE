@@ -151,15 +151,15 @@ const ActionButtons = styled.div`
 
 const ActionButton = styled.button`
     background: ${(props) => {
-    if (props.variant === 'approve') return '#F2F4F4';
-    if (props.variant === 'reject') return '#F66570';
-    return '#F66570';
-}};
+        if (props.variant === 'approve') return '#F2F4F4';
+        if (props.variant === 'reject') return '#F66570';
+        return '#F66570';
+    }};
     color: ${(props) => {
-    if (props.variant === 'approve') return '#000';
-    if (props.variant === 'reject') return '#fff';
-    return '#000';
-}};
+        if (props.variant === 'approve') return '#000';
+        if (props.variant === 'reject') return '#fff';
+        return '#000';
+    }};
     border: none;
     border-radius: 12px;
     font-size: 14px;
@@ -171,10 +171,10 @@ const ActionButton = styled.button`
 
     &:hover {
         background: ${(props) => {
-    if (props.variant === 'approve') return '#e5e7eb';
-    if (props.variant === 'reject') return '#dc2626';
-    return '#dc2626';
-}};
+            if (props.variant === 'approve') return '#e5e7eb';
+            if (props.variant === 'reject') return '#dc2626';
+            return '#dc2626';
+        }};
     }
 
     &:active {
@@ -373,13 +373,32 @@ const MemberManagementPage = () => {
         }
     }, [meetingId, fetchMembers, actionLoading, members]);
 
-    // 멤버 내보내기 (나중에 구현)
+    // 멤버 내보내기 처리
     const handleKick = useCallback(async (userId) => {
+        if (actionLoading === userId) return;
+
         const member = members.find(m => m.userId === userId);
         const memberName = member?.userNickName || `사용자 ${userId}`;
 
-        alert(`${memberName}님 내보내기 기능은 준비 중입니다.`);
-    }, [members]);
+        if (window.confirm(`정말로 ${memberName}님을 모임에서 내보내시겠습니까?\n\n내보낸 멤버는 다시 참여할 수 있습니다.`)) {
+            try {
+                setActionLoading(userId);
+                console.log(`멤버 ${userId} 내보내기 시작`);
+
+                await meetingApi.kickMember(meetingId, userId);
+
+                alert(`${memberName}님을 모임에서 내보냈습니다.`);
+
+                // 멤버 리스트 새로고침
+                await fetchMembers();
+            } catch (err) {
+                console.error("내보내기 실패:", err);
+                alert(err.message || "내보내기에 실패했습니다.");
+            } finally {
+                setActionLoading(null);
+            }
+        }
+    }, [meetingId, fetchMembers, actionLoading, members]);
 
     // 저장하기 (현재는 닫기만)
     const handleSave = useCallback(() => {

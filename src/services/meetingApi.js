@@ -368,6 +368,37 @@ export const meetingApi = {
             console.error('멤버 거절 API 오류:', error);
             throw error;
         }
+    },
+
+    // 멤버 내보내기 (강퇴)
+    kickMember: async (meetingId, userId) => {
+        try {
+            console.log(`모임 ${meetingId}에서 사용자 ${userId} 내보내기 시작`);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/kick/${userId}`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 403:
+                        throw new Error('해당 모임에 참여 중인 멤버가 아닙니다.');
+                    case 404:
+                        throw new Error('존재하지 않는 모임입니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('멤버 내보내기 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('멤버 내보내기 API 오류:', error);
+            throw error;
+        }
     }
 };
 
