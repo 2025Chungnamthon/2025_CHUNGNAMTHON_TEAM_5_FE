@@ -40,3 +40,35 @@ export const getMyCoupons = async () => {
     throw error;
   }
 };
+
+export const useCoupon = async (couponId, confirmCode) => {
+  try {
+    const accessToken = getAuthToken();
+
+    // confirmCode를 숫자로 변환
+    const numericConfirmCode = parseInt(confirmCode, 10);
+
+    console.log("[couponApi] 쿠폰 사용 요청:", {
+      couponId: couponId,
+      confirmCode: numericConfirmCode,
+    });
+
+    const response = await axios.post(
+      `${API_BASE_URL}/api/coupons/use`,
+      {
+        couponId: couponId,
+        confirmCode: numericConfirmCode,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    console.log("[couponApi] 쿠폰 사용 성공:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("[couponApi] 쿠폰 사용 실패:", error.response || error);
+    throw error;
+  }
+};
