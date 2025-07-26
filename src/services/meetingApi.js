@@ -1,5 +1,5 @@
-import { getAuthToken } from './auth';
-import { getLocationCode } from '../utils/locationUtils';
+import {getAuthToken} from './auth';
+import {getLocationCode} from '../utils/locationUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://43.200.175.218:8080';
 
@@ -80,8 +80,7 @@ export const meetingApi = {
                 }
             }
 
-            const result = await response.json();
-            return result;
+            return await response.json();
 
         } catch (error) {
             console.error('모임 생성 API 오류:', error);

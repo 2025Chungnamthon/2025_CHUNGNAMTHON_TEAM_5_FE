@@ -152,7 +152,7 @@ const getScheduleKorean = (schedule) => {
     const scheduleMap = {
         'WEEKDAY': '평일',
         'WEEKEND': '주말',
-        'ALL': '전체'
+        'FULL': '전체'
     };
     return scheduleMap[schedule] || schedule;
 };
@@ -162,7 +162,7 @@ const getScheduleTagType = (schedule) => {
     const typeMap = {
         'WEEKDAY': 'weekday',
         'WEEKEND': 'weekend',
-        'ALL': 'all'
+        'FULL': 'all'
     };
     return typeMap[schedule] || 'all';
 };
@@ -210,7 +210,7 @@ const MeetingCard = ({
             <CardContainer onClick={handleCardClick} swiped={swiped}>
                 <div style={{position: 'relative'}}>
                     <MeetingImage
-                        src={meeting.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
+                        src={meeting.imageUrl || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"}
                         alt={meeting.title}
                         onError={handleImageError}
                     />
