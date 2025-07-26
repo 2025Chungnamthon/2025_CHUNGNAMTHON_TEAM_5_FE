@@ -44,6 +44,19 @@ const Avatar = styled.img`
   object-fit: cover;
   background: #f3f4f6;
 `;
+
+const AvatarPlaceholder = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+`;
 const RankNumber = styled.span`
   font-weight: 600;
   color: #222;
@@ -95,14 +108,27 @@ const rankingData = [
   },
 ];
 
-const HomeRankingSection = () => {
+const HomeRankingSection = ({ powerUsers = [] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
 
-  const displayData = isExpanded ? rankingData : [rankingData[0]];
+  const handleImageError = (imageUrl) => {
+    setImageErrors((prev) => new Set(prev).add(imageUrl));
+  };
+
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    const invalidDomains = ["example.com", "image.com"];
+    return !invalidDomains.some((domain) => url.includes(domain));
+  };
+
+  // API 데이터가 있으면 사용하고, 없으면 기본 데이터 사용
+  const dataToUse = powerUsers.length > 0 ? powerUsers : rankingData;
+  const displayData = isExpanded ? dataToUse : [dataToUse[0]];
 
   return (
     <SectionContainer>
@@ -113,14 +139,30 @@ const HomeRankingSection = () => {
         </SectionArrow>
       </SectionHeader>
       <RankingBox>
-        {displayData.map((user) => (
-          <RankItem key={user.rank}>
-            <RankNumber>{user.rank}.</RankNumber>
-            <Avatar src={user.avatar} alt={user.name} />
-            <RankName>{user.name}</RankName>
-            <RankPoint>{user.points}</RankPoint>
-          </RankItem>
-        ))}
+        {displayData.map((user, index) => {
+          const imageUrl = user.avatar || user.imageUrl;
+          const shouldShowPlaceholder =
+            !isValidImageUrl(imageUrl) || imageErrors.has(imageUrl);
+
+          return (
+            <RankItem key={user.id || user.rank || index}>
+              <RankNumber>{user.rank || index + 1}.</RankNumber>
+              {shouldShowPlaceholder ? (
+                <AvatarPlaceholder>
+                  {(user.name || user.username || "사용자").charAt(0)}
+                </AvatarPlaceholder>
+              ) : (
+                <Avatar
+                  src={imageUrl}
+                  alt={user.name || user.username}
+                  onError={() => handleImageError(imageUrl)}
+                />
+              )}
+              <RankName>{user.name || user.username}</RankName>
+              <RankPoint>{user.points || `${user.point || 0}p`}</RankPoint>
+            </RankItem>
+          );
+        })}
       </RankingBox>
     </SectionContainer>
   );

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getHomeData } from "@/services/homeApi";
 import HomeGroupSection from "./component/HomeGroupSection";
 import HomeRankingSection from "./component/HomeRankingSection";
 import HomeStoreSection from "./component/HomeStoreSection";
@@ -9,6 +10,20 @@ import Header from "./component/Header";
 
 function Homepage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [homeData, setHomeData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getHomeData();
+        setHomeData(res); // 실제 응답 구조에 맞게 조정
+        console.log("홈 데이터:", res);
+      } catch (error) {
+        console.error("홈 데이터 로딩 실패:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleFloatingButtonClick = () => {
     console.log("플로팅 버튼 클릭 - 메뉴 토글");
@@ -23,9 +38,9 @@ function Homepage() {
   return (
     <div>
       <Header />
-      <HomeGroupSection />
-      <HomeRankingSection />
-      <HomeStoreSection />
+      <HomeGroupSection meetings={homeData?.recentMeetings || []} />
+      <HomeRankingSection powerUsers={homeData?.powerUsers || []} />
+      <HomeStoreSection affiliates={homeData?.topAffiliates || []} />
       <HomeCardSection />
 
       <FloatingActionButton

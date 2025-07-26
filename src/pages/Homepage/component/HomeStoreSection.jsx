@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
@@ -61,6 +61,20 @@ const StoreImage = styled.img`
   margin-bottom: 8px;
 `;
 
+const StoreImagePlaceholder = styled.div`
+  width: 90px;
+  height: 90px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+`;
+
 const StoreName = styled.div`
   font-size: 15px;
   color: #181818;
@@ -72,12 +86,54 @@ const StoreName = styled.div`
   max-width: 90px;
 `;
 
-const HomeStoreSection = () => {
+const HomeStoreSection = ({ affiliates = [] }) => {
   const navigate = useNavigate();
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   const handleArrowClick = () => {
     navigate("/affiliated-stores");
   };
+
+  const handleImageError = (imageUrl) => {
+    setImageErrors((prev) => new Set(prev).add(imageUrl));
+  };
+
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    const invalidDomains = ["example.com", "image.com"];
+    return !invalidDomains.some((domain) => url.includes(domain));
+  };
+
+  // 기본 데이터 (API 데이터가 없을 때 사용)
+  const defaultAffiliates = [
+    {
+      id: 1,
+      name: "한결가지칼국수",
+      imageUrl:
+        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
+    },
+    {
+      id: 2,
+      name: "배포 갈비",
+      imageUrl:
+        "https://static.doeat.me/store-food/1092/6d987a0d-2c57-4808-b5a9-423f43efca27.png",
+    },
+    {
+      id: 3,
+      name: "더홀릭보드카페",
+      imageUrl:
+        "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80",
+    },
+    {
+      id: 4,
+      name: "샤브올데이",
+      imageUrl:
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
+    },
+  ];
+
+  // API 데이터가 있으면 사용하고, 없으면 기본 데이터 사용
+  const storesToShow = affiliates.length > 0 ? affiliates : defaultAffiliates;
 
   return (
     <StoreSectionContainer>
@@ -86,34 +142,27 @@ const HomeStoreSection = () => {
         <StoreSectionArrow onClick={handleArrowClick} />
       </StoreSectionHeader>
       <StoreScrollRow>
-        <StoreCard>
-          <StoreImage
-            src="https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
-            alt="한결가지칼국수"
-          />
-          <StoreName>한결가지칼국수</StoreName>
-        </StoreCard>
-        <StoreCard>
-          <StoreImage
-            src="https://static.doeat.me/store-food/1092/6d987a0d-2c57-4808-b5a9-423f43efca27.png"
-            alt="배포 갈비"
-          />
-          <StoreName>배포 갈비</StoreName>
-        </StoreCard>
-        <StoreCard>
-          <StoreImage
-            src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80"
-            alt="더홀릭보드카페"
-          />
-          <StoreName>더홀릭보드카페</StoreName>
-        </StoreCard>
-        <StoreCard>
-          <StoreImage
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
-            alt="샤브올데이"
-          />
-          <StoreName>샤브올데이</StoreName>
-        </StoreCard>
+        {storesToShow.map((store) => {
+          const shouldShowPlaceholder =
+            !isValidImageUrl(store.imageUrl) || imageErrors.has(store.imageUrl);
+
+          return (
+            <StoreCard key={store.id}>
+              {shouldShowPlaceholder ? (
+                <StoreImagePlaceholder>
+                  {store.name ? store.name.charAt(0) : "업"}
+                </StoreImagePlaceholder>
+              ) : (
+                <StoreImage
+                  src={store.imageUrl}
+                  alt={store.name}
+                  onError={() => handleImageError(store.imageUrl)}
+                />
+              )}
+              <StoreName>{store.name}</StoreName>
+            </StoreCard>
+          );
+        })}
       </StoreScrollRow>
     </StoreSectionContainer>
   );
