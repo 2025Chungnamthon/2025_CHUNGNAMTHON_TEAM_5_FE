@@ -15,7 +15,7 @@ const getAuthHeaders = () => {
     const token = getAuthToken();
     return {
         'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
+        ...(token && {'Authorization': `Bearer ${token}`})
     };
 };
 
@@ -111,6 +111,123 @@ export const meetingApi = {
             return await response.json();
         } catch (error) {
             console.error('모임 목록 조회 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 상세 정보 조회
+    getMeetingDetail: async (meetingId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 404:
+                        throw new Error('모임을 찾을 수 없습니다.');
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('모임 상세 조회 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 가입 신청
+    joinMeeting: async (meetingId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/join`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 400:
+                        throw new Error('이미 가입 신청했거나 참여중인 모임입니다.');
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 404:
+                        throw new Error('모임을 찾을 수 없습니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('모임 가입 신청 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 수정
+    updateMeeting: async (meetingId, meetingData) => {
+        try {
+            const requestData = transformMeetingData(meetingData);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+                method: 'PATCH',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 403:
+                        throw new Error('모임을 수정할 권한이 없습니다.');
+                    case 404:
+                        throw new Error('모임을 찾을 수 없습니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('모임 수정 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 삭제
+    deleteMeeting: async (meetingId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 403:
+                        throw new Error('모임을 삭제할 권한이 없습니다.');
+                    case 404:
+                        throw new Error('모임을 찾을 수 없습니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('모임 삭제 API 오류:', error);
             throw error;
         }
     }

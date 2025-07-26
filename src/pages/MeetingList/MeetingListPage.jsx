@@ -207,21 +207,19 @@ const MeetingListPage = () => {
     const handleViewMeeting = (meetingId) => {
         console.log(`모임 ${meetingId} 자세히`);
 
-        if (mainTab === 'meetings') {
-            // 모임 리스트에서는 상세 모달 열기
-            const meeting = meetings.find(m => m.meetingId === meetingId);
-            if (meeting) {
-                setSelectedMeeting(meeting);
-                setIsModalOpen(true);
-            }
-        } else {
-            // 내 모임에서도 상세 모달 열기
-            const meeting = myMeetings.find(m => m.meetingId === meetingId);
-            if (meeting) {
-                setSelectedMeeting(meeting);
-                setIsModalOpen(true);
-            }
+        const meeting = meetings.find(m => m.meetingId === meetingId);
+        if (meeting) {
+            setSelectedMeeting(meeting);
+            setIsModalOpen(true);
         }
+    };
+
+    // 모달 닫기 후 리스트 새로고침용 콜백
+    const handleRefreshAfterAction = () => {
+        fetchMeetings(); // 리스트 새로고침
+        // 가입 신청 후 "내 모임 > 승인 대기 중" 탭으로 이동하려면:
+        // setMainTab('myMeetings');
+        // setSubTab('pending');
     };
 
     // 모달 액션 버튼 클릭 핸들러
@@ -440,15 +438,11 @@ const MeetingListPage = () => {
                 meeting={selectedMeeting}
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
-                onAction={handleModalAction}
-                onEdit={handleEditMeeting}
-                onManageMembers={handleManageMembers}
-                onDelete={handleDeleteMeeting}
-                onLeave={handleLeaveFromModal}
-                onCancelApplication={handleCancelApplication}
+                onRefresh={handleRefreshAfterAction}
                 meetingStatus={
                     mainTab === 'myMeetings'
-                        ? (subTab === 'joined' ? 'joined' : 'pending')
+                        ? (selectedMeeting?.isHost ? 'joined' :
+                            subTab === 'joined' ? 'joined' : 'pending')
                         : 'available'
                 }
             />
