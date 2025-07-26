@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { meetingApi } from "../../services/meetingApi";
+import { isAuthenticated } from "../../services/auth";
 import MeetingCard from "./component/MeetingCard";
 import MeetingDetailModal from "./component/MeetingDetailModal";
 
@@ -136,12 +137,48 @@ const EmptyContainer = styled.div`
     background: #fff;
 `;
 
+const LoginRequiredContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 20px;
+    color: #6b7280;
+    font-size: 14px;
+    text-align: center;
+    background: #fff;
+`;
+
+const LoginButton = styled.button`
+    background: #80c7bc;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #5fa89e;
+    }
+`;
+
 const MeetingListPage = () => {
     const navigate = useNavigate();
-    const [mainTab, setMainTab] = useState('meetings'); // 'meetings' or 'myMeetings'
-    const [subTab, setSubTab] = useState('joined'); // 'joined' or 'pending'
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // URL 파라미터에서 초기값 설정
+    const initialMainTab = searchParams.get('tab') || 'meetings';
+    const initialSubTab = searchParams.get('subTab') || 'approved';
+
+    const [mainTab, setMainTab] = useState(initialMainTab); // 'meetings' or 'myMeetings'
+    const [subTab, setSubTab] = useState(initialSubTab); // 'approved' or 'pending'
     const [meetings, setMeetings] = useState([]);
-    const [myMeetings, setMyMeetings] = useState([]);
+    const [approvedMeetings, setApprovedMeetings] = useState([]); // 참여중 모임
+    const [pendingMeetings, setPendingMeetings] = useState([]); // 승인 대기중 모임
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [swipedCard, setSwipedCard] = useState(null);
@@ -150,26 +187,88 @@ const MeetingListPage = () => {
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 모임 데이터 불러오기
+    // 전체 모임 데이터 불러오기
     const fetchMeetings = async () => {
+        try {
+            console.log('전체 모임 리스트 조회 시작');
+            const response = await meetingApi.getMeetings();
+            console.log('전체 모임 API 응답:', response);
+
+            const meetings = response.data || [];
+            setMeetings(meetings);
+        } catch (err) {
+            console.error('전체 모임 리스트 조회 실패:', err);
+            throw err; // 상위로 에러 전파
+        }
+    };
+
+    // 참여중 내 모임 데이터 불러오기
+    const fetchApprovedMeetings = async () => {
+        try {
+            console.log('참여중 모임 리스트 조회 시작');
+            const response = await meetingApi.getMyMeetings('approved');
+            console.log('참여중 모임 API 응답:', response);
+
+            const approvedMeetings = response.data || [];
+            setApprovedMeetings(approvedMeetings);
+        } catch (err) {
+            console.error('참여중 모임 리스트 조회 실패:', err);
+            throw err;
+        }
+    };
+
+    // 승인 대기중 내 모임 데이터 불러오기
+    const fetchPendingMeetings = async () => {
+        try {
+            console.log('승인 대기중 모임 리스트 조회 시작');
+            const response = await meetingApi.getMyMeetings('pending');
+            console.log('승인 대기중 모임 API 응답:', response);
+
+            const pendingMeetings = response.data || [];
+            setPendingMeetings(pendingMeetings);
+        } catch (err) {
+            console.error('승인 대기중 모임 리스트 조회 실패:', err);
+            throw err;
+        }
+    };
+
+    // 전체 데이터 로드 함수
+    const loadAllData = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            console.log('모임 리스트 조회 시작');
-            const response = await meetingApi.getMeetings();
-            console.log('API 응답:', response);
+            if (mainTab === 'meetings') {
+                // 전체 모임만 로드
+                await fetchMeetings();
+            } else {
+                // 내 모임인 경우 로그인 체크 후 로드
+                if (!isAuthenticated()) {
+                    setApprovedMeetings([]);
+                    setPendingMeetings([]);
+                    return;
+                }
 
-            // 스웨거 응답 구조: { timestamp, message, data: [...] }
-            const meetings = response.data || [];
-            setMeetings(meetings);
-            setMyMeetings([]); // 내 모임은 별도 API라서 일단 빈 배열
+                // 현재 선택된 서브탭에 따라 해당 데이터만 로드
+                if (subTab === 'approved') {
+                    await fetchApprovedMeetings();
+                } else {
+                    await fetchPendingMeetings();
+                }
+            }
 
         } catch (err) {
-            console.error('모임 리스트 조회 실패:', err);
-            setError(err.message || '모임 리스트를 불러오는데 실패했습니다.');
-            setMeetings([]);
-            setMyMeetings([]);
+            console.error('데이터 로드 실패:', err);
+            setError(err.message || '데이터를 불러오는데 실패했습니다.');
+            if (mainTab === 'meetings') {
+                setMeetings([]);
+            } else {
+                if (subTab === 'approved') {
+                    setApprovedMeetings([]);
+                } else {
+                    setPendingMeetings([]);
+                }
+            }
         } finally {
             setLoading(false);
         }
@@ -177,18 +276,52 @@ const MeetingListPage = () => {
 
     // 컴포넌트 마운트 시 데이터 로드
     useEffect(() => {
-        fetchMeetings();
-    }, []);
+        loadAllData();
+    }, [mainTab, subTab]); // mainTab과 subTab 변경 시 데이터 다시 로드
+
+    // URL 파라미터 변경 시 상태 업데이트
+    useEffect(() => {
+        const urlMainTab = searchParams.get('tab');
+        const urlSubTab = searchParams.get('subTab');
+
+        if (urlMainTab && urlMainTab !== mainTab) {
+            setMainTab(urlMainTab);
+        }
+        if (urlSubTab && urlSubTab !== subTab) {
+            setSubTab(urlSubTab);
+        }
+    }, [searchParams]);
 
     // 현재 표시할 모임 리스트 결정
     const getCurrentMeetings = () => {
         if (mainTab === 'meetings') {
             return meetings;
         } else {
-            return myMeetings.filter(meeting =>
-                subTab === 'joined' ? meeting.status === 'JOINED' : meeting.status === 'PENDING'
-            );
+            // 내 모임에서는 현재 선택된 서브탭에 따라 반환
+            return subTab === 'approved' ? approvedMeetings : pendingMeetings;
         }
+    };
+
+    // 메인 탭 변경 핸들러
+    const handleMainTabChange = (tab) => {
+        setMainTab(tab);
+        setSwipedCard(null); // 스와이프 상태 초기화
+
+        // URL 파라미터 업데이트
+        if (tab === 'myMeetings') {
+            setSearchParams({ tab: 'myMeetings', subTab: subTab });
+        } else {
+            setSearchParams({ tab: 'meetings' });
+        }
+    };
+
+    // 서브 탭 변경 핸들러
+    const handleSubTabChange = (tab) => {
+        setSubTab(tab);
+        setSwipedCard(null); // 스와이프 상태 초기화
+
+        // URL 파라미터 업데이트
+        setSearchParams({ tab: 'myMeetings', subTab: tab });
     };
 
     // 모임 카드 클릭 핸들러
@@ -207,7 +340,7 @@ const MeetingListPage = () => {
     const handleViewMeeting = (meetingId) => {
         console.log(`모임 ${meetingId} 자세히`);
 
-        const meeting = meetings.find(m => m.meetingId === meetingId);
+        const meeting = getCurrentMeetings().find(m => m.meetingId === meetingId);
         if (meeting) {
             setSelectedMeeting(meeting);
             setIsModalOpen(true);
@@ -216,17 +349,7 @@ const MeetingListPage = () => {
 
     // 모달 닫기 후 리스트 새로고침용 콜백
     const handleRefreshAfterAction = () => {
-        fetchMeetings(); // 리스트 새로고침
-        // 가입 신청 후 "내 모임 > 승인 대기 중" 탭으로 이동하려면:
-        // setMainTab('myMeetings');
-        // setSubTab('pending');
-    };
-
-    // 모달 액션 버튼 클릭 핸들러
-    const handleModalAction = (meetingId) => {
-        console.log(`모임 ${meetingId} 가입 신청`);
-        alert(`모임 ${meetingId}에 가입 신청하시겠습니까?`);
-        setIsModalOpen(false);
+        loadAllData(); // 전체 데이터 새로고침
     };
 
     // 모달 닫기 핸들러
@@ -247,50 +370,25 @@ const MeetingListPage = () => {
         setSwipedCard(null);
     };
 
-    // 멤버 관리 핸들러 - 새로 추가된 부분
-    const handleManageMembers = (meetingId) => {
-        console.log(`모임 ${meetingId} 멤버 관리`);
-        navigate(`/meetings/${meetingId}/members`);
-        setIsModalOpen(false); // 모달 닫기
-    };
-
-    // 모임 수정 핸들러
-    const handleEditMeeting = (meetingId) => {
-        console.log(`모임 ${meetingId} 수정`);
-        alert(`모임 ${meetingId} 수정 기능은 준비 중입니다.`);
-        setIsModalOpen(false);
-    };
-
-    // 모임 삭제 핸들러
-    const handleDeleteMeeting = (meetingId) => {
-        console.log(`모임 ${meetingId} 삭제`);
-        if (window.confirm(`정말로 모임 ${meetingId}을(를) 삭제하시겠습니까?`)) {
-            alert(`모임 ${meetingId}이(가) 삭제되었습니다.`);
-            setIsModalOpen(false);
-        }
-    };
-
-    // 모임 나가기 핸들러
-    const handleLeaveFromModal = (meetingId) => {
-        console.log(`모임 ${meetingId} 나가기`);
-        if (window.confirm(`정말로 모임 ${meetingId}에서 나가시겠습니까?`)) {
-            alert(`모임 ${meetingId}에서 나가셨습니다.`);
-            setIsModalOpen(false);
-        }
-    };
-
-    // 신청 취소 핸들러
-    const handleCancelApplication = (meetingId) => {
-        console.log(`모임 ${meetingId} 신청 취소`);
-        if (window.confirm(`정말로 모임 ${meetingId} 신청을 취소하시겠습니까?`)) {
-            alert(`모임 ${meetingId} 신청이 취소되었습니다.`);
-            setIsModalOpen(false);
-        }
-    };
-
     // 재시도 핸들러
     const handleRetry = () => {
-        fetchMeetings();
+        loadAllData();
+    };
+
+    // 로그인 버튼 클릭 핸들러
+    const handleLogin = () => {
+        navigate('/login');
+    };
+
+    // 현재 모임 상태 결정 (모달용)
+    const getCurrentMeetingStatus = () => {
+        if (mainTab === 'myMeetings') {
+            if (selectedMeeting?.isHost) {
+                return 'joined'; // 호스트는 참여중으로 처리
+            }
+            return subTab === 'approved' ? 'joined' : 'pending';
+        }
+        return 'available'; // 전체 모임에서는 가입 가능 상태
     };
 
     // 로딩 상태
@@ -299,8 +397,18 @@ const MeetingListPage = () => {
             <PageContainer>
                 <PageHeader>
                     <MainTabContainer>
-                        <MainTab active={true}>모임</MainTab>
-                        <MainTab active={false}>내 모임</MainTab>
+                        <MainTab
+                            active={mainTab === 'meetings'}
+                            onClick={() => handleMainTabChange('meetings')}
+                        >
+                            모임
+                        </MainTab>
+                        <MainTab
+                            active={mainTab === 'myMeetings'}
+                            onClick={() => handleMainTabChange('myMeetings')}
+                        >
+                            내 모임
+                        </MainTab>
                     </MainTabContainer>
                 </PageHeader>
                 <LoadingContainer>
@@ -316,8 +424,18 @@ const MeetingListPage = () => {
             <PageContainer>
                 <PageHeader>
                     <MainTabContainer>
-                        <MainTab active={true}>모임</MainTab>
-                        <MainTab active={false}>내 모임</MainTab>
+                        <MainTab
+                            active={mainTab === 'meetings'}
+                            onClick={() => handleMainTabChange('meetings')}
+                        >
+                            모임
+                        </MainTab>
+                        <MainTab
+                            active={mainTab === 'myMeetings'}
+                            onClick={() => handleMainTabChange('myMeetings')}
+                        >
+                            내 모임
+                        </MainTab>
                     </MainTabContainer>
                 </PageHeader>
                 <ErrorContainer>
@@ -330,23 +448,60 @@ const MeetingListPage = () => {
         );
     }
 
-    const currentMeetings = getCurrentMeetings();
-
-    // 빈 상태
-    if (currentMeetings.length === 0) {
+    // 내 모임 탭이지만 로그인되지 않은 경우
+    if (mainTab === 'myMeetings' && !isAuthenticated()) {
         return (
             <PageContainer>
                 <PageHeader>
                     <MainTabContainer>
                         <MainTab
                             active={mainTab === 'meetings'}
-                            onClick={() => setMainTab('meetings')}
+                            onClick={() => handleMainTabChange('meetings')}
                         >
                             모임
                         </MainTab>
                         <MainTab
                             active={mainTab === 'myMeetings'}
-                            onClick={() => setMainTab('myMeetings')}
+                            onClick={() => handleMainTabChange('myMeetings')}
+                        >
+                            내 모임
+                        </MainTab>
+                    </MainTabContainer>
+                </PageHeader>
+                <LoginRequiredContainer>
+                    <div>로그인이 필요한 서비스입니다.</div>
+                    <div>로그인 후 내 모임을 확인해보세요!</div>
+                    <LoginButton onClick={handleLogin}>
+                        로그인하기
+                    </LoginButton>
+                </LoginRequiredContainer>
+            </PageContainer>
+        );
+    }
+
+    const currentMeetings = getCurrentMeetings();
+
+    // 빈 상태
+    if (currentMeetings.length === 0) {
+        const emptyMessage = mainTab === 'meetings'
+            ? { main: '등록된 모임이 없습니다.', sub: '새로운 모임을 만들어보세요!' }
+            : subTab === 'approved'
+                ? { main: '참여중인 모임이 없습니다.', sub: '새로운 모임에 가입해보세요!' }
+                : { main: '승인 대기중인 모임이 없습니다.', sub: '모임에 가입 신청해보세요!' };
+
+        return (
+            <PageContainer>
+                <PageHeader>
+                    <MainTabContainer>
+                        <MainTab
+                            active={mainTab === 'meetings'}
+                            onClick={() => handleMainTabChange('meetings')}
+                        >
+                            모임
+                        </MainTab>
+                        <MainTab
+                            active={mainTab === 'myMeetings'}
+                            onClick={() => handleMainTabChange('myMeetings')}
                         >
                             내 모임
                         </MainTab>
@@ -355,14 +510,14 @@ const MeetingListPage = () => {
                     {mainTab === 'myMeetings' && (
                         <SubTabContainer>
                             <SubTab
-                                active={subTab === 'joined'}
-                                onClick={() => setSubTab('joined')}
+                                active={subTab === 'approved'}
+                                onClick={() => handleSubTabChange('approved')}
                             >
                                 참여중
                             </SubTab>
                             <SubTab
                                 active={subTab === 'pending'}
-                                onClick={() => setSubTab('pending')}
+                                onClick={() => handleSubTabChange('pending')}
                             >
                                 승인 대기 중
                             </SubTab>
@@ -370,8 +525,8 @@ const MeetingListPage = () => {
                     )}
                 </PageHeader>
                 <EmptyContainer>
-                    <div>등록된 모임이 없습니다.</div>
-                    <div>새로운 모임을 만들어보세요!</div>
+                    <div>{emptyMessage.main}</div>
+                    <div>{emptyMessage.sub}</div>
                 </EmptyContainer>
             </PageContainer>
         );
@@ -384,13 +539,13 @@ const MeetingListPage = () => {
                 <MainTabContainer>
                     <MainTab
                         active={mainTab === 'meetings'}
-                        onClick={() => setMainTab('meetings')}
+                        onClick={() => handleMainTabChange('meetings')}
                     >
                         모임
                     </MainTab>
                     <MainTab
                         active={mainTab === 'myMeetings'}
-                        onClick={() => setMainTab('myMeetings')}
+                        onClick={() => handleMainTabChange('myMeetings')}
                     >
                         내 모임
                     </MainTab>
@@ -399,14 +554,14 @@ const MeetingListPage = () => {
                 {mainTab === 'myMeetings' && (
                     <SubTabContainer>
                         <SubTab
-                            active={subTab === 'joined'}
-                            onClick={() => setSubTab('joined')}
+                            active={subTab === 'approved'}
+                            onClick={() => handleSubTabChange('approved')}
                         >
                             참여중
                         </SubTab>
                         <SubTab
                             active={subTab === 'pending'}
-                            onClick={() => setSubTab('pending')}
+                            onClick={() => handleSubTabChange('pending')}
                         >
                             승인 대기 중
                         </SubTab>
@@ -433,18 +588,13 @@ const MeetingListPage = () => {
                 ))}
             </MeetingList>
 
-            {/* 모임 상세 모달 - 새로 추가된 핸들러들 포함 */}
+            {/* 모임 상세 모달 */}
             <MeetingDetailModal
                 meeting={selectedMeeting}
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onRefresh={handleRefreshAfterAction}
-                meetingStatus={
-                    mainTab === 'myMeetings'
-                        ? (selectedMeeting?.isHost ? 'joined' :
-                            subTab === 'joined' ? 'joined' : 'pending')
-                        : 'available'
-                }
+                meetingStatus={getCurrentMeetingStatus()}
             />
         </PageContainer>
     );

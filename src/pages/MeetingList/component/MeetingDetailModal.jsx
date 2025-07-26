@@ -1,9 +1,9 @@
-import React, {useState, useRef, useEffect, useCallback, useMemo} from "react";
+import React, {useState, useRef, useEffect, useMemo} from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
 import {getLocationKorean} from "../../../utils/locationUtils";
 import TagBadge from "../../../components/TagBadge";
 import { meetingApi } from "../../../services/meetingApi";
+import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -266,12 +266,20 @@ const MeetingDetailModal = ({
                                 onRefresh,
                                 meetingStatus = 'available'
                             }) => {
-    const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const [detailData, setDetailData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState(false);
     const dropdownRef = useRef(null);
+
+    // 현재 표시할 모임 데이터
+    const currentMeeting = detailData || meeting;
+
+    // 커스텀 훅으로 분리된 핸들러들
+    const {
+        actionLoading,
+        handleActionClick,
+        handleMenuAction
+    } = useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
 
     // 모임 상세 정보 불러오기
     const fetchMeetingDetail = async () => {
@@ -314,9 +322,6 @@ const MeetingDetailModal = ({
         };
     }, [showDropdown]);
 
-    // 현재 표시할 모임 데이터
-    const currentMeeting = detailData || meeting;
-
     // 메뉴 표시 여부 결정
     const shouldShowMenu = useMemo(() => {
         return currentMeeting?.isHost || meetingStatus === 'joined' || meetingStatus === 'pending';
@@ -328,45 +333,17 @@ const MeetingDetailModal = ({
 
         if (currentMeeting.isHost) {
             return [
-                {
-                    key: 'edit',
-                    label: '수정하기',
-                    icon: '✏️',
-                    action: 'edit'
-                },
-                {
-                    key: 'members',
-                    label: '멤버 관리',
-                    icon: '👥',
-                    action: 'members'
-                },
-                {
-                    key: 'delete',
-                    label: '삭제하기',
-                    icon: '🗑️',
-                    action: 'delete',
-                    danger: true
-                }
+                { key: 'edit', label: '수정하기', icon: '✏️', action: 'edit' },
+                { key: 'members', label: '멤버 관리', icon: '👥', action: 'members' },
+                { key: 'delete', label: '삭제하기', icon: '🗑️', action: 'delete', danger: true }
             ];
         } else if (meetingStatus === 'joined') {
             return [
-                {
-                    key: 'leave',
-                    label: '나가기',
-                    icon: '🚪',
-                    action: 'leave',
-                    danger: true
-                }
+                { key: 'leave', label: '나가기', icon: '🚪', action: 'leave', danger: true }
             ];
         } else if (meetingStatus === 'pending') {
             return [
-                {
-                    key: 'cancel',
-                    label: '신청 취소하기',
-                    icon: '❌',
-                    action: 'cancel',
-                    danger: true
-                }
+                { key: 'cancel', label: '신청 취소하기', icon: '❌', action: 'cancel', danger: true }
             ];
         }
         return [];
@@ -374,197 +351,22 @@ const MeetingDetailModal = ({
 
     // 상태에 따른 버튼 설정
     const buttonConfig = useMemo(() => {
+        console.log('🔧 버튼 설정 계산:', {
+            isHost: currentMeeting?.isHost,
+            meetingStatus,
+            meetingId: currentMeeting?.meetingId
+        });
+
         if (currentMeeting?.isHost) {
-            return {
-                text: '오픈채팅 참가하기',
-                disabled: false,
-                action: 'openChat'
-            };
+            return { text: '오픈채팅 참가하기', disabled: false, action: 'openChat' };
         } else if (meetingStatus === 'joined') {
-            return {
-                text: '오픈채팅 참가하기',
-                disabled: false,
-                action: 'openChat'
-            };
+            return { text: '오픈채팅 참가하기', disabled: false, action: 'openChat' };
         } else if (meetingStatus === 'pending') {
-            return {
-                text: '승인 대기 중이에요',
-                disabled: true,
-                action: 'none'
-            };
+            return { text: '승인 대기 중이에요', disabled: true, action: 'none' };
         } else {
-            return {
-                text: '가입 신청하기',
-                disabled: false,
-                action: 'join'
-            };
+            return { text: '가입 신청하기', disabled: false, action: 'join' };
         }
     }, [currentMeeting?.isHost, meetingStatus]);
-
-    // 가입 신청 처리
-    const handleJoinMeeting = async () => {
-        if (!currentMeeting?.meetingId) return;
-
-        try {
-            setActionLoading(true);
-            const response = await meetingApi.joinMeeting(currentMeeting.meetingId);
-            console.log('가입 신청 응답:', response);
-
-            alert('가입 신청이 완료되었습니다!');
-            onClose();
-
-            if (onRefresh) {
-                onRefresh();
-            }
-        } catch (error) {
-            console.error('가입 신청 실패:', error);
-            alert(error.message || '가입 신청에 실패했습니다.');
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    // 오픈채팅 참가
-    const handleOpenChat = () => {
-        if (currentMeeting?.openChatUrl) {
-            window.open(currentMeeting.openChatUrl, '_blank');
-        } else {
-            alert('오픈채팅 링크가 없습니다.');
-        }
-    };
-
-    // 모임 수정 - CreateMeetingPage 재활용
-    const handleEditMeeting = () => {
-        setShowDropdown(false);
-        onClose();
-
-        // 상세 정보가 있으면 그걸 사용, 없으면 기본 meeting 정보 사용
-        const editData = detailData || currentMeeting;
-
-        console.log('🔧 수정하기 - 전달할 데이터:', editData);
-
-        // 쿼리 파라미터로 수정 모드와 모임 데이터 전달
-        const editParams = new URLSearchParams({
-            mode: 'edit',
-            meetingId: editData.meetingId
-        });
-
-        navigate(`/create-meeting?${editParams.toString()}`, {
-            state: {
-                editMode: true,
-                meetingData: editData
-            }
-        });
-    };
-
-    // 멤버 관리
-    const handleManageMembers = () => {
-        console.log(`모임 ${currentMeeting.meetingId} 멤버 관리`);
-        setShowDropdown(false);
-        onClose();
-        navigate(`/meetings/${currentMeeting.meetingId}/members`);
-    };
-
-    // 모임 삭제
-    const handleDeleteMeeting = async () => {
-        if (!currentMeeting?.meetingId) return;
-
-        const confirmMessage = `정말로 "${currentMeeting.title}" 모임을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
-
-        if (window.confirm(confirmMessage)) {
-            try {
-                setActionLoading(true);
-                await meetingApi.deleteMeeting(currentMeeting.meetingId);
-
-                alert('모임이 성공적으로 삭제되었습니다.');
-                setShowDropdown(false);
-                onClose();
-
-                // 모임 리스트 페이지로 이동
-                navigate('/meetings');
-
-                if (onRefresh) {
-                    onRefresh();
-                }
-            } catch (error) {
-                console.error('모임 삭제 실패:', error);
-
-                // 에러 메시지 세분화
-                let errorMessage = '모임 삭제에 실패했습니다.';
-                if (error.message.includes('권한')) {
-                    errorMessage = '모임을 삭제할 권한이 없습니다.';
-                } else if (error.message.includes('찾을 수 없습니다')) {
-                    errorMessage = '삭제하려는 모임을 찾을 수 없습니다.';
-                } else if (error.message.includes('네트워크')) {
-                    errorMessage = '네트워크 오류가 발생했습니다. 다시 시도해주세요.';
-                }
-
-                alert(errorMessage);
-            } finally {
-                setActionLoading(false);
-            }
-        }
-    };
-
-    // 모임 나가기
-    const handleLeaveMeeting = () => {
-        if (!currentMeeting?.meetingId) return;
-
-        const confirmMessage = `정말로 "${currentMeeting.title}" 모임에서 나가시겠습니까?`;
-
-        if (window.confirm(confirmMessage)) {
-            console.log(`모임 ${currentMeeting.meetingId} 나가기`);
-            alert('모임 나가기 기능은 준비 중입니다.');
-            setShowDropdown(false);
-            onClose();
-        }
-    };
-
-    // 가입 신청 취소
-    const handleCancelApplication = () => {
-        if (!currentMeeting?.meetingId) return;
-
-        const confirmMessage = `정말로 "${currentMeeting.title}" 모임 신청을 취소하시겠습니까?`;
-
-        if (window.confirm(confirmMessage)) {
-            console.log(`모임 ${currentMeeting.meetingId} 신청 취소`);
-            alert('신청 취소 기능은 준비 중입니다.');
-            setShowDropdown(false);
-            onClose();
-        }
-    };
-
-    // 메인 액션 버튼 클릭 핸들러
-    const handleActionClick = useCallback(() => {
-        if (actionLoading) return;
-
-        switch (buttonConfig.action) {
-            case 'join':
-                handleJoinMeeting();
-                break;
-            case 'openChat':
-                handleOpenChat();
-                break;
-            default:
-                break;
-        }
-    }, [buttonConfig.action, actionLoading]);
-
-    // 메뉴 액션 처리
-    const handleMenuAction = useCallback((action) => {
-        const actionMap = {
-            edit: handleEditMeeting,
-            members: handleManageMembers,
-            delete: handleDeleteMeeting,
-            leave: handleLeaveMeeting,
-            cancel: handleCancelApplication
-        };
-
-        const handler = actionMap[action];
-        if (handler) {
-            handler();
-        }
-    }, [currentMeeting]);
 
     if (!isOpen || !currentMeeting) return null;
 
@@ -615,7 +417,11 @@ const MeetingDetailModal = ({
                                             <DropdownItem
                                                 key={item.key}
                                                 danger={item.danger}
-                                                onClick={() => handleMenuAction(item.action)}
+                                                onClick={() => {
+                                                    setShowDropdown(false);
+                                                    onClose();
+                                                    handleMenuAction(item.action, detailData);
+                                                }}
                                                 disabled={actionLoading}
                                             >
                                                 <span>{item.icon}</span>
@@ -642,7 +448,7 @@ const MeetingDetailModal = ({
                     </ContentWrapper>
 
                     <ActionButton
-                        onClick={handleActionClick}
+                        onClick={() => handleActionClick(buttonConfig)}
                         disabled={buttonConfig.disabled || actionLoading}
                     >
                         {actionLoading ? (

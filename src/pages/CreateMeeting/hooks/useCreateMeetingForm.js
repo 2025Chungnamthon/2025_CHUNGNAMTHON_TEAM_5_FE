@@ -220,8 +220,8 @@ export const useCreateMeetingForm = () => {
                 response = await meetingApi.createMeeting(submitData);
                 successMessage = '모임이 성공적으로 생성되었습니다!';
 
-                const newMeetingId = response.data?.meetingId;
-                redirectPath = newMeetingId ? `/meetings/${newMeetingId}` : '/meetings';
+                // 모임 생성 후 내 모임 - 참여중 페이지로 이동
+                redirectPath = '/meetings?tab=myMeetings&subTab=approved';
 
                 console.log('모임 생성 응답:', response);
             }

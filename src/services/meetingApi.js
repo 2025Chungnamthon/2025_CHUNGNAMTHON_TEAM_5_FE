@@ -115,6 +115,41 @@ export const meetingApi = {
         }
     },
 
+    // 내 모임 리스트 조회 (새로 추가) - status별 엔드포인트
+    getMyMeetings: async (status = 'approved') => {
+        try {
+            // status에 따라 엔드포인트 결정
+            const endpoint = status ? `/api/meetings/me/${status}` : '/api/meetings/me';
+            const url = `${API_BASE_URL}${endpoint}`;
+
+            console.log('내 모임 조회 URL:', url);
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 403:
+                        throw new Error('권한이 없습니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log(`내 모임 조회 응답 (${status}):`, result);
+            return result;
+        } catch (error) {
+            console.error(`내 모임 조회 API 오류 (${status}):`, error);
+            throw error;
+        }
+    },
+
     // 모임 상세 정보 조회
     getMeetingDetail: async (meetingId) => {
         try {
@@ -145,6 +180,8 @@ export const meetingApi = {
     // 모임 가입 신청
     joinMeeting: async (meetingId) => {
         try {
+            console.log('모임 가입 신청:', meetingId);
+
             const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/join`, {
                 method: 'POST',
                 headers: getAuthHeaders()
@@ -164,7 +201,9 @@ export const meetingApi = {
                 }
             }
 
-            return await response.json();
+            const result = await response.json();
+            console.log('모임 가입 신청 응답:', result);
+            return result;
         } catch (error) {
             console.error('모임 가입 신청 API 오류:', error);
             throw error;
