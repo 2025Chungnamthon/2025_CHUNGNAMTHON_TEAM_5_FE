@@ -135,15 +135,6 @@ const MemberName = styled.div`
     flex: 1;
 `;
 
-const MemberStatus = styled.span`
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    background: #f3f4f6;
-    padding: 6px 12px;
-    border-radius: 12px;
-`;
-
 const ActionButtons = styled.div`
     display: flex;
     gap: 8px;
