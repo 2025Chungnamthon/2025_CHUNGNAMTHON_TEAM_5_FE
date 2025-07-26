@@ -119,29 +119,61 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
         }
     }, [currentMeeting, onClose, onRefresh, navigate]);
 
-    // 모임 나가기
-    const handleLeaveMeeting = useCallback(() => {
+    // 모임 나가기 - API 연동
+    const handleLeaveMeeting = useCallback(async () => {
         if (!currentMeeting?.meetingId) return;
 
-        const confirmMessage = `정말로 "${currentMeeting.title}" 모임에서 나가시겠습니까?`;
+        const confirmMessage = `정말로 "${currentMeeting.title}" 모임에서 나가시겠습니까?\n\n나간 후에는 다시 가입 신청을 해야 합니다.`;
 
         if (window.confirm(confirmMessage)) {
-            console.log(`모임 ${currentMeeting.meetingId} 나가기`);
-            alert('모임 나가기 기능은 준비 중입니다.');
-        }
-    }, [currentMeeting]);
+            try {
+                setActionLoading(true);
+                console.log(`모임 ${currentMeeting.meetingId} 나가기 시작`);
 
-    // 가입 신청 취소
-    const handleCancelApplication = useCallback(() => {
+                await meetingApi.leaveMeeting(currentMeeting.meetingId);
+
+                alert('모임에서 나갔습니다.');
+                onClose();
+
+                if (onRefresh) {
+                    onRefresh();
+                }
+            } catch (error) {
+                console.error('모임 나가기 실패:', error);
+                alert(error.message || '모임 나가기에 실패했습니다.');
+            } finally {
+                setActionLoading(false);
+            }
+        }
+    }, [currentMeeting, onClose, onRefresh]);
+
+    // 가입 신청 취소 - API 연동
+    const handleCancelApplication = useCallback(async () => {
         if (!currentMeeting?.meetingId) return;
 
         const confirmMessage = `정말로 "${currentMeeting.title}" 모임 신청을 취소하시겠습니까?`;
 
         if (window.confirm(confirmMessage)) {
-            console.log(`모임 ${currentMeeting.meetingId} 신청 취소`);
-            alert('신청 취소 기능은 준비 중입니다.');
+            try {
+                setActionLoading(true);
+                console.log(`모임 ${currentMeeting.meetingId} 신청 취소 시작`);
+
+                await meetingApi.cancelJoinRequest(currentMeeting.meetingId);
+
+                alert('가입 신청이 취소되었습니다.');
+                onClose();
+
+                if (onRefresh) {
+                    onRefresh();
+                }
+            } catch (error) {
+                console.error('신청 취소 실패:', error);
+                alert(error.message || '신청 취소에 실패했습니다.');
+            } finally {
+                setActionLoading(false);
+            }
         }
-    }, [currentMeeting]);
+    }, [currentMeeting, onClose, onRefresh]);
 
     // 메인 액션 버튼 클릭 핸들러
     const handleActionClick = useCallback((buttonConfig) => {

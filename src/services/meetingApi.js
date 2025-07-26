@@ -399,6 +399,72 @@ export const meetingApi = {
             console.error('멤버 내보내기 API 오류:', error);
             throw error;
         }
+    },
+
+    // 모임 가입 신청 취소
+    cancelJoinRequest: async (meetingId) => {
+        try {
+            console.log('모임 가입 신청 취소:', meetingId);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/cancel`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 400:
+                        throw new Error('이미 승인된 모임이거나, 신청하지 않은 모임입니다.');
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 404:
+                        throw new Error('존재하지 않는 모임입니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('모임 가입 신청 취소 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('모임 가입 신청 취소 API 오류:', error);
+            throw error;
+        }
+    },
+
+    // 모임 나가기 (탈퇴)
+    leaveMeeting: async (meetingId) => {
+        try {
+            console.log('모임 나가기:', meetingId);
+
+            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/leave`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                switch (response.status) {
+                    case 403:
+                        throw new Error('참여하고 있지 않은 모임입니다.');
+                    case 401:
+                        throw new Error('로그인이 필요합니다.');
+                    case 404:
+                        throw new Error('존재하지 않는 모임입니다.');
+                    default:
+                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            }
+
+            const result = await response.json();
+            console.log('모임 나가기 응답:', result);
+            return result;
+        } catch (error) {
+            console.error('모임 나가기 API 오류:', error);
+            throw error;
+        }
     }
 };
 
