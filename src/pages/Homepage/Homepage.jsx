@@ -19,7 +19,6 @@ function Homepage() {
         setIsLoading(true);
         const res = await getHomeData();
         setHomeData(res);
-        console.log("홈 데이터:", res);
       } catch (error) {
         console.error("홈 데이터 로딩 실패:", error);
       } finally {
@@ -30,12 +29,10 @@ function Homepage() {
   }, []);
 
   const handleFloatingButtonClick = () => {
-    console.log("플로팅 버튼 클릭 - 메뉴 토글");
     setMenuOpen(!menuOpen);
   };
 
   const handleMenuClose = () => {
-    console.log("액션 메뉴 닫기");
     setMenuOpen(false);
   };
 

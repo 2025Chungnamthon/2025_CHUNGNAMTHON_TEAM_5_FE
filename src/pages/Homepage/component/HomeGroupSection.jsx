@@ -161,14 +161,24 @@ const HomeGroupSection = ({ meetings = [] }) => {
 
   const isValidImageUrl = (url) => {
     if (!url) return false;
+    // 기본 이미지 URL은 유효한 것으로 간주
+    if (
+      url ===
+      "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+    ) {
+      return true;
+    }
     // example.com, image.com 등은 유효하지 않은 URL로 간주
     const invalidDomains = ["example.com", "image.com"];
     return !invalidDomains.some((domain) => url.includes(domain));
   };
 
   const getImageUrl = (meeting) => {
-    // API 데이터의 imageUrl 필드 사용
-    return meeting.imageUrl;
+    // API 데이터의 imageUrl 필드 사용, 없으면 기본 이미지 사용
+    return (
+      meeting.imageUrl ||
+      "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+    );
   };
 
   const handleArrowClick = () => {
