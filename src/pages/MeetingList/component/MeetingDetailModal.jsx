@@ -4,6 +4,9 @@ import { getLocationKorean } from "../../../utils/locationUtils";
 import TagBadge from "../../../components/TagBadge";
 import { meetingApi } from "../../../services/meetingApi";
 import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
+import ConfirmModal from "../../../components/ConfirmModal";
+import { useModal } from "../../../hooks/useModal";
+import { MODAL_CONFIGS } from "../../../config/modalConfigs";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -264,23 +267,33 @@ const getScheduleTagType = (schedule) => {
 };
 
 const MeetingDetailModal = ({
-  meeting,
-  isOpen,
-  onClose,
-  onRefresh,
-  meetingStatus = "available",
-}) => {
+                              meeting,
+                              isOpen,
+                              onClose,
+                              onRefresh,
+                              meetingStatus = "available",
+                            }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
 
+  // 확인창 모달 상태
+  const confirmModal = useModal();
+  const [confirmAction, setConfirmAction] = useState(null);
+
   // 현재 표시할 모임 데이터
   const currentMeeting = detailData || meeting;
 
   // 커스텀 훅으로 분리된 핸들러들
-  const { actionLoading, handleActionClick, handleMenuAction } =
-    useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
+  const {
+    actionLoading,
+    handleActionClick,
+    handleMenuAction,
+    handleConfirmDeleteMeeting,
+    handleConfirmLeaveMeeting,
+    handleConfirmCancelApplication
+  } = useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
 
   // 모임 상세 정보 불러오기
   const fetchMeetingDetail = async () => {
@@ -326,9 +339,9 @@ const MeetingDetailModal = ({
   // 메뉴 표시 여부 결정
   const shouldShowMenu = useMemo(() => {
     return (
-      currentMeeting?.isHost ||
-      meetingStatus === "joined" ||
-      meetingStatus === "pending"
+        currentMeeting?.isHost ||
+        meetingStatus === "joined" ||
+        meetingStatus === "pending"
     );
   }, [currentMeeting?.isHost, meetingStatus]);
 
@@ -391,113 +404,179 @@ const MeetingDetailModal = ({
     }
   }, [currentMeeting?.isHost, meetingStatus]);
 
+  // 메뉴 아이템 클릭 처리
+  const handleMenuItemClick = (item) => {
+    setShowDropdown(false);
+
+    const result = handleMenuAction(item.action, detailData);
+
+    // 확인창이 필요한 액션인 경우
+    if (result && result.type) {
+      setConfirmAction(result);
+      confirmModal.openModal();
+    } else {
+      // 즉시 실행되는 액션 (수정하기, 멤버 관리)
+      onClose();
+    }
+  };
+
+  // 확인창에서 확인 버튼 클릭
+  const handleConfirmAction = () => {
+    if (!confirmAction) return;
+
+    switch (confirmAction.type) {
+      case 'DELETE_MEETING':
+        handleConfirmDeleteMeeting();
+        break;
+      case 'LEAVE_MEETING':
+        handleConfirmLeaveMeeting();
+        break;
+      case 'CANCEL_APPLICATION':
+        handleConfirmCancelApplication();
+        break;
+    }
+
+    setConfirmAction(null);
+  };
+
+  // 확인창에서 취소 버튼 클릭
+  const handleCancelAction = () => {
+    setConfirmAction(null);
+    confirmModal.closeModal();
+  };
+
+  // 확인창 설정 가져오기
+  const getConfirmModalConfig = () => {
+    if (!confirmAction) return {};
+
+    switch (confirmAction.type) {
+      case 'DELETE_MEETING':
+        return MODAL_CONFIGS.DELETE_AS_LEADER;
+      case 'LEAVE_MEETING':
+        return MODAL_CONFIGS.LEAVE_AS_MEMBER;
+      case 'CANCEL_APPLICATION':
+        return MODAL_CONFIGS.CANCEL_MEETING_REQUEST;
+      default:
+        return {};
+    }
+  };
+
   if (!isOpen || !currentMeeting) return null;
 
   return (
-    <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <ModalContainer>
-        <ModalContent>
-          <MeetingHeader>
-            <MeetingImage
-              src={
-                currentMeeting.imageUrl ||
-                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
-              }
-              alt={currentMeeting.title}
-              onError={(e) => {
-                e.target.src =
-                  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
-              }}
-            />
-            <MeetingInfo>
-              <HostInfo>
-                {currentMeeting.isHost && (
-                  <CrownIcon src="/UI/crown.svg" alt="모임장" />
-                )}
-                @{currentMeeting.hostName || "호스트"}
-              </HostInfo>
-              <MeetingTitle>{currentMeeting.title}</MeetingTitle>
-              <TagContainer>
-                <TagBadge
-                  type="location"
-                  text={getLocationKorean(currentMeeting.location)}
+      <>
+        <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+          <ModalContainer>
+            <ModalContent>
+              <MeetingHeader>
+                <MeetingImage
+                    src={
+                        currentMeeting.imageUrl ||
+                        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
+                    }
+                    alt={currentMeeting.title}
+                    onError={(e) => {
+                      e.target.src =
+                          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+                    }}
                 />
-                <TagBadge
-                  type={getScheduleTagType(currentMeeting.schedule)}
-                  text={getScheduleKorean(currentMeeting.schedule)}
-                  className="last"
-                />
-              </TagContainer>
-            </MeetingInfo>
+                <MeetingInfo>
+                  <HostInfo>
+                    {currentMeeting.isHost && (
+                        <CrownIcon src="/UI/crown.svg" alt="모임장" />
+                    )}
+                    @{currentMeeting.hostName || "호스트"}
+                  </HostInfo>
+                  <MeetingTitle>{currentMeeting.title}</MeetingTitle>
+                  <TagContainer>
+                    <TagBadge
+                        type="location"
+                        text={getLocationKorean(currentMeeting.location)}
+                    />
+                    <TagBadge
+                        type={getScheduleTagType(currentMeeting.schedule)}
+                        text={getScheduleKorean(currentMeeting.schedule)}
+                        className="last"
+                    />
+                  </TagContainer>
+                </MeetingInfo>
 
-            {/* 메뉴 버튼 */}
-            {shouldShowMenu && (
-              <div ref={dropdownRef} style={{ position: "relative" }}>
-                <MenuButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDropdown((prev) => !prev);
-                  }}
-                >
-                  ⋯
-                </MenuButton>
-
-                {showDropdown && (
-                  <DropdownMenu>
-                    {menuItems.map((item) => (
-                      <DropdownItem
-                        key={item.key}
-                        danger={item.danger}
-                        onClick={() => {
-                          setShowDropdown(false);
-                          onClose();
-                          handleMenuAction(item.action, detailData);
-                        }}
-                        disabled={actionLoading}
+                {/* 메뉴 버튼 */}
+                {shouldShowMenu && (
+                    <div ref={dropdownRef} style={{ position: "relative" }}>
+                      <MenuButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDropdown((prev) => !prev);
+                          }}
                       >
-                        <span>{item.icon}</span>
-                        {item.label}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
+                        ⋯
+                      </MenuButton>
+
+                      {showDropdown && (
+                          <DropdownMenu>
+                            {menuItems.map((item) => (
+                                <DropdownItem
+                                    key={item.key}
+                                    danger={item.danger}
+                                    onClick={() => handleMenuItemClick(item)}
+                                    disabled={actionLoading}
+                                >
+                                  <span>{item.icon}</span>
+                                  {item.label}
+                                </DropdownItem>
+                            ))}
+                          </DropdownMenu>
+                      )}
+                    </div>
                 )}
-              </div>
-            )}
-          </MeetingHeader>
+              </MeetingHeader>
 
-          <ContentWrapper>
-            {loading ? (
-              <div
-                style={{ textAlign: "center", padding: "40px", color: "#666" }}
+              <ContentWrapper>
+                {loading ? (
+                    <div
+                        style={{ textAlign: "center", padding: "40px", color: "#666" }}
+                    >
+                      모임 정보를 불러오는 중...
+                    </div>
+                ) : (
+                    <DescriptionSection>
+                      <SectionTitle>소개글</SectionTitle>
+                      <DescriptionContent>
+                        {currentMeeting.description}
+                      </DescriptionContent>
+                    </DescriptionSection>
+                )}
+              </ContentWrapper>
+
+              <ActionButton
+                  onClick={() => handleActionClick(buttonConfig)}
+                  disabled={buttonConfig.disabled || actionLoading}
               >
-                모임 정보를 불러오는 중...
-              </div>
-            ) : (
-              <DescriptionSection>
-                <SectionTitle>소개글</SectionTitle>
-                <DescriptionContent>
-                  {currentMeeting.description}
-                </DescriptionContent>
-              </DescriptionSection>
-            )}
-          </ContentWrapper>
+                {actionLoading ? (
+                    <>
+                      <LoadingSpinner />
+                      처리 중...
+                    </>
+                ) : (
+                    buttonConfig.text
+                )}
+              </ActionButton>
+            </ModalContent>
+          </ModalContainer>
+        </ModalOverlay>
 
-          <ActionButton
-            onClick={() => handleActionClick(buttonConfig)}
-            disabled={buttonConfig.disabled || actionLoading}
-          >
-            {actionLoading ? (
-              <>
-                <LoadingSpinner />
-                처리 중...
-              </>
-            ) : (
-              buttonConfig.text
-            )}
-          </ActionButton>
-        </ModalContent>
-      </ModalContainer>
-    </ModalOverlay>
+        {/* 확인 모달 */}
+        <ConfirmModal
+            isOpen={confirmModal.isOpen}
+            onClose={handleCancelAction}
+            title={getConfirmModalConfig().title}
+            cancelText={getConfirmModalConfig().cancelText}
+            confirmText={getConfirmModalConfig().confirmText}
+            onConfirm={handleConfirmAction}
+            primaryColor={getConfirmModalConfig().primaryColor}
+        />
+      </>
   );
 };
 

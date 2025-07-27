@@ -5,6 +5,11 @@ import { meetingApi } from "../../services/meetingApi";
 import { isAuthenticated } from "../../services/auth";
 import MeetingCard from "./component/MeetingCard";
 import MeetingDetailModal from "./component/MeetingDetailModal";
+import ConfirmModal from "../../components/ConfirmModal";
+import { useModal } from "../../hooks/useModal";
+import { MODAL_CONFIGS } from "../../config/modalConfigs";
+import { useToastContext } from "../../components/ToastNotification";
+import { TOAST_CONFIGS } from "../../config/toastConfigs";
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -169,6 +174,7 @@ const LoginButton = styled.button`
 const MeetingListPage = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { showToast } = useToastContext(); // 토스트 훅 추가
 
     // URL 파라미터에서 초기값 설정
     const initialMainTab = searchParams.get('tab') || 'meetings';
@@ -186,6 +192,10 @@ const MeetingListPage = () => {
     // 모달 상태
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // 확인창 모달 상태
+    const confirmModal = useModal();
+    const [meetingToLeave, setMeetingToLeave] = useState(null);
 
     // 전체 모임 데이터 불러오기
     const fetchMeetings = async () => {
@@ -342,7 +352,6 @@ const MeetingListPage = () => {
         }
     };
 
-
     // 자세히 버튼 클릭 핸들러
     const handleViewMeeting = (meetingId) => {
         console.log(`모임 ${meetingId} 자세히`);
@@ -370,8 +379,8 @@ const MeetingListPage = () => {
         setSwipedCard(swipedCard === meetingId ? null : meetingId);
     };
 
-    // 나가기 버튼 클릭 핸들러
-    const handleLeaveMeeting = async (meetingId) => {
+    // 나가기 버튼 클릭 핸들러 - 확인창 띄우기
+    const handleLeaveMeeting = (meetingId) => {
         const meeting = getCurrentMeetings().find(m => m.meetingId === meetingId);
 
         if (!meeting) {
@@ -379,23 +388,39 @@ const MeetingListPage = () => {
             return;
         }
 
-        const confirmMessage = `정말로 "${meeting.title}" 모임에서 나가시겠습니까?\n\n나간 후에는 다시 가입 신청을 해야 합니다.`;
+        // 나갈 모임 정보 저장하고 확인창 열기
+        setMeetingToLeave(meeting);
+        confirmModal.openModal();
+    };
 
-        if (window.confirm(confirmMessage)) {
-            try {
-                await meetingApi.leaveMeeting(meetingId);
-                alert('모임에서 나갔습니다.');
+    // 실제 모임 나가기 API 호출
+    const handleConfirmLeaveMeeting = async () => {
+        if (!meetingToLeave) return;
 
-                // 스와이프 상태 초기화
-                setSwipedCard(null);
+        try {
+            await meetingApi.leaveMeeting(meetingToLeave.meetingId);
 
-                // 데이터 새로고침
-                loadAllData();
-            } catch (error) {
-                console.error('모임 나가기 실패:', error);
-                alert(error.message || '모임 나가기에 실패했습니다.');
-            }
+            // 토스트 알림 표시
+            showToast(TOAST_CONFIGS.MEETING_LEFT);
+
+            // 스와이프 상태 초기화
+            setSwipedCard(null);
+
+            // 나갈 모임 정보 초기화
+            setMeetingToLeave(null);
+
+            // 데이터 새로고침
+            loadAllData();
+        } catch (error) {
+            console.error('모임 나가기 실패:', error);
+            alert(error.message || '모임 나가기에 실패했습니다.');
         }
+    };
+
+    // 확인창 취소 핸들러
+    const handleCancelLeaveMeeting = () => {
+        setMeetingToLeave(null);
+        confirmModal.closeModal();
     };
 
     // 재시도 핸들러
@@ -623,6 +648,17 @@ const MeetingListPage = () => {
                 onClose={handleCloseModal}
                 onRefresh={handleRefreshAfterAction}
                 meetingStatus={getCurrentMeetingStatus()}
+            />
+
+            {/* 나가기 확인 모달 */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={handleCancelLeaveMeeting}
+                title={MODAL_CONFIGS.LEAVE_JOINED_MEETING.title}
+                cancelText={MODAL_CONFIGS.LEAVE_JOINED_MEETING.cancelText}
+                confirmText={MODAL_CONFIGS.LEAVE_JOINED_MEETING.confirmText}
+                onConfirm={handleConfirmLeaveMeeting}
+                primaryColor={MODAL_CONFIGS.LEAVE_JOINED_MEETING.primaryColor}
             />
         </PageContainer>
     );
