@@ -123,9 +123,22 @@ export const useUIStore = create((set, get) => ({
   },
 
   // 포인트 새로고침 함수 (안전한 방식)
-  refreshPoints: () => {
-    // 단순히 더미 함수로 만들어서 에러 방지
-    console.log("refreshPoints 호출됨 - 현재는 비활성화");
+  refreshPoints: async () => {
+    try {
+      const { pointApi } = await import("@/services/pointApi");
+      const res = await pointApi.getPointHistory();
+
+      // 포인트 내역에서 총 포인트 계산
+      const total = res.data.reduce((acc, item) => acc + item.changedPoint, 0);
+
+      // UI 스토어에 포인트 업데이트
+      get().setPoints(total);
+
+      console.log("포인트 새로고침 완료:", total);
+    } catch (error) {
+      console.error("포인트 새로고침 실패:", error);
+      // 에러가 발생해도 앱이 크래시되지 않도록 처리
+    }
   },
 
   // 알림 관리
@@ -162,9 +175,9 @@ export const useUIStore = create((set, get) => ({
 
 // 편의 함수들
 export const getModalState = (modalName) =>
-    useUIStore.getState().modals[modalName];
+  useUIStore.getState().modals[modalName];
 export const getMenuState = (menuName) => useUIStore.getState().menus[menuName];
 export const getTabState = (tabName) => useUIStore.getState().tabs[tabName];
 export const getLoadingState = (loadingName) =>
-    useUIStore.getState().loading[loadingName];
+  useUIStore.getState().loading[loadingName];
 export const getPointsState = () => useUIStore.getState().points;
