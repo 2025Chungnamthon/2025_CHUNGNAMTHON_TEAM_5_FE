@@ -1,8 +1,10 @@
 import axios from 'axios';
-import { getAuthToken } from '../stores/authStore';
+import { getAuthToken } from '../stores/authStore'; // 팀원들과 동일한 경로
 import { getLocationCode } from '../utils/locationUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://43.200.175.218:8080';
+const API_BASE_URL = import.meta.env.DEV
+    ? ''
+    : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080');
 
 // 스케줄 변환 (UI 값 -> API 값)
 const SCHEDULE_TO_API_MAP = {
@@ -11,9 +13,9 @@ const SCHEDULE_TO_API_MAP = {
     'WEEKEND': 'WEEKEND'  // 주말 -> WEEKEND
 };
 
-// axios 인스턴스 생성
+// axios 인스턴스 생성 - 프록시 사용을 위해 baseURL 조건부 설정
 const meetingAxios = axios.create({
-    baseURL: API_BASE_URL,
+    ...(import.meta.env.PROD && { baseURL: API_BASE_URL }),
     timeout: 10000, // 10초 타임아웃
     headers: {
         'Content-Type': 'application/json'
@@ -274,11 +276,4 @@ export const meetingApi = {
             throw error;
         }
     }
-};
-
-// 디버깅용 함수들 export
-export const debugUtils = {
-    convertScheduleToAPI,
-    transformMeetingData,
-    SCHEDULE_TO_API_MAP
 };
