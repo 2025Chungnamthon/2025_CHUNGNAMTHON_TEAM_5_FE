@@ -90,7 +90,9 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
 
                 alert('모임이 성공적으로 삭제되었습니다.');
                 onClose();
-                navigate('/meetings');
+
+                // 내 모임 참여중 리스트로 이동
+                navigate('/meetings?tab=myMeetings&subTab=approved');
 
                 if (onRefresh) {
                     onRefresh();

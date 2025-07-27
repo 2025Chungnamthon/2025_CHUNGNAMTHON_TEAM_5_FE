@@ -209,18 +209,16 @@ export const useCreateMeetingForm = () => {
             let redirectPath;
 
             if (isEditMode && meetingId) {
-                // 수정 모드
+                // 수정 모드 - 내 모임 참여중 리스트로 이동
                 response = await meetingApi.updateMeeting(meetingId, submitData);
                 successMessage = '모임이 성공적으로 수정되었습니다!';
-                redirectPath = `/meetings/${meetingId}`;
+                redirectPath = '/meetings?tab=myMeetings&subTab=approved';
 
                 console.log('모임 수정 응답:', response);
             } else {
-                // 생성 모드
+                // 생성 모드 - 내 모임 참여중 리스트로 이동
                 response = await meetingApi.createMeeting(submitData);
                 successMessage = '모임이 성공적으로 생성되었습니다!';
-
-                // 모임 생성 후 내 모임 - 참여중 페이지로 이동
                 redirectPath = '/meetings?tab=myMeetings&subTab=approved';
 
                 console.log('모임 생성 응답:', response);
