@@ -111,15 +111,28 @@ const EmptyText = styled.p`
   margin: 0;
 `;
 
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 60px 20px;
+  color: #ef4444;
+`;
+
 const PointHistoryPage = () => {
   const navigate = useNavigate();
-  const { points, refreshPoints } = useUIStore();
+  const { points, setPoints } = useUIStore();
+  const [pointHistory, setPointHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const handleBack = () => {
     navigate(-1);
   };
-
-  const [pointHistory, setPointHistory] = useState([]);
 
   const paymentTypeLabels = {
     MEETING_PARTICIPATION: "모임 참여 보상",
@@ -133,8 +146,11 @@ const PointHistoryPage = () => {
   useEffect(() => {
     const fetchPointHistory = async () => {
       try {
+        setLoading(true);
+        setError(null);
+
         const res = await pointApi.getPointHistory();
-        // console.log("Point History Response:", res);
+        console.log("Point History Response:", res);
 
         const formatted = res.data.map((item) => ({
           ...item,
@@ -145,64 +161,106 @@ const PointHistoryPage = () => {
 
         // 전역 포인트 상태도 업데이트
         const total = formatted.reduce(
-          (acc, item) => acc + item.changePoint,
-          0
+            (acc, item) => acc + item.changePoint,
+            0
         );
-        refreshPoints();
+        setPoints(total);
       } catch (error) {
         console.error("포인트 데이터 로드 실패:", error);
+        setError(error.message || "포인트 데이터를 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPointHistory();
-  }, [refreshPoints]);
+  }, [setPoints]);
+
+  if (loading) {
+    return (
+        <PageContainer>
+          <Header>
+            <HeaderLeft>
+              <BackButton onClick={handleBack}>
+                <FaArrowLeft />
+              </BackButton>
+              <Title>포인트 내역</Title>
+            </HeaderLeft>
+          </Header>
+          <Content>
+            <LoadingState>포인트 내역을 불러오는 중...</LoadingState>
+          </Content>
+        </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+        <PageContainer>
+          <Header>
+            <HeaderLeft>
+              <BackButton onClick={handleBack}>
+                <FaArrowLeft />
+              </BackButton>
+              <Title>포인트 내역</Title>
+            </HeaderLeft>
+          </Header>
+          <Content>
+            <ErrorState>
+              <div>포인트 내역을 불러오는데 실패했습니다.</div>
+              <div style={{ fontSize: "14px", marginTop: "8px" }}>{error}</div>
+            </ErrorState>
+          </Content>
+        </PageContainer>
+    );
+  }
 
   return (
-    <PageContainer>
-      <Header>
-        <HeaderLeft>
-          <BackButton onClick={handleBack}>
-            <FaArrowLeft />
-          </BackButton>
-          <Title>포인트 내역</Title>
-        </HeaderLeft>
-        <HeaderRight>
-          <PointDisplay points={points.currentPoints || 0} variant="header" />
-        </HeaderRight>
-      </Header>
+      <PageContainer>
+        <Header>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <FaArrowLeft />
+            </BackButton>
+            <Title>포인트 내역</Title>
+          </HeaderLeft>
+          <HeaderRight>
+            <PointDisplay points={points.currentPoints || 0} variant="header" />
+          </HeaderRight>
+        </Header>
 
-      <Content>
-        {pointHistory.length > 0 ? (
-          pointHistory.map((item) => (
-            <HistoryItem key={item.id}>
-              <HistoryLeft>
-                <HistoryDate>
-                  {new Date(item.usedAt).toLocaleString("ko-KR", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </HistoryDate>
-                <HistoryDescription>
-                  {paymentTypeLabels[item.paymentType] || item.paymentType}
-                </HistoryDescription>
-              </HistoryLeft>
-              <HistoryPoints isPositive={item.changePoint > 0}>
-                {item.changePoint > 0 ? "+ " : "- "}
-                {Math.abs(item.changePoint).toLocaleString()}p
-              </HistoryPoints>
-            </HistoryItem>
-          ))
-        ) : (
-          <EmptyState>
-            <EmptyIcon>💰</EmptyIcon>
-            <EmptyText>포인트 내역이 없습니다</EmptyText>
-          </EmptyState>
-        )}
-      </Content>
-    </PageContainer>
+        <Content>
+          {pointHistory.length > 0 ? (
+              pointHistory.map((item) => (
+                  <HistoryItem key={item.id}>
+                    <HistoryLeft>
+                      <HistoryDate>
+                        {new Date(item.usedAt).toLocaleString("ko-KR", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </HistoryDate>
+                      <HistoryDescription>
+                        {paymentTypeLabels[item.paymentType] || item.paymentType}
+                      </HistoryDescription>
+                    </HistoryLeft>
+                    <HistoryPoints isPositive={item.changePoint > 0}>
+                      {item.changePoint > 0 ? "+ " : "- "}
+                      {Math.abs(item.changePoint).toLocaleString()}p
+                    </HistoryPoints>
+                  </HistoryItem>
+              ))
+          ) : (
+              <EmptyState>
+                <EmptyIcon>💰</EmptyIcon>
+                <EmptyText>포인트 내역이 없습니다</EmptyText>
+              </EmptyState>
+          )}
+        </Content>
+      </PageContainer>
   );
 };
 
