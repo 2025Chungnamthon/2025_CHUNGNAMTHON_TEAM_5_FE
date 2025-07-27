@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { pointApi } from "@/services/pointApi";
+import PointDisplay from "@/components/PointDisplay";
+import { useUIStore } from "@/stores/uiStore";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -55,25 +58,6 @@ const HeaderRight = styled.div`
   gap: 8px;
 `;
 
-const PointIcon = styled.div`
-  width: 24px;
-  height: 24px;
-  background: #fdd756;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #d18000;
-  font-weight: 700;
-  font-size: 12px;
-`;
-
-const PointText = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: #222;
-`;
-
 const Content = styled.div`
   padding: 0 20px;
   padding-bottom: 100px;
@@ -103,7 +87,9 @@ const HistoryDescription = styled.div`
   color: #374151;
 `;
 
-const HistoryPoints = styled.div`
+const HistoryPoints = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "isPositive",
+})`
   font-size: 16px;
   font-weight: 600;
   color: ${(props) => (props.isPositive ? "#10b981" : "#ef4444")};
@@ -127,122 +113,49 @@ const EmptyText = styled.p`
 
 const PointHistoryPage = () => {
   const navigate = useNavigate();
+  const { points, refreshPoints } = useUIStore();
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  // 더미 데이터 (실제 연동 시 API 사용)
-  const pointHistory = [
-    {
-      id: 1,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 2,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 3,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 4,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 5,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 6,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 7,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 8,
-      date: "2025.06.20 02:59",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 9,
-      date: "2025.06.19 15:30",
-      description: "쿠폰 교환",
-      points: 5000,
-      isPositive: false,
-    },
-    {
-      id: 10,
-      date: "2025.06.19 14:20",
-      description: "모임 참여",
-      points: 50,
-      isPositive: true,
-    },
-    {
-      id: 11,
-      date: "2025.06.19 12:15",
-      description: "모임 참여",
-      points: 50,
-      isPositive: true,
-    },
-    {
-      id: 12,
-      date: "2025.06.18 20:45",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-    {
-      id: 13,
-      date: "2025.06.18 18:30",
-      description: "쿠폰 교환",
-      points: 3000,
-      isPositive: false,
-    },
-    {
-      id: 14,
-      date: "2025.06.18 16:20",
-      description: "모임 참여",
-      points: 50,
-      isPositive: true,
-    },
-    {
-      id: 15,
-      date: "2025.06.18 14:10",
-      description: "모임 생성",
-      points: 10,
-      isPositive: true,
-    },
-  ];
+  const [pointHistory, setPointHistory] = useState([]);
 
-  // 사용자 포인트 (실제 연동 시 API 사용)
-  const userPoints = 1620;
+  const paymentTypeLabels = {
+    MEETING_PARTICIPATION: "모임 참여 보상",
+    MEETING_CREATION: "모임 개설 보상",
+    PAYMENT_VERIFICATION: "천안사랑카드 결제 인증 보상",
+    PARTNER_STORE_BONUS: "제휴 상점 이용 보너스",
+    WEEKLY_STREAK_BONUS: "주간 연속 참여 보너스",
+    EXCHANGE_COUPON: "쿠폰 교환",
+  };
+
+  useEffect(() => {
+    const fetchPointHistory = async () => {
+      try {
+        const res = await pointApi.getPointHistory();
+        // console.log("Point History Response:", res);
+
+        const formatted = res.data.map((item) => ({
+          ...item,
+          changePoint: item.changedPoint, // normalize key
+        }));
+
+        setPointHistory(formatted);
+
+        // 전역 포인트 상태도 업데이트
+        const total = formatted.reduce(
+          (acc, item) => acc + item.changePoint,
+          0
+        );
+        refreshPoints();
+      } catch (error) {
+        console.error("포인트 데이터 로드 실패:", error);
+      }
+    };
+
+    fetchPointHistory();
+  }, [refreshPoints]);
 
   return (
     <PageContainer>
@@ -254,8 +167,7 @@ const PointHistoryPage = () => {
           <Title>포인트 내역</Title>
         </HeaderLeft>
         <HeaderRight>
-          <PointIcon>P</PointIcon>
-          <PointText>{userPoints.toLocaleString()}p</PointText>
+          <PointDisplay points={points.currentPoints || 0} variant="header" />
         </HeaderRight>
       </Header>
 
@@ -264,12 +176,22 @@ const PointHistoryPage = () => {
           pointHistory.map((item) => (
             <HistoryItem key={item.id}>
               <HistoryLeft>
-                <HistoryDate>{item.date}</HistoryDate>
-                <HistoryDescription>{item.description}</HistoryDescription>
+                <HistoryDate>
+                  {new Date(item.usedAt).toLocaleString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </HistoryDate>
+                <HistoryDescription>
+                  {paymentTypeLabels[item.paymentType] || item.paymentType}
+                </HistoryDescription>
               </HistoryLeft>
-              <HistoryPoints isPositive={item.isPositive}>
-                {item.isPositive ? "+ " : "- "}
-                {item.points.toLocaleString()}p
+              <HistoryPoints isPositive={item.changePoint > 0}>
+                {item.changePoint > 0 ? "+ " : "- "}
+                {Math.abs(item.changePoint).toLocaleString()}p
               </HistoryPoints>
             </HistoryItem>
           ))

@@ -25,10 +25,18 @@ export const UIState = {
     auth: false,
     stores: false,
     meetings: false,
+    points: false,
   },
 
   // 알림 상태
   notifications: [],
+
+  // 포인트 관련 상태
+  points: {
+    currentPoints: 0,
+    isLoading: false,
+    lastUpdated: null,
+  },
 };
 
 // Zustand UI 스토어 생성
@@ -94,6 +102,51 @@ export const useUIStore = create((set, get) => ({
     }));
   },
 
+  // 포인트 관리
+  setPoints: (points) => {
+    set((state) => ({
+      points: {
+        ...state.points,
+        currentPoints: points,
+        lastUpdated: new Date().toISOString(),
+      },
+    }));
+  },
+
+  setPointsLoading: (isLoading) => {
+    set((state) => ({
+      points: {
+        ...state.points,
+        isLoading,
+      },
+    }));
+  },
+
+  // 포인트 데이터 새로고침
+  refreshPoints: async () => {
+    const { setPoints, setPointsLoading } = get();
+
+    setPointsLoading(true);
+    try {
+      const { pointApi } = await import("@/services/pointApi");
+      const res = await pointApi.getPointHistory();
+
+      const formatted = res.data.map((item) => ({
+        ...item,
+        changePoint: item.changedPoint,
+      }));
+
+      const total = formatted.reduce((acc, item) => acc + item.changePoint, 0);
+
+      setPoints(total);
+    } catch (error) {
+      console.error("포인트 데이터 로드 실패:", error);
+      setPoints(0);
+    } finally {
+      setPointsLoading(false);
+    }
+  },
+
   // 알림 관리
   addNotification: (notification) => {
     const id = Date.now();
@@ -133,3 +186,4 @@ export const getMenuState = (menuName) => useUIStore.getState().menus[menuName];
 export const getTabState = (tabName) => useUIStore.getState().tabs[tabName];
 export const getLoadingState = (loadingName) =>
   useUIStore.getState().loading[loadingName];
+export const getPointsState = () => useUIStore.getState().points;

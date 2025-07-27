@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.AWS_API_BASE_URL || 'http://localhost:8080/api';
+import { useAuthStore } from "../stores/authStore";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
 
 // 개발용 더미 데이터 (API 연동 전까지 사용)
 const DUMMY_STORES = [
@@ -82,16 +84,22 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 class StoreApiService {
   // 전체 가맹점 목록 조회
   async getStores(params = {}) {
+    const token = useAuthStore.getState().accessToken;
     try {
       // 실제 API 호출 시도
       const response = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores${
+        }/api/merchants${
           new URLSearchParams(params).toString()
             ? `?${new URLSearchParams(params).toString()}`
             : ""
-        }`
+        }`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (response.ok) {
         return await response.json();
@@ -102,7 +110,6 @@ class StoreApiService {
 
     // 더미 데이터 반환
     return {
-      success: true,
       data: DUMMY_STORES,
       pagination: {
         page: 1,
@@ -120,6 +127,7 @@ class StoreApiService {
     radius = 1000,
     category = null,
   }) {
+    const token = useAuthStore.getState().accessToken;
     try {
       const params = {
         latitude,
@@ -130,7 +138,12 @@ class StoreApiService {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores/nearby?${new URLSearchParams(params).toString()}`
+        }/api/affiliate-stores?${new URLSearchParams(params).toString()}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (response.ok) {
         return await response.json();
@@ -151,7 +164,6 @@ class StoreApiService {
     });
 
     return {
-      success: true,
       data: filteredStores,
       searchInfo: {
         centerLatitude: latitude,
@@ -164,12 +176,23 @@ class StoreApiService {
 
   // 가맹점 검색
   async searchStores({ query, category = null, page = 1, size = 20 }) {
+    const token = useAuthStore.getState().accessToken;
     try {
-      const params = { query, page, size, ...(category && { category }) };
+      const params = {
+        keyword: query,
+        page,
+        size,
+        ...(category && { category }),
+      };
       const response = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores/search?${new URLSearchParams(params).toString()}`
+        }/api/search?${new URLSearchParams(params).toString()}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (response.ok) {
         return await response.json();
@@ -187,7 +210,6 @@ class StoreApiService {
     );
 
     return {
-      success: true,
       data: filteredStores,
       pagination: {
         page: 1,
@@ -200,11 +222,17 @@ class StoreApiService {
 
   // 가맹점 상세 정보 조회
   async getStoreDetail(storeId) {
+    const token = useAuthStore.getState().accessToken;
     try {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores/${storeId}`
+        }/api/merchants/${storeId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (response.ok) {
         return await response.json();
@@ -215,13 +243,13 @@ class StoreApiService {
 
     const store = DUMMY_STORES.find((s) => s.id === parseInt(storeId, 10));
     return {
-      success: true,
       data: store || null,
     };
   }
 
   // 카테고리별 가맹점 조회
   async getStoresByCategory(category, params = {}) {
+    const token = useAuthStore.getState().accessToken;
     try {
       const queryParams = new URLSearchParams({
         category,
@@ -230,7 +258,12 @@ class StoreApiService {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores/category?${queryParams}`
+        }/api/merchants?${queryParams}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (response.ok) {
         return await response.json();
@@ -244,22 +277,27 @@ class StoreApiService {
     );
 
     return {
-      success: true,
       data: filteredStores,
     };
   }
 
   // 카테고리 목록 조회
   async getCategories() {
+    const token = useAuthStore.getState().accessToken;
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-        }/api/stores/categories`
-      );
-      if (response.ok) {
-        return await response.json();
-      }
+      // const response = await fetch(
+      //   `${
+      //     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+      //   }/api/stores/categories`,
+      //   {
+      //     headers: {
+      //       ...(token && { Authorization: `Bearer ${token}` }),
+      //     },
+      //   }
+      // );
+      // if (response.ok) {
+      //   return await response.json();
+      // }
     } catch (error) {
       console.log("카테고리 목록용 더미 데이터 사용");
     }
@@ -268,8 +306,44 @@ class StoreApiService {
       ...new Set(DUMMY_STORES.map((store) => store.category)),
     ];
     return {
-      success: true,
       data: categories,
+    };
+  }
+
+  // 키워드 기반 스토어 검색 (search bar용)
+  async searchStoresByKeyword(keyword) {
+    const token = useAuthStore.getState().accessToken;
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+        }/api/search?keyword=${encodeURIComponent(keyword)}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error("키워드 검색 실패:", error);
+    }
+
+    // 더미 데이터에서 더 정확한 검색
+    const keywordLower = keyword.toLowerCase();
+    const filtered = DUMMY_STORES.filter((store) => {
+      const nameMatch = store.name.toLowerCase().includes(keywordLower);
+      const categoryMatch = store.category.toLowerCase().includes(keywordLower);
+      const addressMatch = store.address.toLowerCase().includes(keywordLower);
+
+      return nameMatch || categoryMatch || addressMatch;
+    });
+
+    console.log(`검색어 "${keyword}"에 대한 결과: ${filtered.length}개`);
+    return {
+      data: filtered,
     };
   }
 }

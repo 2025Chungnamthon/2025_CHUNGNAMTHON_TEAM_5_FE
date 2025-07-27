@@ -3,7 +3,7 @@ import { getAuthToken, logout } from "./auth.js";
 
 // API 기본 설정
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -53,16 +53,20 @@ apiClient.interceptors.response.use(
             }
           );
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+            response.data;
 
-          if (accessToken) {
+          if (newAccessToken) {
             // Zustand 스토어 업데이트
             const { refreshTokens } = await import("../stores/authStore");
-            refreshTokens({ accessToken, refreshToken: newRefreshToken });
+            refreshTokens({
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+            });
           }
 
           // 원래 요청 재시도
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         }
       } catch (refreshError) {

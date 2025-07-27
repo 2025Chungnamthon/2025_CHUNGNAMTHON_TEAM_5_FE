@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import PointDisplay from "@/components/PointDisplay";
+import { useUIStore } from "@/stores/uiStore";
 
 const Header = styled.header`
   background-color: #fff;
@@ -43,38 +45,32 @@ const PointBadge = styled.div`
   box-shadow: none;
 `;
 
-const PointCircle = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: #fdd756;
-  color: #d18000;
-  font-weight: 700;
-  font-size: 18px;
-  border-radius: 50%;
-`;
-
-const PointValue = styled.span`
-  color: #6b7280;
-  font-size: 18px;
-  font-weight: 500;
-  margin-left: 2px;
-`;
-
 function HeaderComponent() {
+  const { points, refreshPoints } = useUIStore();
+
   const handleLogoClick = () => {
     window.location.href = "/";
   };
+
+  // 포인트 데이터가 없거나 오래된 경우 새로고침
+  useEffect(() => {
+    if (points.currentPoints === 0 || !points.lastUpdated) {
+      refreshPoints();
+    }
+  }, [points.currentPoints, points.lastUpdated, refreshPoints]);
+
   return (
     <Header>
       <LogoRow onClick={handleLogoClick}>
         <LogoImg src="/logo.png" alt="Cheon:On 로고" />
       </LogoRow>
       <PointBadge>
-        <PointCircle>P</PointCircle>
-        <PointValue>1,620p</PointValue>
+        <PointDisplay
+          points={points.currentPoints || 0}
+          size="28px"
+          fontSize="18px"
+          iconFontSize="18px"
+        />
       </PointBadge>
     </Header>
   );

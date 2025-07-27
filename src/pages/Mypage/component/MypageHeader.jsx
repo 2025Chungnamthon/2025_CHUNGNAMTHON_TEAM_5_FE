@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../stores/authStore";
 import { FaUser } from "react-icons/fa";
+import { mypageApi } from "../../../services/mypageApi";
 
 const HeaderWrap = styled.div`
   padding: 32px 24px 0 24px;
@@ -102,9 +103,73 @@ const GuestHeaderSection = styled.div`
   }
 `;
 
-const MypageHeader = ({ name, profileImg, isGuest = false }) => {
+const LoadingSpinner = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &::after {
+    content: "";
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoadingText = styled.div`
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+`;
+
+const MypageHeader = ({ isGuest = false }) => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      setError(false);
+
+      try {
+        const res = await mypageApi.getMypage();
+
+        const userData = res;
+        if (userData) {
+          setProfile(userData);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLoginClick = () => {
     navigate("/login");
@@ -145,12 +210,42 @@ const MypageHeader = ({ name, profileImg, isGuest = false }) => {
               <LoginDescription>
                 로그인 후 모임에 참여하면 포인트를 받을 수 있어요.
               </LoginDescription>
-              <DevButton onClick={handleDevLogin}>
-                개발용: 로그인 시뮬레이션
-              </DevButton>
             </LoginContent>
           </ProfileRow>
         </GuestHeaderSection>
+      </HeaderWrap>
+    );
+  }
+
+  // 로딩 중일 때
+  if (isLoading) {
+    return (
+      <HeaderWrap>
+        <Title>마이페이지</Title>
+        <ProfileRow>
+          <LoadingSpinner />
+          <LoginContent>
+            <LoadingText>정보를 불러오는 중...</LoadingText>
+          </LoginContent>
+        </ProfileRow>
+      </HeaderWrap>
+    );
+  }
+
+  // 에러가 발생했을 때
+  if (error || !profile || typeof profile !== "object") {
+    return (
+      <HeaderWrap>
+        <Title>마이페이지</Title>
+        <ProfileRow>
+          <ProfileIcon>
+            <FaUser />
+          </ProfileIcon>
+          <LoginContent>
+            <LoginText>정보를 불러올 수 없습니다.</LoginText>
+            <LoginDescription>로그인을 다시 시도해주세요.</LoginDescription>
+          </LoginContent>
+        </ProfileRow>
       </HeaderWrap>
     );
   }
@@ -159,8 +254,19 @@ const MypageHeader = ({ name, profileImg, isGuest = false }) => {
     <HeaderWrap>
       <Title>마이페이지</Title>
       <ProfileRow>
-        <ProfileImg src={profileImg} alt={name} />
-        <Name>{name}</Name>
+        {profile?.profileImageUrl ? (
+          <ProfileImg
+            src={profile.profileImageUrl}
+            alt={profile.userName || "프로필 이미지"}
+          />
+        ) : (
+          <ProfileIcon>
+            <FaUser />
+          </ProfileIcon>
+        )}
+        <LoginContent>
+          <LoginText>{profile?.userName || "이름 없음"}</LoginText>
+        </LoginContent>
       </ProfileRow>
     </HeaderWrap>
   );

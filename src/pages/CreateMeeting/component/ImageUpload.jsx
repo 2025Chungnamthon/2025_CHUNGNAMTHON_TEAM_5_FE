@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiCamera, FiX, FiImage } from "react-icons/fi";
 
@@ -125,10 +125,20 @@ const UploadInfo = styled.div`
     margin-top: 8px;
 `;
 
-const ImageUpload = ({ onImageChange, error }) => {
+const ImageUpload = ({ onImageChange, error, initialImage = null }) => {
     const [imagePreview, setImagePreview] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const fileInputRef = useRef(null);
+
+    // 초기 이미지 설정
+    useEffect(() => {
+        if (initialImage && !imagePreview) {
+            console.log('초기 이미지 설정:', initialImage);
+            setImagePreview(initialImage);
+            // 초기 이미지는 URL이므로 파일은 null로 유지
+            setImageFile(null);
+        }
+    }, [initialImage]);
 
     // 파일 선택 처리
     const handleFileSelect = (event) => {
@@ -179,6 +189,12 @@ const ImageUpload = ({ onImageChange, error }) => {
         fileInputRef.current?.click();
     };
 
+    // 이미지 로드 에러 처리
+    const handleImageError = (e) => {
+        console.error('이미지 로드 실패:', e.target.src);
+        e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+    };
+
     return (
         <ImageUploadContainer>
             <HiddenFileInput
@@ -191,7 +207,11 @@ const ImageUpload = ({ onImageChange, error }) => {
             {imagePreview ? (
                 // 이미지 미리보기
                 <ImagePreviewContainer>
-                    <ImagePreview src={imagePreview} alt="업로드된 이미지" />
+                    <ImagePreview
+                        src={imagePreview}
+                        alt="업로드된 이미지"
+                        onError={handleImageError}
+                    />
                     <RemoveButton onClick={handleRemoveImage}>
                         <FiX />
                     </RemoveButton>

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiArrowLeft } from "react-icons/fi";
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { TextAreaInput } from "./component/FormInput";
 import LocationSearchModal from "./component/LocationSearchModal";
 import ImageUpload from "./component/ImageUpload";
@@ -185,7 +186,14 @@ const SCHEDULE_OPTIONS = [
 ];
 
 const CreateMeetingPage = () => {
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+    // 수정 모드 확인
+    const isEditMode = searchParams.get('mode') === 'edit' || location.state?.editMode;
+    const editMeetingId = searchParams.get('meetingId');
+    const editMeetingData = location.state?.meetingData;
 
     const {
         formData,
@@ -202,8 +210,26 @@ const CreateMeetingPage = () => {
         handleImageUpload,
         handleSubmit,
         handleBack,
-        canSubmit
+        canSubmit,
+        initializeEditMode
     } = useCreateMeetingForm();
+
+    // 수정 모드일 때 데이터 초기화
+    useEffect(() => {
+        console.log('🚀 CreateMeetingPage useEffect 실행');
+        console.log('isEditMode:', isEditMode);
+        console.log('editMeetingData:', editMeetingData);
+        console.log('searchParams mode:', searchParams.get('mode'));
+        console.log('location.state:', location.state);
+
+        if (isEditMode && editMeetingData && initializeEditMode) {
+            console.log('🔄 수정 모드 초기화 실행!');
+            initializeEditMode(editMeetingData);
+        } else if (isEditMode && !editMeetingData) {
+            console.warn('⚠️ 수정 모드이지만 meetingData가 없습니다!');
+            // 만약 데이터가 없다면 모임 상세 API를 호출해야 할 수도 있습니다
+        }
+    }, [isEditMode, editMeetingData, initializeEditMode]);
 
     const handleLocationClick = (location) => {
         if (location === "검색") {
@@ -218,13 +244,21 @@ const CreateMeetingPage = () => {
         setIsLocationModalOpen(false);
     };
 
+    const handleFormSubmit = () => {
+        if (isEditMode && editMeetingId) {
+            handleSubmit(editMeetingId, true); // 수정 모드로 제출
+        } else {
+            handleSubmit(); // 생성 모드로 제출
+        }
+    };
+
     return (
         <PageContainer>
             <Header>
                 <BackButton onClick={handleBack}>
                     <FiArrowLeft />
                 </BackButton>
-                <HeaderTitle>모임 만들기</HeaderTitle>
+                <HeaderTitle>{isEditMode ? '모임 수정하기' : '모임 만들기'}</HeaderTitle>
             </Header>
 
             <Content>
@@ -307,21 +341,22 @@ const CreateMeetingPage = () => {
                     <ImageUpload
                         onImageChange={handleImageUpload}
                         error={errors.image}
+                        initialImage={isEditMode ? formData.image_url : null}
                     />
                 </FormSection>
 
                 {/* 제출 버튼 */}
                 <SubmitButton
-                    onClick={handleSubmit}
+                    onClick={handleFormSubmit}
                     disabled={!canSubmit || isLoading}
                 >
                     {isLoading ? (
                         <>
                             <LoadingSpinner />
-                            생성 중...
+                            {isEditMode ? '수정 중...' : '생성 중...'}
                         </>
                     ) : (
-                        "모임 만들기"
+                        isEditMode ? "모임 수정하기" : "모임 만들기"
                     )}
                 </SubmitButton>
             </Content>

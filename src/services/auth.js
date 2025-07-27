@@ -2,7 +2,7 @@ import { useAuthStore } from "../stores/authStore";
 
 // API 기본 설정
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
 
 // ============================================================================
 // 인증 상태 관리 (Zustand 스토어 래퍼)
@@ -33,10 +33,10 @@ export const decodeToken = (token) => {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -148,7 +148,7 @@ export const createAuthHeaders = () => {
 export const handleOAuthCallback = async () => {
   const accessToken = getTokenFromUrl();
   const refreshToken = new URLSearchParams(window.location.search).get(
-    "refreshToken"
+      "refreshToken"
   );
   const error = getErrorFromUrl();
   const code = getCodeFromUrl();
@@ -160,11 +160,11 @@ export const handleOAuthCallback = async () => {
   // accessToken이 있으면 바로 처리
   if (accessToken) {
     login(
-      {
-        accessToken,
-        refreshToken: refreshToken || null,
-      },
-      null
+        {
+          accessToken,
+          refreshToken: refreshToken || null,
+        },
+        null
     );
     cleanUrl();
     return { success: true };
@@ -188,11 +188,11 @@ export const handleOAuthCallback = async () => {
 
     if (data.data && data.data.accessToken) {
       login(
-        {
-          accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken,
-        },
-        null
+          {
+            accessToken: data.data.accessToken,
+            refreshToken: data.data.refreshToken,
+          },
+          null
       );
       cleanUrl();
       return { success: true };

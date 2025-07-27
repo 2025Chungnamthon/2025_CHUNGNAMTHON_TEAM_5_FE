@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
@@ -9,7 +9,7 @@ import MypageLogout from "./component/MypageLogout";
 
 // 인증 유틸리티
 import { isAuthenticated } from "../../services/auth";
-import { getUserPoints, getCouponCount } from "../../services/couponData";
+import { mypageApi } from "../../services/mypageApi";
 
 const PageContainer = styled.div`
   background: #f3f6f7;
@@ -43,13 +43,32 @@ const MyPage = () => {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
 
-  // 더미 데이터 (실제 연동 시 API/Context 사용)
-  const user = {
-    name: "김천안",
-    profileImg: "https://randomuser.me/api/portraits/men/1.jpg",
-    point: getUserPoints(),
-    couponCount: getCouponCount(),
-  };
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const data = await mypageApi.getMypage();
+        setUser({
+          name: data.userName,
+          profileImg: data.profileImageUrl,
+          point: data.currentPoint,
+          couponCount: data.couponCount,
+        });
+      } catch (error) {
+        console.error("마이페이지 정보 불러오기 실패:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchUserData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isLoggedIn]);
 
   const handleGuestCouponClick = () => {
     if (isLoggedIn) {
@@ -62,14 +81,14 @@ const MyPage = () => {
   return (
     <PageContainer>
       <MypageHeader
-        name={user.name}
-        profileImg={user.profileImg}
+        name={user?.name || ""}
+        profileImg={user?.profileImg || ""}
         isGuest={!isLoggedIn}
       />
       <Section>
         <MypageSummaryCard
-          point={user.point}
-          couponCount={user.couponCount}
+          point={user?.point || 0}
+          couponCount={user?.couponCount || 0}
           isGuest={!isLoggedIn}
         />
       </Section>

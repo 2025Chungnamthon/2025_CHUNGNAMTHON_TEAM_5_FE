@@ -29,29 +29,31 @@ function PrivateRoute({ children }) {
 }
 
 const AppRouter = () => (
-  <Routes>
-    <Route element={<Layout />}>
-      <Route path="/" element={<Homepage />} />
-      <Route path="/login" element={<Loginpage />} />
-      <Route path="/callback" element={<CallbackPage />} />
-      <Route path="/meetings" element={<MeetingListPage />} />
-      <Route path="/create-meeting" element={<CreateMeetingPage />} />
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/coupon" element={<CouponPage />} />
-      <Route path="/point-history" element={<PointHistoryPage />} />
-      <Route path="/affiliated-stores" element={<AffiliatedStoresPage />} />
-      <Route path="/meetings/:meetingId/members" element={<MemberManagementPage />} />
-      {/* 필요시 인증이 필요한 라우트들
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/login" element={<Loginpage />} />
+        <Route path="/callback" element={<CallbackPage />} />
+        <Route path="/meetings" element={<MeetingListPage />} />
+        {/* 모임 생성/수정 페이지 - 같은 컴포넌트로 두 경로 모두 처리 */}
+        <Route path="/create-meeting" element={<CreateMeetingPage />} />
+        <Route path="/meetings/create" element={<CreateMeetingPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/coupon" element={<CouponPage />} />
+        <Route path="/point-history" element={<PointHistoryPage />} />
+        <Route path="/affiliated-stores" element={<AffiliatedStoresPage />} />
+        <Route path="/meetings/:meetingId/members" element={<MemberManagementPage />} />
+        {/* 필요시 인증이 필요한 라우트들
             <Route path="/protected" element={
                 <PrivateRoute>
                     <SomeProtectedComponent />
                 </PrivateRoute>
             }/>
             */}
-    </Route>
-    {/* <Route path="*" element={<NotFound />} /> */}
-  </Routes>
+      </Route>
+      {/* <Route path="*" element={<NotFound />} /> */}
+    </Routes>
 );
 
 export default AppRouter;
