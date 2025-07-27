@@ -22,7 +22,12 @@ export const getHomeData = async () => {
 
 export const getAffiliatedStores = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/home/affiliate`);
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/home/affiliate`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     console.log("[homeApi] 제휴 업체 정보:", response.data);
     return response.data.data;
   } catch (error) {

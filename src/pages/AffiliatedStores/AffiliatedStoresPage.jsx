@@ -257,11 +257,12 @@ const AffiliatedStoresPage = () => {
             <StoreItem key={index}>
               <StoreImageContainer>
                 <StoreImage
-                  src="https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+                  src={
+                    store.imageUrl ||
+                    "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+                  }
                   alt={store.name}
                 />
-                <ImageOverlay>Delivery / Take out</ImageOverlay>
-                <ImageBottomText>배달 / 포장 전문점</ImageBottomText>
               </StoreImageContainer>
               <StoreInfo>
                 <StoreName>{store.name}</StoreName>
