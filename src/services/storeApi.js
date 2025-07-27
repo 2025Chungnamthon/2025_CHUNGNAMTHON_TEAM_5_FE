@@ -59,6 +59,116 @@ const DUMMY_STORES = [
     businessHours: "10:00-23:00",
     isOpen: true,
   },
+  {
+    id: 6,
+    name: "스타벅스 천안터미널점",
+    category: "카페",
+    address: "충남 천안시 동남구 만남로 45",
+    phoneNumber: "041-555-1111",
+    latitude: 36.813,
+    longitude: 127.119,
+    businessHours: "07:00-23:00",
+    isOpen: true,
+  },
+  {
+    id: 7,
+    name: "롯데마트 천안점",
+    category: "대형마트",
+    address: "충남 천안시 서북구 공단로 123",
+    phoneNumber: "041-555-2222",
+    latitude: 36.82,
+    longitude: 127.115,
+    businessHours: "10:00-24:00",
+    isOpen: true,
+  },
+  {
+    id: 8,
+    name: "올리브영 천안터미널점",
+    category: "화장품",
+    address: "충남 천안시 동남구 만남로 67",
+    phoneNumber: "041-555-3333",
+    latitude: 36.814,
+    longitude: 127.12,
+    businessHours: "10:00-22:00",
+    isOpen: true,
+  },
+  {
+    id: 9,
+    name: "다이소 천안점",
+    category: "생활용품",
+    address: "충남 천안시 서북구 공단로 89",
+    phoneNumber: "041-555-4444",
+    latitude: 36.821,
+    longitude: 127.116,
+    businessHours: "10:00-22:00",
+    isOpen: true,
+  },
+  {
+    id: 10,
+    name: "버거킹 천안터미널점",
+    category: "패스트푸드",
+    address: "충남 천안시 동남구 만남로 89",
+    phoneNumber: "041-555-5555",
+    latitude: 36.815,
+    longitude: 127.121,
+    businessHours: "10:00-22:00",
+    isOpen: true,
+  },
+  {
+    id: 11,
+    name: "맥도날드 천안점",
+    category: "패스트푸드",
+    address: "충남 천안시 서북구 공단로 156",
+    phoneNumber: "041-555-6666",
+    latitude: 36.822,
+    longitude: 127.117,
+    businessHours: "10:00-22:00",
+    isOpen: true,
+  },
+  {
+    id: 12,
+    name: "GS25 천안터미널점",
+    category: "편의점",
+    address: "충남 천안시 동남구 만남로 111",
+    phoneNumber: "041-555-7777",
+    latitude: 36.816,
+    longitude: 127.122,
+    businessHours: "24시간",
+    isOpen: true,
+  },
+  {
+    id: 13,
+    name: "CU 천안점",
+    category: "편의점",
+    address: "충남 천안시 서북구 공단로 223",
+    phoneNumber: "041-555-8888",
+    latitude: 36.823,
+    longitude: 127.118,
+    businessHours: "24시간",
+    isOpen: true,
+  },
+  {
+    id: 14,
+    name: "세븐일레븐 천안터미널점",
+    category: "편의점",
+    address: "충남 천안시 동남구 만남로 133",
+    phoneNumber: "041-555-9999",
+    latitude: 36.817,
+    longitude: 127.123,
+    businessHours: "24시간",
+    isOpen: true,
+  },
+  {
+    id: 15,
+    name: "롯데리아 천안점",
+    category: "패스트푸드",
+    address: "충남 천안시 서북구 공단로 290",
+    phoneNumber: "041-555-0000",
+    latitude: 36.824,
+    longitude: 127.119,
+    businessHours: "10:00-22:00",
+    isOpen: true,
+  },
 ];
 
 // 거리 계산 함수
@@ -344,6 +454,55 @@ class StoreApiService {
     console.log(`검색어 "${keyword}"에 대한 결과: ${filtered.length}개`);
     return {
       data: filtered,
+    };
+  }
+
+  // bounds 기반 가맹점 조회 (지도 영역 내 가맹점)
+  async getStoresByBounds({ swLat, swLng, neLat, neLng }) {
+    const token = useAuthStore.getState().accessToken;
+    try {
+      const params = {
+        swLat,
+        swLng,
+        neLat,
+        neLng,
+      };
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+        }/api/merchants/bounds?${new URLSearchParams(params).toString()}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.log("bounds 검색용 더미 데이터 사용");
+    }
+
+    // 더미 데이터에서 bounds 내 가맹점 필터링
+    const filteredStores = DUMMY_STORES.filter((store) => {
+      return (
+        store.latitude >= swLat &&
+        store.latitude <= neLat &&
+        store.longitude >= swLng &&
+        store.longitude <= neLng
+      );
+    });
+
+    return {
+      data: filteredStores,
+      bounds: {
+        swLat,
+        swLng,
+        neLat,
+        neLng,
+      },
+      totalCount: filteredStores.length,
     };
   }
 }

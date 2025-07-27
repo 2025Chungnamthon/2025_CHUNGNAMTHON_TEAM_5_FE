@@ -124,6 +124,18 @@ const GlobalStyles = createGlobalStyle`
   ::-webkit-scrollbar { display: none; }
   scrollbar-width: none;
   -ms-overflow-style: none;
+
+  /* 애니메이션 키프레임 */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 export default GlobalStyles;
