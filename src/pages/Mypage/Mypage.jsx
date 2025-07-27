@@ -48,6 +48,12 @@ const MyPage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // 로그인하지 않은 경우 API 호출하지 않음
+      if (!isLoggedIn) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const data = await mypageApi.getMypage();
         setUser({
@@ -58,16 +64,19 @@ const MyPage = () => {
         });
       } catch (error) {
         console.error("마이페이지 정보 불러오기 실패:", error);
+        // 에러 발생시 기본값 설정 (로그인된 상태에서 에러가 난 경우)
+        setUser({
+          name: "",
+          profileImg: "",
+          point: 0,
+          couponCount: 0,
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (isLoggedIn) {
-      fetchUserData();
-    } else {
-      setIsLoading(false);
-    }
+    fetchUserData();
   }, [isLoggedIn]);
 
   const handleGuestCouponClick = () => {
@@ -79,26 +88,26 @@ const MyPage = () => {
   };
 
   return (
-    <PageContainer>
-      <MypageHeader
-        name={user?.name || ""}
-        profileImg={user?.profileImg || ""}
-        isGuest={!isLoggedIn}
-      />
-      <Section>
-        <MypageSummaryCard
-          point={user?.point || 0}
-          couponCount={user?.couponCount || 0}
-          isGuest={!isLoggedIn}
+      <PageContainer>
+        <MypageHeader
+            name={user?.name || ""}
+            profileImg={user?.profileImg || ""}
+            isGuest={!isLoggedIn}
         />
-      </Section>
-      <Section>
-        <CouponLinkCard onClick={handleGuestCouponClick}>
-          쿠폰 교환하러 가기
-        </CouponLinkCard>
-        {isLoggedIn && <MypageLogout />}
-      </Section>
-    </PageContainer>
+        <Section>
+          <MypageSummaryCard
+              point={user?.point || 0}
+              couponCount={user?.couponCount || 0}
+              isGuest={!isLoggedIn}
+          />
+        </Section>
+        <Section>
+          <CouponLinkCard onClick={handleGuestCouponClick}>
+            쿠폰 교환하러 가기
+          </CouponLinkCard>
+          {isLoggedIn && <MypageLogout />}
+        </Section>
+      </PageContainer>
   );
 };
 
