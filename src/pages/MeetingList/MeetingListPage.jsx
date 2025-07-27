@@ -302,6 +302,11 @@ const MeetingListPage = () => {
         }
     };
 
+    // 스와이프 기능 활성화 조건 결정
+    const shouldShowSwipeAction = () => {
+        return mainTab === 'myMeetings' && subTab === 'approved';
+    };
+
     // 메인 탭 변경 핸들러
     const handleMainTabChange = (tab) => {
         setMainTab(tab);
@@ -326,15 +331,17 @@ const MeetingListPage = () => {
 
     // 모임 카드 클릭 핸들러
     const handleMeetingClick = (meetingId) => {
-        if (mainTab === 'myMeetings') {
-            // 내 모임에서는 스와이프 기능
+        // "내 모임-참여중"에서만 스와이프 기능 동작
+        if (mainTab === 'myMeetings' && subTab === 'approved') {
+            // 스와이프 기능: 토글 방식
             handleSwipe(meetingId);
         } else {
-            // 모임 리스트에서는 카드 클릭 시 아무 동작 안 함
-            // 자세히 버튼으로만 모달 열기
-            console.log(`모임 ${meetingId} 카드 클릭 (모달 열지 않음)`);
+            // 다른 탭에서는 클릭으로 상세 모달 열기
+            console.log(`모임 ${meetingId} 카드 클릭`);
+            handleViewMeeting(meetingId);
         }
     };
+
 
     // 자세히 버튼 클릭 핸들러
     const handleViewMeeting = (meetingId) => {
@@ -364,10 +371,31 @@ const MeetingListPage = () => {
     };
 
     // 나가기 버튼 클릭 핸들러
-    const handleLeaveMeeting = (meetingId) => {
-        console.log(`모임 ${meetingId} 나가기`);
-        alert(`모임 ${meetingId}에서 나가시겠습니까?`);
-        setSwipedCard(null);
+    const handleLeaveMeeting = async (meetingId) => {
+        const meeting = getCurrentMeetings().find(m => m.meetingId === meetingId);
+
+        if (!meeting) {
+            alert('모임 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        const confirmMessage = `정말로 "${meeting.title}" 모임에서 나가시겠습니까?\n\n나간 후에는 다시 가입 신청을 해야 합니다.`;
+
+        if (window.confirm(confirmMessage)) {
+            try {
+                await meetingApi.leaveMeeting(meetingId);
+                alert('모임에서 나갔습니다.');
+
+                // 스와이프 상태 초기화
+                setSwipedCard(null);
+
+                // 데이터 새로고침
+                loadAllData();
+            } catch (error) {
+                console.error('모임 나가기 실패:', error);
+                alert(error.message || '모임 나가기에 실패했습니다.');
+            }
+        }
     };
 
     // 재시도 핸들러
@@ -577,7 +605,7 @@ const MeetingListPage = () => {
                         onCardClick={handleMeetingClick}
                         onActionClick={handleViewMeeting}
                         onLeaveClick={handleLeaveMeeting}
-                        showSwipeAction={mainTab === 'myMeetings'}
+                        showSwipeAction={shouldShowSwipeAction()}
                         swiped={swipedCard === meeting.meetingId}
                         actionButtonText={
                             mainTab === 'myMeetings' && subTab === 'pending'
