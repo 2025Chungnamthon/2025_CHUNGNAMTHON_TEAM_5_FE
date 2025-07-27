@@ -197,82 +197,72 @@ const AffiliatedStoresPage = () => {
   } = useQuery({
     queryKey: ["affiliatedStores"],
     queryFn: getAffiliatedStores,
+    // 에러가 발생해도 실패로 처리하지 않고 빈 배열 사용
+    retry: false,
+    onError: (error) => {
+      console.log("제휴업체 조회 에러 (정상 처리됨):", error);
+    }
   });
 
   if (isLoading) {
     return (
-      <PageContainer>
-        <Header>
-          <HeaderLeft>
-            <BackButton onClick={handleBack}>
-              <FaArrowLeft />
-            </BackButton>
-            <Title>이번 주 제휴 업체</Title>
-          </HeaderLeft>
-        </Header>
-        <Content>
-          <LoadingState>
-            <LoadingText>제휴 업체 정보를 불러오는 중...</LoadingText>
-          </LoadingState>
-        </Content>
-      </PageContainer>
+        <PageContainer>
+          <Header>
+            <HeaderLeft>
+              <BackButton onClick={handleBack}>
+                <FaArrowLeft />
+              </BackButton>
+              <Title>이번 주 제휴 업체</Title>
+            </HeaderLeft>
+          </Header>
+          <Content>
+            <LoadingState>
+              <LoadingText>제휴 업체 정보를 불러오는 중...</LoadingText>
+            </LoadingState>
+          </Content>
+        </PageContainer>
     );
   }
 
-  if (error) {
-    return (
-      <PageContainer>
-        <Header>
-          <HeaderLeft>
-            <BackButton onClick={handleBack}>
-              <FaArrowLeft />
-            </BackButton>
-            <Title>이번 주 제휴 업체</Title>
-          </HeaderLeft>
-        </Header>
-        <Content>
-          <ErrorState>
-            <ErrorText>제휴 업체 정보를 불러오는데 실패했습니다</ErrorText>
-            <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
-          </ErrorState>
-        </Content>
-      </PageContainer>
-    );
-  }
-
+  // error가 있어도 stores가 빈 배열로 올 수 있으므로 정상 렌더링
   return (
-    <PageContainer>
-      <Header>
-        <HeaderLeft>
-          <BackButton onClick={handleBack}>
-            <FaArrowLeft />
-          </BackButton>
-          <Title>이번 주 제휴 업체</Title>
-        </HeaderLeft>
-      </Header>
+      <PageContainer>
+        <Header>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <FaArrowLeft />
+            </BackButton>
+            <Title>이번 주 제휴 업체</Title>
+          </HeaderLeft>
+        </Header>
 
-      <Content>
-        {stores.length > 0 ? (
-          stores.map((store, index) => (
-            <StoreItem key={index}>
-              <StoreImageContainer>
-                <StoreImage src={store.imageUrl} alt={store.name} />
-              </StoreImageContainer>
-              <StoreInfo>
-                <StoreName>{store.name}</StoreName>
-                <StoreAddress>{store.address}</StoreAddress>
-                <StorePhone>{store.tel}</StorePhone>
-              </StoreInfo>
-            </StoreItem>
-          ))
-        ) : (
-          <EmptyState>
-            <EmptyIcon>🏪</EmptyIcon>
-            <EmptyText>제휴 업체가 없습니다</EmptyText>
-          </EmptyState>
-        )}
-      </Content>
-    </PageContainer>
+        <Content>
+          {stores && stores.length > 0 ? (
+              stores.map((store, index) => (
+                  <StoreItem key={index}>
+                    <StoreImageContainer>
+                      <StoreImage src={store.imageUrl} alt={store.name} />
+                    </StoreImageContainer>
+                    <StoreInfo>
+                      <StoreName>{store.name}</StoreName>
+                      <StoreAddress>{store.address}</StoreAddress>
+                      <StorePhone>{store.tel}</StorePhone>
+                    </StoreInfo>
+                  </StoreItem>
+              ))
+          ) : (
+              <EmptyState>
+                <EmptyIcon>🏪</EmptyIcon>
+                <EmptyText>
+                  {error ? "제휴 업체 정보를 불러올 수 없습니다" : "제휴 업체가 없습니다"}
+                </EmptyText>
+                {error && (
+                    <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
+                )}
+              </EmptyState>
+          )}
+        </Content>
+      </PageContainer>
   );
 };
 
