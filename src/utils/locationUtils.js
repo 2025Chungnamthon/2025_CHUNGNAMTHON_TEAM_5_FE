@@ -1,6 +1,6 @@
 export const LOCATION_MAP = {
     // 동남구
-    MOKCHEON: '목천동',
+    MOKCHEON: '목천읍',
     PUNGSAE: '풍세면',
     GWANGDEOK: '광덕면',
     BUK: '북면',
@@ -29,10 +29,10 @@ export const LOCATION_MAP = {
     SSANGYONG2: '쌍용2동',
     SSANGYONG3: '쌍용3동',
     BAEKSEOK: '백석동',
-    BULDANG: '불당동',
+    BULDANG1: '불당1동',
+    BULDANG2: '불당2동',
     BUSEONG1: '부성1동',
     BUSEONG2: '부성2동',
-    DUJEONG: '두정동'
 };
 
 // 영문 지역명을 한글로 변환
