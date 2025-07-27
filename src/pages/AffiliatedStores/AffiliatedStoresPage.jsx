@@ -256,13 +256,7 @@ const AffiliatedStoresPage = () => {
           stores.map((store, index) => (
             <StoreItem key={index}>
               <StoreImageContainer>
-                <StoreImage
-                  src={
-                    store.imageUrl ||
-                    "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
-                  }
-                  alt={store.name}
-                />
+                <StoreImage src={store.imageUrl} alt={store.name} />
               </StoreImageContainer>
               <StoreInfo>
                 <StoreName>{store.name}</StoreName>
