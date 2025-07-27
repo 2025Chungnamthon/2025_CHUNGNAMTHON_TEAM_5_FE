@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {getAuthToken} from './auth';
 import {getLocationCode} from '../utils/locationUtils';
 
@@ -10,14 +11,59 @@ const SCHEDULE_TO_API_MAP = {
     'WEEKEND': 'WEEKEND'  // 주말 -> WEEKEND
 };
 
-// API 요청 헤더 생성
-const getAuthHeaders = () => {
-    const token = getAuthToken();
-    return {
-        'Content-Type': 'application/json',
-        ...(token && {'Authorization': `Bearer ${token}`})
-    };
-};
+// axios 인스턴스 생성
+const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
+// 요청 인터셉터 - 인증 토큰 자동 추가
+apiClient.interceptors.request.use(
+    (config) => {
+        const token = getAuthToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// 응답 인터셉터 - 에러 처리
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.code === 'ECONNABORTED' || error.message.includes('Network Error')) {
+            throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+        }
+
+        if (error.response) {
+            const { status, data } = error.response;
+            const errorMessage = data?.message || `HTTP ${status}: ${error.response.statusText}`;
+
+            switch (status) {
+                case 400:
+                    throw new Error(data?.message || '입력 정보를 확인해주세요.');
+                case 401:
+                    throw new Error('로그인이 필요합니다. 다시 로그인해주세요.');
+                case 403:
+                    throw new Error(data?.message || '권한이 없습니다.');
+                case 404:
+                    throw new Error(data?.message || '요청한 리소스를 찾을 수 없습니다.');
+                case 500:
+                    throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                default:
+                    throw new Error(errorMessage);
+            }
+        }
+
+        throw error;
+    }
+);
 
 // 스케줄을 API 형식으로 변환
 const convertScheduleToAPI = (schedule) => {
@@ -56,40 +102,10 @@ export const meetingApi = {
             console.log('원본 데이터:', meetingData);
             console.log('API 요청 데이터:', requestData);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(requestData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-
-                // HTTP 상태코드별 에러 처리
-                switch (response.status) {
-                    case 401:
-                        throw new Error('로그인이 필요합니다. 다시 로그인해주세요.');
-                    case 403:
-                        throw new Error('권한이 없습니다.');
-                    case 400:
-                        throw new Error(errorData.message || '입력 정보를 확인해주세요.');
-                    case 500:
-                        throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            return await response.json();
-
+            const response = await apiClient.post('/api/meetings', requestData);
+            return response.data;
         } catch (error) {
             console.error('모임 생성 API 오류:', error);
-
-            // 네트워크 오류 처리
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
-            }
-
             throw error;
         }
     },
@@ -97,18 +113,8 @@ export const meetingApi = {
     // 모임 목록 조회
     getMeetings: async (params = {}) => {
         try {
-            const queryParams = new URLSearchParams(params);
-            const response = await fetch(`${API_BASE_URL}/api/meetings?${queryParams}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            return await response.json();
+            const response = await apiClient.get('/api/meetings', { params });
+            return response.data;
         } catch (error) {
             console.error('모임 목록 조회 API 오류:', error);
             throw error;
@@ -120,30 +126,13 @@ export const meetingApi = {
         try {
             // status에 따라 엔드포인트 결정
             const endpoint = status ? `/api/meetings/me/${status}` : '/api/meetings/me';
-            const url = `${API_BASE_URL}${endpoint}`;
 
-            console.log('내 모임 조회 URL:', url);
+            console.log('내 모임 조회 URL:', `${API_BASE_URL}${endpoint}`);
 
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.get(endpoint);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 403:
-                        throw new Error('권한이 없습니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log(`내 모임 조회 응답 (${status}):`, result);
-            return result;
+            console.log(`내 모임 조회 응답 (${status}):`, response.data);
+            return response.data;
         } catch (error) {
             console.error(`내 모임 조회 API 오류 (${status}):`, error);
             throw error;
@@ -153,26 +142,15 @@ export const meetingApi = {
     // 모임 상세 정보 조회
     getMeetingDetail: async (meetingId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 404:
-                        throw new Error('모임을 찾을 수 없습니다.');
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            return await response.json();
+            const response = await apiClient.get(`/api/meetings/${meetingId}`);
+            return response.data;
         } catch (error) {
             console.error('모임 상세 조회 API 오류:', error);
+
+            // 404 에러에 대한 특별한 처리
+            if (error.response?.status === 404) {
+                throw new Error('모임을 찾을 수 없습니다.');
+            }
             throw error;
         }
     },
@@ -182,30 +160,20 @@ export const meetingApi = {
         try {
             console.log('모임 가입 신청:', meetingId);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/join`, {
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.post(`/api/meetings/${meetingId}/join`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 400:
-                        throw new Error('이미 가입 신청했거나 참여중인 모임입니다.');
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 404:
-                        throw new Error('모임을 찾을 수 없습니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('모임 가입 신청 응답:', result);
-            return result;
+            console.log('모임 가입 신청 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('모임 가입 신청 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 400) {
+                throw new Error('이미 가입 신청했거나 참여중인 모임입니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('모임을 찾을 수 없습니다.');
+            }
             throw error;
         }
     },
@@ -215,29 +183,18 @@ export const meetingApi = {
         try {
             const requestData = transformMeetingData(meetingData);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
-                method: 'PATCH',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(requestData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 403:
-                        throw new Error('모임을 수정할 권한이 없습니다.');
-                    case 404:
-                        throw new Error('모임을 찾을 수 없습니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            return await response.json();
+            const response = await apiClient.patch(`/api/meetings/${meetingId}`, requestData);
+            return response.data;
         } catch (error) {
             console.error('모임 수정 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('모임을 수정할 권한이 없습니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('모임을 찾을 수 없습니다.');
+            }
             throw error;
         }
     },
@@ -245,28 +202,18 @@ export const meetingApi = {
     // 모임 삭제
     deleteMeeting: async (meetingId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 403:
-                        throw new Error('모임을 삭제할 권한이 없습니다.');
-                    case 404:
-                        throw new Error('모임을 찾을 수 없습니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            return await response.json();
+            const response = await apiClient.delete(`/api/meetings/${meetingId}`);
+            return response.data;
         } catch (error) {
             console.error('모임 삭제 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('모임을 삭제할 권한이 없습니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('모임을 찾을 수 없습니다.');
+            }
             throw error;
         }
     },
@@ -276,30 +223,20 @@ export const meetingApi = {
         try {
             console.log(`모임 ${meetingId} 멤버 리스트 조회 시작`);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/users`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.get(`/api/meetings/${meetingId}/users`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 403:
-                        throw new Error('멤버 리스트를 볼 권한이 없습니다.');
-                    case 404:
-                        throw new Error('모임을 찾을 수 없습니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('멤버 리스트 조회 응답:', result);
-            return result;
+            console.log('멤버 리스트 조회 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('멤버 리스트 조회 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('멤버 리스트를 볼 권한이 없습니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('모임을 찾을 수 없습니다.');
+            }
             throw error;
         }
     },
@@ -309,32 +246,23 @@ export const meetingApi = {
         try {
             console.log(`모임 ${meetingId}에서 사용자 ${userId} 승인 시작`);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/approve/${userId}`, {
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.post(`/api/meetings/${meetingId}/approve/${userId}`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 400:
-                        throw new Error('잘못된 신청 상태입니다.');
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 403:
-                        throw new Error('승인 권한이 없습니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 모임입니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('멤버 승인 응답:', result);
-            return result;
+            console.log('멤버 승인 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('멤버 승인 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 400) {
+                throw new Error('잘못된 신청 상태입니다.');
+            }
+            if (error.response?.status === 403) {
+                throw new Error('승인 권한이 없습니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('존재하지 않는 모임입니다.');
+            }
             throw error;
         }
     },
@@ -344,28 +272,20 @@ export const meetingApi = {
         try {
             console.log(`모임 ${meetingId}에서 사용자 ${userId} 거절 시작`);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/reject/${userId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.delete(`/api/meetings/${meetingId}/reject/${userId}`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 403:
-                        throw new Error('요청 상태가 아닙니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 모임입니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('멤버 거절 응답:', result);
-            return result;
+            console.log('멤버 거절 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('멤버 거절 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('요청 상태가 아닙니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('존재하지 않는 모임입니다.');
+            }
             throw error;
         }
     },
@@ -375,28 +295,20 @@ export const meetingApi = {
         try {
             console.log(`모임 ${meetingId}에서 사용자 ${userId} 내보내기 시작`);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/kick/${userId}`, {
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.post(`/api/meetings/${meetingId}/kick/${userId}`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 403:
-                        throw new Error('해당 모임에 참여 중인 멤버가 아닙니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 모임입니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('멤버 내보내기 응답:', result);
-            return result;
+            console.log('멤버 내보내기 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('멤버 내보내기 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('해당 모임에 참여 중인 멤버가 아닙니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('존재하지 않는 모임입니다.');
+            }
             throw error;
         }
     },
@@ -406,30 +318,20 @@ export const meetingApi = {
         try {
             console.log('모임 가입 신청 취소:', meetingId);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/cancel`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.delete(`/api/meetings/${meetingId}/cancel`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 400:
-                        throw new Error('이미 승인된 모임이거나, 신청하지 않은 모임입니다.');
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 모임입니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('모임 가입 신청 취소 응답:', result);
-            return result;
+            console.log('모임 가입 신청 취소 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('모임 가입 신청 취소 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 400) {
+                throw new Error('이미 승인된 모임이거나, 신청하지 않은 모임입니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('존재하지 않는 모임입니다.');
+            }
             throw error;
         }
     },
@@ -439,30 +341,20 @@ export const meetingApi = {
         try {
             console.log('모임 나가기:', meetingId);
 
-            const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/leave`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+            const response = await apiClient.delete(`/api/meetings/${meetingId}/leave`);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                switch (response.status) {
-                    case 403:
-                        throw new Error('참여하고 있지 않은 모임입니다.');
-                    case 401:
-                        throw new Error('로그인이 필요합니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 모임입니다.');
-                    default:
-                        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-            console.log('모임 나가기 응답:', result);
-            return result;
+            console.log('모임 나가기 응답:', response.data);
+            return response.data;
         } catch (error) {
             console.error('모임 나가기 API 오류:', error);
+
+            // 특별한 에러 메시지 처리
+            if (error.response?.status === 403) {
+                throw new Error('참여하고 있지 않은 모임입니다.');
+            }
+            if (error.response?.status === 404) {
+                throw new Error('존재하지 않는 모임입니다.');
+            }
             throw error;
         }
     }
