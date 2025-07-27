@@ -2,7 +2,7 @@ import { useAuthStore } from "../stores/authStore";
 
 // API 기본 설정
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // ============================================================================
 // 인증 상태 관리 (Zustand 스토어 래퍼)

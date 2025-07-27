@@ -2,7 +2,7 @@ import axios from 'axios';
 import {getAuthToken} from './auth';
 import {getLocationCode} from '../utils/locationUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://43.200.175.218:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 // 스케줄 변환 (UI 값 -> API 값)
 const SCHEDULE_TO_API_MAP = {
