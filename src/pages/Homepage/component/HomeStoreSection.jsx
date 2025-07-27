@@ -100,12 +100,12 @@ const HomeStoreSection = ({ affiliates = [] }) => {
 
   const isValidImageUrl = (url) => {
     if (!url) return false;
-    const invalidDomains = ["example.com", "image.com"];
+    const invalidDomains = []; // Allow all domains now
     return !invalidDomains.some((domain) => url.includes(domain));
   };
 
   const getImageUrl = (store) => {
-    // API 데이터는 imageUrl이 없으므로 null 반환
+    // Return the store's imageUrl directly
     return store.imageUrl;
   };
 
@@ -149,10 +149,10 @@ const HomeStoreSection = ({ affiliates = [] }) => {
       <StoreScrollRow>
         {storesToShow.map((store, index) => {
           const imageUrl = getImageUrl(store);
-          const shouldShowPlaceholder =
-            !imageUrl ||
-            !isValidImageUrl(imageUrl) ||
-            imageErrors.has(imageUrl);
+          const shouldShowPlaceholder = !imageUrl;
+
+          // !isValidImageUrl(imageUrl) ||
+          // imageErrors.has(imageUrl);
 
           return (
             <StoreCard key={store.id || index}>
