@@ -150,24 +150,19 @@ const MypageHeader = ({ isGuest = false }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      console.log("[MypageHeader] 요청 시작 - 마이페이지 프로필 불러오기");
       setIsLoading(true);
       setError(false);
 
       try {
         const res = await mypageApi.getMypage();
-        console.log("[MypageHeader] 전체 응답:", res);
 
         const userData = res;
-        console.log("[MypageHeader] 파싱된 유저 데이터:", userData);
         if (userData) {
           setProfile(userData);
         } else {
-          console.warn("[MypageHeader] 사용자 데이터가 존재하지 않습니다.");
           setError(true);
         }
       } catch (err) {
-        console.error("[MypageHeader] 마이페이지 데이터 불러오기 실패:", err);
         setError(true);
       } finally {
         setIsLoading(false);
@@ -215,9 +210,6 @@ const MypageHeader = ({ isGuest = false }) => {
               <LoginDescription>
                 로그인 후 모임에 참여하면 포인트를 받을 수 있어요.
               </LoginDescription>
-              <DevButton onClick={handleDevLogin}>
-                개발용: 로그인 시뮬레이션
-              </DevButton>
             </LoginContent>
           </ProfileRow>
         </GuestHeaderSection>

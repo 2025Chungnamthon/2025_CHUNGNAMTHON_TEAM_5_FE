@@ -134,7 +134,7 @@ const PointHistoryPage = () => {
     const fetchPointHistory = async () => {
       try {
         const res = await pointApi.getPointHistory();
-        console.log("Point History Response:", res);
+        // console.log("Point History Response:", res);
 
         const formatted = res.data.map((item) => ({
           ...item,

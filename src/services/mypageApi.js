@@ -8,13 +8,13 @@ export const mypageApi = {
   getMypage: async () => {
     try {
       const token = getAuthToken();
-      console.log("불러온 토큰:", token);
+      // console.log("불러온 토큰:", token);
       const response = await axios.get(`${API_BASE_URL}/api/mypage`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("마이페이지 전체 응답:", response);
+      // console.log("마이페이지 전체 응답:", response);
       if (!response?.data?.data) {
         console.warn("마이페이지 데이터 없음:", response?.data);
       }

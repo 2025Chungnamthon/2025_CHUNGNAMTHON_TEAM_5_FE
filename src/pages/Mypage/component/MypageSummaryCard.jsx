@@ -87,26 +87,15 @@ const MypageSummaryCard = ({ isGuest = false }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      console.log("[MypageSummaryCard] 요청 시작 - 마이페이지 프로필 불러오기");
       try {
         const res = await mypageApi.getMypage();
-        console.log("[MypageSummaryCard] 전체 응답:", res);
 
         const userData = res;
-        console.log("[MypageSummaryCard] 파싱된 유저 데이터:", userData);
         if (userData) {
           setProfile(userData);
         } else {
-          console.warn(
-            "[MypageSummaryCard] 사용자 데이터가 존재하지 않습니다."
-          );
         }
-      } catch (err) {
-        console.error(
-          "[MypageSummaryCard] 마이페이지 데이터 불러오기 실패:",
-          err
-        );
-      }
+      } catch (err) {}
     };
     fetchProfile();
   }, []);

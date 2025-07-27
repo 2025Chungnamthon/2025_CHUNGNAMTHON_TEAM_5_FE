@@ -5,8 +5,14 @@ import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
 import { useUIStore } from "../../../stores/uiStore";
 import dayjs from "dayjs";
-import { getAllCoupons, getMyCoupons } from "@/services/couponApi";
+import {
+  getAllCoupons,
+  getMyCoupons,
+  useCoupon,
+  exchangeCoupon,
+} from "@/services/couponApi";
 import PointDisplay from "@/components/PointDisplay";
+import CouponUseModal from "./component/couponUseModal.jsx";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -188,6 +194,8 @@ const CouponPage = () => {
   const [exchangeCouponsData, setExchangeCouponsData] = useState([]);
   const [myCouponsData, setMyCouponsData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -215,6 +223,64 @@ const CouponPage = () => {
     setTab("coupon", tab);
   };
 
+  const handleUseCoupon = (coupon) => {
+    setSelectedCoupon(coupon);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCoupon(null);
+  };
+
+  const handleSubmitCouponUse = async (code) => {
+    if (!selectedCoupon) return;
+
+    try {
+      const response = await useCoupon(selectedCoupon.id, code);
+      alert("쿠폰이 성공적으로 사용되었습니다!");
+      handleCloseModal();
+      // 쿠폰 목록 새로고침
+      const updatedMyCoupons = await getMyCoupons();
+      setMyCouponsData(updatedMyCoupons);
+      // 포인트 새로고침
+      refreshPoints();
+    } catch (error) {
+      console.error("쿠폰 사용 실패:", error);
+      console.error("에러 응답 데이터:", error.response?.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        "쿠폰 사용에 실패했습니다. 확인 코드를 다시 입력해주세요.";
+      alert(errorMessage);
+    }
+  };
+
+  const handleExchangeCoupon = async (coupon) => {
+    try {
+      const response = await exchangeCoupon(coupon.id);
+      alert("쿠폰이 성공적으로 교환되었습니다!");
+      // 쿠폰 목록 새로고침
+      const updatedMyCoupons = await getMyCoupons();
+      setMyCouponsData(updatedMyCoupons);
+      // 포인트 새로고침
+      refreshPoints();
+    } catch (error) {
+      console.error("쿠폰 교환 실패:", error);
+      console.error("에러 응답 데이터:", error.response?.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        "쿠폰 교환에 실패했습니다. 다시 시도해주세요.";
+      alert(errorMessage);
+    }
+  };
+
+  const calculateRemainDays = (expirationDate) => {
+    const today = dayjs();
+    const expiry = dayjs(expirationDate);
+    const remainDays = expiry.diff(today, "day");
+    return Math.max(0, remainDays);
+  };
+
   // 전역 포인트 상태 사용
   useEffect(() => {
     // 포인트 데이터가 없거나 오래된 경우 새로고침
@@ -236,6 +302,7 @@ const CouponPage = () => {
     title: coupon.title,
     points: coupon.point,
     expiry: dayjs(coupon.expirationPeriod).format("YYYY.MM.DD 까지 사용가능"),
+    originalExpiry: coupon.expirationPeriod, // 원본 날짜 데이터 보존
   }));
 
   // 로딩 상태 처리
@@ -303,7 +370,9 @@ const CouponPage = () => {
                   </CouponPoints>
                   <CouponExpiry>{coupon.expiry}</CouponExpiry>
                 </CouponContent>
-                <ExchangeButton>교환</ExchangeButton>
+                <ExchangeButton onClick={() => handleExchangeCoupon(coupon)}>
+                  교환
+                </ExchangeButton>
               </CouponCard>
             ))
           : // 내 쿠폰함 탭
@@ -322,10 +391,21 @@ const CouponPage = () => {
                   </CouponPoints>
                   <CouponExpiry>{coupon.expiry}</CouponExpiry>
                 </CouponContent>
-                <ExchangeButton>사용하기</ExchangeButton>
+                <ExchangeButton onClick={() => handleUseCoupon(coupon)}>
+                  사용하기
+                </ExchangeButton>
               </CouponCard>
             ))}
       </Content>
+
+      {isModalOpen && selectedCoupon && (
+        <CouponUseModal
+          couponName={selectedCoupon.title}
+          remainDays={calculateRemainDays(selectedCoupon.originalExpiry)}
+          onSubmit={handleSubmitCouponUse}
+          onClose={handleCloseModal}
+        />
+      )}
     </PageContainer>
   );
 };
