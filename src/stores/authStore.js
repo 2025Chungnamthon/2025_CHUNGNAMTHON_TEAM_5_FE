@@ -128,7 +128,7 @@ export const useAuthStore = create(
 // 편의 함수들
 export const getAuthToken = () => {
   const token = useAuthStore.getState().accessToken;
-  console.log("Access Token retrieved:", token);
+  // console.log("Access Token retrieved:", token);
   return token;
 };
 export const isAuthenticated = () => useAuthStore.getState().isAuthenticated;

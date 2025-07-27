@@ -5,7 +5,12 @@ import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
 import { useUIStore } from "../../../stores/uiStore";
 import dayjs from "dayjs";
-import { getAllCoupons, getMyCoupons, useCoupon } from "@/services/couponApi";
+import {
+  getAllCoupons,
+  getMyCoupons,
+  useCoupon,
+  exchangeCoupon,
+} from "@/services/couponApi";
 import PointDisplay from "@/components/PointDisplay";
 import CouponUseModal from "./component/couponUseModal.jsx";
 
@@ -231,11 +236,8 @@ const CouponPage = () => {
   const handleSubmitCouponUse = async (code) => {
     if (!selectedCoupon) return;
 
-    console.log("쿠폰 사용 시도 - couponId:", selectedCoupon.id, "code:", code);
-
     try {
       const response = await useCoupon(selectedCoupon.id, code);
-      console.log("쿠폰 사용 응답:", response);
       alert("쿠폰이 성공적으로 사용되었습니다!");
       handleCloseModal();
       // 쿠폰 목록 새로고침
@@ -249,6 +251,25 @@ const CouponPage = () => {
       const errorMessage =
         error.response?.data?.message ||
         "쿠폰 사용에 실패했습니다. 확인 코드를 다시 입력해주세요.";
+      alert(errorMessage);
+    }
+  };
+
+  const handleExchangeCoupon = async (coupon) => {
+    try {
+      const response = await exchangeCoupon(coupon.id);
+      alert("쿠폰이 성공적으로 교환되었습니다!");
+      // 쿠폰 목록 새로고침
+      const updatedMyCoupons = await getMyCoupons();
+      setMyCouponsData(updatedMyCoupons);
+      // 포인트 새로고침
+      refreshPoints();
+    } catch (error) {
+      console.error("쿠폰 교환 실패:", error);
+      console.error("에러 응답 데이터:", error.response?.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        "쿠폰 교환에 실패했습니다. 다시 시도해주세요.";
       alert(errorMessage);
     }
   };
@@ -349,7 +370,9 @@ const CouponPage = () => {
                   </CouponPoints>
                   <CouponExpiry>{coupon.expiry}</CouponExpiry>
                 </CouponContent>
-                <ExchangeButton>교환</ExchangeButton>
+                <ExchangeButton onClick={() => handleExchangeCoupon(coupon)}>
+                  교환
+                </ExchangeButton>
               </CouponCard>
             ))
           : // 내 쿠폰함 탭
