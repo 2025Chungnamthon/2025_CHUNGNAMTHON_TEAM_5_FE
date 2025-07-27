@@ -166,6 +166,11 @@ const HomeGroupSection = ({ meetings = [] }) => {
     return !invalidDomains.some((domain) => url.includes(domain));
   };
 
+  const getImageUrl = (meeting) => {
+    // API 데이터의 imageUrl 필드 사용
+    return meeting.imageUrl;
+  };
+
   const handleArrowClick = () => {
     navigate("/meetings");
   };
@@ -193,8 +198,9 @@ const HomeGroupSection = ({ meetings = [] }) => {
         <SectionArrow onClick={handleArrowClick} />
       </SectionHeader>
       {meetings.map((group) => {
+        const imageUrl = getImageUrl(group);
         const shouldShowPlaceholder =
-          !isValidImageUrl(group.imageUrl) || imageErrors.has(group.imageUrl);
+          !isValidImageUrl(imageUrl) || imageErrors.has(imageUrl);
 
         return (
           <GroupCard key={group.id}>
@@ -204,15 +210,16 @@ const HomeGroupSection = ({ meetings = [] }) => {
               </GroupImagePlaceholder>
             ) : (
               <GroupImage
-                src={group.imageUrl}
+                src={imageUrl}
                 alt={group.title}
-                onError={() => handleImageError(group.imageUrl)}
+                onError={() => handleImageError(imageUrl)}
               />
             )}
             <GroupInfo>
               <GroupTitle>{group.title}</GroupTitle>
               <GroupDesc>
-                {group.description ||
+                {group.shortDescription ||
+                  group.description ||
                   `${getLocationKorean(group.location)} • ${getScheduleKorean(
                     group.schedule
                   )}`}

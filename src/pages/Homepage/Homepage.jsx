@@ -11,15 +11,19 @@ import Header from "./component/Header";
 function Homepage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [homeData, setHomeData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const res = await getHomeData();
-        setHomeData(res); // 실제 응답 구조에 맞게 조정
+        setHomeData(res);
         console.log("홈 데이터:", res);
       } catch (error) {
         console.error("홈 데이터 로딩 실패:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -38,10 +42,27 @@ function Homepage() {
   return (
     <div>
       <Header />
-      <HomeGroupSection meetings={homeData?.recentMeetings || []} />
-      <HomeRankingSection powerUsers={homeData?.powerUsers || []} />
-      <HomeStoreSection affiliates={homeData?.topAffiliates || []} />
-      <HomeCardSection />
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "200px",
+            fontSize: "16px",
+            color: "#666",
+          }}
+        >
+          데이터를 불러오는 중...
+        </div>
+      ) : (
+        <>
+          <HomeGroupSection meetings={homeData?.recentMeetings || []} />
+          <HomeRankingSection powerUsers={homeData?.powerUsers || []} />
+          <HomeStoreSection affiliates={homeData?.topAffiliates || []} />
+          <HomeCardSection />
+        </>
+      )}
 
       <FloatingActionButton
         onClick={handleFloatingButtonClick}
@@ -49,23 +70,6 @@ function Homepage() {
       />
 
       {menuOpen && <ActionMenu onClose={handleMenuClose} />}
-
-      {/* 스크롤 테스트용 더미 데이터
-      <div
-        style={{
-          height: 400,
-          background: "#e5e7eb",
-          margin: "32px 0",
-          borderRadius: 16,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 24,
-          color: "#333",
-        }}
-      >
-        스크롤 테스트용 더미 데이터 (400px)
-      </div> */}
     </div>
   );
 }

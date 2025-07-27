@@ -86,10 +86,14 @@ const Badge = styled.span`
  */
 function TagBadge({ type = "location", text, className }) {
   const style = TAG_STYLES[type] || TAG_STYLES.location;
+
+  // FULL 일정일 때 "전체"로 표시
+  const displayText = text === "FULL" ? "전체" : text;
+
   return (
     <Badge $bg={style.bg} $color={style.color} className={className}>
       {style.icon}
-      {text}
+      {displayText}
     </Badge>
   );
 }

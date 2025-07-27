@@ -140,26 +140,33 @@ const HomeRankingSection = ({ powerUsers = [] }) => {
       </SectionHeader>
       <RankingBox>
         {displayData.map((user, index) => {
-          const imageUrl = user.avatar || user.imageUrl;
+          const imageUrl = user.image || user.avatar || user.imageUrl;
           const shouldShowPlaceholder =
             !isValidImageUrl(imageUrl) || imageErrors.has(imageUrl);
 
           return (
-            <RankItem key={user.id || user.rank || index}>
+            <RankItem key={user.userId || user.id || user.rank || index}>
               <RankNumber>{user.rank || index + 1}.</RankNumber>
               {shouldShowPlaceholder ? (
                 <AvatarPlaceholder>
-                  {(user.name || user.username || "사용자").charAt(0)}
+                  {(
+                    user.nickname ||
+                    user.name ||
+                    user.username ||
+                    "사용자"
+                  ).charAt(0)}
                 </AvatarPlaceholder>
               ) : (
                 <Avatar
                   src={imageUrl}
-                  alt={user.name || user.username}
+                  alt={user.nickname || user.name || user.username}
                   onError={() => handleImageError(imageUrl)}
                 />
               )}
-              <RankName>{user.name || user.username}</RankName>
-              <RankPoint>{user.points || `${user.point || 0}p`}</RankPoint>
+              <RankName>{user.nickname || user.name || user.username}</RankName>
+              <RankPoint>
+                {user.totalPoint ? `${user.totalPoint}p` : "0p"}
+              </RankPoint>
             </RankItem>
           );
         })}

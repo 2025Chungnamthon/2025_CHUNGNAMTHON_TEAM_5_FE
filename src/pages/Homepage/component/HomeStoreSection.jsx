@@ -104,6 +104,11 @@ const HomeStoreSection = ({ affiliates = [] }) => {
     return !invalidDomains.some((domain) => url.includes(domain));
   };
 
+  const getImageUrl = (store) => {
+    // API 데이터는 imageUrl이 없으므로 null 반환
+    return store.imageUrl;
+  };
+
   // 기본 데이터 (API 데이터가 없을 때 사용)
   const defaultAffiliates = [
     {
@@ -142,21 +147,24 @@ const HomeStoreSection = ({ affiliates = [] }) => {
         <StoreSectionArrow onClick={handleArrowClick} />
       </StoreSectionHeader>
       <StoreScrollRow>
-        {storesToShow.map((store) => {
+        {storesToShow.map((store, index) => {
+          const imageUrl = getImageUrl(store);
           const shouldShowPlaceholder =
-            !isValidImageUrl(store.imageUrl) || imageErrors.has(store.imageUrl);
+            !imageUrl ||
+            !isValidImageUrl(imageUrl) ||
+            imageErrors.has(imageUrl);
 
           return (
-            <StoreCard key={store.id}>
+            <StoreCard key={store.id || index}>
               {shouldShowPlaceholder ? (
                 <StoreImagePlaceholder>
                   {store.name ? store.name.charAt(0) : "업"}
                 </StoreImagePlaceholder>
               ) : (
                 <StoreImage
-                  src={store.imageUrl}
+                  src={imageUrl}
                   alt={store.name}
-                  onError={() => handleImageError(store.imageUrl)}
+                  onError={() => handleImageError(imageUrl)}
                 />
               )}
               <StoreName>{store.name}</StoreName>
