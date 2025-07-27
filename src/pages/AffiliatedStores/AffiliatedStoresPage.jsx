@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { useQuery } from "@tanstack/react-query";
+import { getAffiliatedStores } from "@/services/homeApi";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -143,6 +145,43 @@ const EmptyText = styled.p`
   margin: 0;
 `;
 
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+`;
+
+const LoadingText = styled.p`
+  font-size: 16px;
+  margin: 0;
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 60px 20px;
+  color: #ef4444;
+`;
+
+const ErrorText = styled.p`
+  font-size: 16px;
+  margin: 0;
+`;
+
+const RetryButton = styled.button`
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:hover {
+    background: #2563eb;
+  }
+`;
+
 const AffiliatedStoresPage = () => {
   const navigate = useNavigate();
 
@@ -150,73 +189,56 @@ const AffiliatedStoresPage = () => {
     navigate(-1);
   };
 
-  // 더미 데이터 (실제 연동 시 API 사용)
-  const stores = [
-    {
-      id: 1,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 2,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 3,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 4,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 5,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 6,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 7,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-    {
-      id: 8,
-      name: "한결가치칼국수 성정점",
-      address: "충남 천안시 서북구 성정공원1길 9-4 지하1층 101-9호",
-      phone: "041-555-0426",
-      image:
-        "https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG",
-    },
-  ];
+  const {
+    data: stores = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["affiliatedStores"],
+    queryFn: getAffiliatedStores,
+  });
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Header>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <FaArrowLeft />
+            </BackButton>
+            <Title>이번 주 제휴 업체</Title>
+          </HeaderLeft>
+        </Header>
+        <Content>
+          <LoadingState>
+            <LoadingText>제휴 업체 정보를 불러오는 중...</LoadingText>
+          </LoadingState>
+        </Content>
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer>
+        <Header>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <FaArrowLeft />
+            </BackButton>
+            <Title>이번 주 제휴 업체</Title>
+          </HeaderLeft>
+        </Header>
+        <Content>
+          <ErrorState>
+            <ErrorText>제휴 업체 정보를 불러오는데 실패했습니다</ErrorText>
+            <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
+          </ErrorState>
+        </Content>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -231,17 +253,20 @@ const AffiliatedStoresPage = () => {
 
       <Content>
         {stores.length > 0 ? (
-          stores.map((store) => (
-            <StoreItem key={store.id}>
+          stores.map((store, index) => (
+            <StoreItem key={index}>
               <StoreImageContainer>
-                <StoreImage src={store.image} alt={store.name} />
+                <StoreImage
+                  src="https://www.onlmenu.com/data/file/sb/2040321633_9sUAX5GY_23dd04579a9ee8fb463c129a1b090c2adf37f485.JPG"
+                  alt={store.name}
+                />
                 <ImageOverlay>Delivery / Take out</ImageOverlay>
                 <ImageBottomText>배달 / 포장 전문점</ImageBottomText>
               </StoreImageContainer>
               <StoreInfo>
                 <StoreName>{store.name}</StoreName>
                 <StoreAddress>{store.address}</StoreAddress>
-                <StorePhone>{store.phone}</StorePhone>
+                <StorePhone>{store.tel}</StorePhone>
               </StoreInfo>
             </StoreItem>
           ))

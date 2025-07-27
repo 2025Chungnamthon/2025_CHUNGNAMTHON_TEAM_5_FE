@@ -19,3 +19,14 @@ export const getHomeData = async () => {
     throw error;
   }
 };
+
+export const getAffiliatedStores = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/home/affiliate`);
+    console.log("[homeApi] 제휴 업체 정보:", response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("[homeApi] 제휴 업체 조회 실패:", error);
+    throw error;
+  }
+};
