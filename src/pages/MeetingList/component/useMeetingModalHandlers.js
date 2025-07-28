@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { meetingApi } from "@/services/meetingApi.js";
 import { useToastContext } from "@/components/ToastProvider.jsx";
-import { TOAST_CONFIGS } from "@/config/toastConfigs.js";
+import { TOAST_CONFIGS, ERROR_TOAST_CONFIGS } from "@/config/toastConfigs.js";
 
 export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
   const navigate = useNavigate();
@@ -13,19 +13,22 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
   const handleJoinMeeting = useCallback(async () => {
     console.log("🚀 가입 신청 버튼 클릭됨!");
     console.log("currentMeeting:", currentMeeting);
-    console.log("meetingId:", currentMeeting?.meetingId);
 
-    if (!currentMeeting?.meetingId) {
+    // meetingId 또는 id 필드에서 meetingId 가져오기
+    const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
+    console.log("meetingId:", meetingId);
+
+    if (!meetingId) {
       console.error("❌ meetingId가 없습니다!");
-      alert("모임 정보를 찾을 수 없습니다.");
+      showToast(ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND, { type: "error" });
       return;
     }
 
     try {
       setActionLoading(true);
-      console.log("📡 API 호출 시작:", currentMeeting.meetingId);
+      console.log("📡 API 호출 시작:", meetingId);
 
-      const response = await meetingApi.joinMeeting(currentMeeting.meetingId);
+      const response = await meetingApi.joinMeeting(meetingId);
       console.log("✅ 가입 신청 응답:", response);
 
       showToast(TOAST_CONFIGS.JOIN_REQUESTED);
@@ -36,7 +39,9 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
       }
     } catch (error) {
       console.error("❌ 가입 신청 실패:", error);
-      alert(error.message || "가입 신청에 실패했습니다.");
+      showToast(error.message || ERROR_TOAST_CONFIGS.JOIN_REQUEST_FAILED, {
+        type: "error",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -49,9 +54,9 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
     if (currentMeeting?.openChatUrl) {
       window.open(currentMeeting.openChatUrl, "_blank");
     } else {
-      alert("오픈채팅 링크가 없습니다.");
+      showToast(ERROR_TOAST_CONFIGS.NO_OPENCHAT_LINK, { type: "error" });
     }
-  }, [currentMeeting]);
+  }, [currentMeeting, showToast]);
 
   // 모임 수정
   const handleEditMeeting = useCallback(
@@ -59,9 +64,10 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
       const editData = detailData || currentMeeting;
       console.log("🔧 수정하기 - 전달할 데이터:", editData);
 
+      const meetingId = editData.meetingId || editData.id;
       const editParams = new URLSearchParams({
         mode: "edit",
-        meetingId: editData.meetingId,
+        meetingId: meetingId,
       });
 
       navigate(`/create-meeting?${editParams.toString()}`, {
@@ -76,8 +82,9 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
 
   // 멤버 관리
   const handleManageMembers = useCallback(() => {
-    console.log(`모임 ${currentMeeting.meetingId} 멤버 관리`);
-    navigate(`/meetings/${currentMeeting.meetingId}/members`);
+    const meetingId = currentMeeting.meetingId || currentMeeting.id;
+    console.log(`모임 ${meetingId} 멤버 관리`);
+    navigate(`/meetings/${meetingId}/members`);
   }, [currentMeeting, navigate]);
 
   // 모임 삭제 - 확인창용 함수로 변경
@@ -91,13 +98,14 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
 
   // 실제 모임 삭제 API 호출
   const handleConfirmDeleteMeeting = useCallback(async () => {
-    if (!currentMeeting?.meetingId) return;
+    const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
+    if (!meetingId) return;
 
     try {
       setActionLoading(true);
 
-      console.log("🗑️ 모임 삭제 시작:", currentMeeting.meetingId);
-      const response = await meetingApi.deleteMeeting(currentMeeting.meetingId);
+      console.log("🗑️ 모임 삭제 시작:", meetingId);
+      const response = await meetingApi.deleteMeeting(meetingId);
       console.log("🗑️ 모임 삭제 응답:", response);
 
       showToast(TOAST_CONFIGS.MEETING_DELETED);
@@ -112,29 +120,27 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
     } catch (error) {
       console.error("🚨 모임 삭제 실패:", error);
 
-      let errorMessage = "모임 삭제에 실패했습니다.";
+      let errorMessage = ERROR_TOAST_CONFIGS.DELETE_MEETING_FAILED;
 
       if (error.message.includes("500")) {
-        errorMessage =
-          "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.\n\n관리자에게 문의하시기 바랍니다.";
+        errorMessage = ERROR_TOAST_CONFIGS.SERVER_ERROR;
       } else if (
         error.message.includes("403") ||
         error.message.includes("권한")
       ) {
-        errorMessage = "모임을 삭제할 권한이 없습니다.";
+        errorMessage = ERROR_TOAST_CONFIGS.NO_PERMISSION;
       } else if (
         error.message.includes("404") ||
         error.message.includes("찾을 수 없습니다")
       ) {
-        errorMessage = "삭제하려는 모임을 찾을 수 없습니다.";
+        errorMessage = ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND;
       } else if (error.message.includes("네트워크")) {
-        errorMessage =
-          "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+        errorMessage = ERROR_TOAST_CONFIGS.NETWORK_ERROR;
       } else if (error.message) {
-        errorMessage = `삭제 실패: ${error.message}`;
+        errorMessage = error.message;
       }
 
-      alert(errorMessage);
+      showToast(errorMessage, { type: "error" });
     } finally {
       setActionLoading(false);
     }
@@ -151,13 +157,14 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
 
   // 실제 모임 나가기 API 호출
   const handleConfirmLeaveMeeting = useCallback(async () => {
-    if (!currentMeeting?.meetingId) return;
+    const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
+    if (!meetingId) return;
 
     try {
       setActionLoading(true);
-      console.log(`모임 ${currentMeeting.meetingId} 나가기 시작`);
+      console.log(`모임 ${meetingId} 나가기 시작`);
 
-      await meetingApi.leaveMeeting(currentMeeting.meetingId);
+      await meetingApi.leaveMeeting(meetingId);
 
       showToast(TOAST_CONFIGS.MEETING_LEFT);
       onClose();
@@ -167,7 +174,9 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
       }
     } catch (error) {
       console.error("모임 나가기 실패:", error);
-      alert(error.message || "모임 나가기에 실패했습니다.");
+      showToast(error.message || ERROR_TOAST_CONFIGS.LEAVE_MEETING_FAILED, {
+        type: "error",
+      });
     } finally {
       setActionLoading(false);
     }
@@ -184,13 +193,14 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
 
   // 실제 가입 신청 취소 API 호출
   const handleConfirmCancelApplication = useCallback(async () => {
-    if (!currentMeeting?.meetingId) return;
+    const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
+    if (!meetingId) return;
 
     try {
       setActionLoading(true);
-      console.log(`모임 ${currentMeeting.meetingId} 신청 취소 시작`);
+      console.log(`모임 ${meetingId} 신청 취소 시작`);
 
-      await meetingApi.cancelJoinRequest(currentMeeting.meetingId);
+      await meetingApi.cancelJoinRequest(meetingId);
 
       showToast(TOAST_CONFIGS.JOIN_CANCELLED);
       onClose();
@@ -200,7 +210,10 @@ export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
       }
     } catch (error) {
       console.error("신청 취소 실패:", error);
-      alert(error.message || "신청 취소에 실패했습니다.");
+      showToast(
+        error.message || ERROR_TOAST_CONFIGS.CANCEL_APPLICATION_FAILED,
+        { type: "error" }
+      );
     } finally {
       setActionLoading(false);
     }

@@ -7,6 +7,8 @@ import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
 import ConfirmModal from "../../../components/ConfirmModal";
 import { useModal } from "@/hooks/useModal.js";
 import { MODAL_CONFIGS } from "@/config/modalConfigs.js";
+import { useToastContext } from "@/components/ToastProvider.jsx";
+import { ERROR_TOAST_CONFIGS } from "@/config/toastConfigs.js";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -267,12 +269,12 @@ const getScheduleTagType = (schedule) => {
 };
 
 const MeetingDetailModal = ({
-                              meeting,
-                              isOpen,
-                              onClose,
-                              onRefresh,
-                              meetingStatus = "available",
-                            }) => {
+  meeting,
+  isOpen,
+  onClose,
+  onRefresh,
+  meetingStatus = "available",
+}) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -281,6 +283,7 @@ const MeetingDetailModal = ({
   // 확인창 모달 상태
   const confirmModal = useModal();
   const [confirmAction, setConfirmAction] = useState(null);
+  const { showToast } = useToastContext();
 
   // 현재 표시할 모임 데이터
   const currentMeeting = detailData || meeting;
@@ -292,20 +295,23 @@ const MeetingDetailModal = ({
     handleMenuAction,
     handleConfirmDeleteMeeting,
     handleConfirmLeaveMeeting,
-    handleConfirmCancelApplication
+    handleConfirmCancelApplication,
   } = useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
 
   // 모임 상세 정보 불러오기
   const fetchMeetingDetail = async () => {
-    if (!meeting?.meetingId) return;
+    // meetingId 또는 id 필드에서 meetingId 가져오기
+    const meetingId = meeting?.meetingId || meeting?.id;
+    if (!meetingId) return;
 
     try {
       setLoading(true);
-      const response = await meetingApi.getMeetingDetail(meeting.meetingId);
+      const response = await meetingApi.getMeetingDetail(meetingId);
       console.log("모임 상세 정보:", response);
       setDetailData(response.data);
     } catch (error) {
       console.error("모임 상세 정보 조회 실패:", error);
+      showToast(ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND, { type: "error" });
       setDetailData(meeting);
     } finally {
       setLoading(false);
@@ -314,10 +320,11 @@ const MeetingDetailModal = ({
 
   // 모달 열릴 때 상세 정보 조회
   useEffect(() => {
-    if (isOpen && meeting?.meetingId) {
+    const meetingId = meeting?.meetingId || meeting?.id;
+    if (isOpen && meetingId) {
       fetchMeetingDetail();
     }
-  }, [isOpen, meeting?.meetingId]);
+  }, [isOpen, meeting?.meetingId, meeting?.id]);
 
   // 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -339,9 +346,9 @@ const MeetingDetailModal = ({
   // 메뉴 표시 여부 결정
   const shouldShowMenu = useMemo(() => {
     return (
-        currentMeeting?.isHost ||
-        meetingStatus === "joined" ||
-        meetingStatus === "pending"
+      currentMeeting?.isHost ||
+      meetingStatus === "joined" ||
+      meetingStatus === "pending"
     );
   }, [currentMeeting?.isHost, meetingStatus]);
 
@@ -387,10 +394,11 @@ const MeetingDetailModal = ({
 
   // 상태에 따른 버튼 설정
   const buttonConfig = useMemo(() => {
+    const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
     console.log("🔧 버튼 설정 계산:", {
       isHost: currentMeeting?.isHost,
       meetingStatus,
-      meetingId: currentMeeting?.meetingId,
+      meetingId: meetingId,
     });
 
     if (currentMeeting?.isHost) {
@@ -425,13 +433,13 @@ const MeetingDetailModal = ({
     if (!confirmAction) return;
 
     switch (confirmAction.type) {
-      case 'DELETE_MEETING':
+      case "DELETE_MEETING":
         handleConfirmDeleteMeeting();
         break;
-      case 'LEAVE_MEETING':
+      case "LEAVE_MEETING":
         handleConfirmLeaveMeeting();
         break;
-      case 'CANCEL_APPLICATION':
+      case "CANCEL_APPLICATION":
         handleConfirmCancelApplication();
         break;
     }
@@ -450,11 +458,11 @@ const MeetingDetailModal = ({
     if (!confirmAction) return {};
 
     switch (confirmAction.type) {
-      case 'DELETE_MEETING':
+      case "DELETE_MEETING":
         return MODAL_CONFIGS.DELETE_AS_LEADER;
-      case 'LEAVE_MEETING':
+      case "LEAVE_MEETING":
         return MODAL_CONFIGS.LEAVE_AS_MEMBER;
-      case 'CANCEL_APPLICATION':
+      case "CANCEL_APPLICATION":
         return MODAL_CONFIGS.CANCEL_MEETING_REQUEST;
       default:
         return {};
@@ -464,119 +472,123 @@ const MeetingDetailModal = ({
   if (!isOpen || !currentMeeting) return null;
 
   return (
-      <>
-        <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
-          <ModalContainer>
-            <ModalContent>
-              <MeetingHeader>
-                <MeetingImage
-                    src={
-                        currentMeeting.imageUrl ||
-                        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
-                    }
-                    alt={currentMeeting.title}
-                    onError={(e) => {
-                      e.target.src =
-                          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+    <>
+      <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <ModalContainer>
+          <ModalContent>
+            <MeetingHeader>
+              <MeetingImage
+                src={
+                  currentMeeting.imageUrl ||
+                  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80"
+                }
+                alt={currentMeeting.title}
+                onError={(e) => {
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+                }}
+              />
+              <MeetingInfo>
+                <HostInfo>
+                  {currentMeeting.isHost && (
+                    <CrownIcon src="/UI/crown.svg" alt="모임장" />
+                  )}
+                  @{currentMeeting.hostName || "호스트"}
+                </HostInfo>
+                <MeetingTitle>{currentMeeting.title}</MeetingTitle>
+                <TagContainer>
+                  <TagBadge
+                    type="location"
+                    text={getLocationKorean(currentMeeting.location)}
+                  />
+                  <TagBadge
+                    type={getScheduleTagType(currentMeeting.schedule)}
+                    text={getScheduleKorean(currentMeeting.schedule)}
+                    className="last"
+                  />
+                </TagContainer>
+              </MeetingInfo>
+
+              {/* 메뉴 버튼 */}
+              {shouldShowMenu && (
+                <div ref={dropdownRef} style={{ position: "relative" }}>
+                  <MenuButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDropdown((prev) => !prev);
                     }}
-                />
-                <MeetingInfo>
-                  <HostInfo>
-                    {currentMeeting.isHost && (
-                        <CrownIcon src="/UI/crown.svg" alt="모임장" />
-                    )}
-                    @{currentMeeting.hostName || "호스트"}
-                  </HostInfo>
-                  <MeetingTitle>{currentMeeting.title}</MeetingTitle>
-                  <TagContainer>
-                    <TagBadge
-                        type="location"
-                        text={getLocationKorean(currentMeeting.location)}
-                    />
-                    <TagBadge
-                        type={getScheduleTagType(currentMeeting.schedule)}
-                        text={getScheduleKorean(currentMeeting.schedule)}
-                        className="last"
-                    />
-                  </TagContainer>
-                </MeetingInfo>
+                  >
+                    ⋯
+                  </MenuButton>
 
-                {/* 메뉴 버튼 */}
-                {shouldShowMenu && (
-                    <div ref={dropdownRef} style={{ position: "relative" }}>
-                      <MenuButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDropdown((prev) => !prev);
-                          }}
-                      >
-                        ⋯
-                      </MenuButton>
+                  {showDropdown && (
+                    <DropdownMenu>
+                      {menuItems.map((item) => (
+                        <DropdownItem
+                          key={item.key}
+                          danger={item.danger}
+                          onClick={() => handleMenuItemClick(item)}
+                          disabled={actionLoading}
+                        >
+                          <span>{item.icon}</span>
+                          {item.label}
+                        </DropdownItem>
+                      ))}
+                    </DropdownMenu>
+                  )}
+                </div>
+              )}
+            </MeetingHeader>
 
-                      {showDropdown && (
-                          <DropdownMenu>
-                            {menuItems.map((item) => (
-                                <DropdownItem
-                                    key={item.key}
-                                    danger={item.danger}
-                                    onClick={() => handleMenuItemClick(item)}
-                                    disabled={actionLoading}
-                                >
-                                  <span>{item.icon}</span>
-                                  {item.label}
-                                </DropdownItem>
-                            ))}
-                          </DropdownMenu>
-                      )}
-                    </div>
-                )}
-              </MeetingHeader>
+            <ContentWrapper>
+              {loading ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#666",
+                  }}
+                >
+                  모임 정보를 불러오는 중...
+                </div>
+              ) : (
+                <DescriptionSection>
+                  <SectionTitle>소개글</SectionTitle>
+                  <DescriptionContent>
+                    {currentMeeting.description}
+                  </DescriptionContent>
+                </DescriptionSection>
+              )}
+            </ContentWrapper>
 
-              <ContentWrapper>
-                {loading ? (
-                    <div
-                        style={{ textAlign: "center", padding: "40px", color: "#666" }}
-                    >
-                      모임 정보를 불러오는 중...
-                    </div>
-                ) : (
-                    <DescriptionSection>
-                      <SectionTitle>소개글</SectionTitle>
-                      <DescriptionContent>
-                        {currentMeeting.description}
-                      </DescriptionContent>
-                    </DescriptionSection>
-                )}
-              </ContentWrapper>
+            <ActionButton
+              onClick={() => handleActionClick(buttonConfig)}
+              disabled={buttonConfig.disabled || actionLoading}
+            >
+              {actionLoading ? (
+                <>
+                  <LoadingSpinner />
+                  처리 중...
+                </>
+              ) : (
+                buttonConfig.text
+              )}
+            </ActionButton>
+          </ModalContent>
+        </ModalContainer>
+      </ModalOverlay>
 
-              <ActionButton
-                  onClick={() => handleActionClick(buttonConfig)}
-                  disabled={buttonConfig.disabled || actionLoading}
-              >
-                {actionLoading ? (
-                    <>
-                      <LoadingSpinner />
-                      처리 중...
-                    </>
-                ) : (
-                    buttonConfig.text
-                )}
-              </ActionButton>
-            </ModalContent>
-          </ModalContainer>
-        </ModalOverlay>
-
-        {/* 확인 모달 */}
-        <ConfirmModal
-            isOpen={confirmModal.isOpen}
-            onClose={handleCancelAction}
-            title={getConfirmModalConfig().title}
-            cancelText={getConfirmModalConfig().cancelText}
-            confirmText={getConfirmModalConfig().confirmText}
-            onConfirm={handleConfirmAction}
-            primaryColor={getConfirmModalConfig().primaryColor}
-        />
-      </>
+      {/* 확인 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={handleCancelAction}
+        title={getConfirmModalConfig().title}
+        cancelText={getConfirmModalConfig().cancelText}
+        confirmText={getConfirmModalConfig().confirmText}
+        onConfirm={handleConfirmAction}
+        primaryColor={getConfirmModalConfig().primaryColor}
+      />
+    </>
   );
 };
 

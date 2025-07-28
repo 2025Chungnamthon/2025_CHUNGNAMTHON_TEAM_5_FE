@@ -195,10 +195,9 @@ const HomeGroupSection = ({ meetings = [] }) => {
     setSelectedMeeting(null);
   };
 
-  const handleModalAction = (meetingId) => {
-    console.log(`모임 ${meetingId} 가입 신청`);
-    alert(`모임 ${meetingId}에 가입 신청하시겠습니까?`);
-    setIsModalOpen(false);
+  const handleRefreshAfterAction = () => {
+    // 홈페이지 데이터 새로고침이 필요한 경우 여기서 처리
+    console.log("홈페이지 데이터 새로고침");
   };
 
   return (
@@ -257,9 +256,7 @@ const HomeGroupSection = ({ meetings = [] }) => {
         meeting={selectedMeeting}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onAction={handleModalAction}
-        actionButtonText="가입 신청하기"
-        isActionDisabled={false}
+        onRefresh={handleRefreshAfterAction}
         meetingStatus="available"
       />
     </SectionContainer>
