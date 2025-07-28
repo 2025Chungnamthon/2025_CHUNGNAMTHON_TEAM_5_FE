@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 // import KakaoMap from "./component/KakaoMap";
 import KakaoMap from "./component/KakaoMap";
@@ -88,11 +88,13 @@ const MapPage = () => {
     error: storeError,
     searchQuery,
     isSearchMode,
+    currentBounds,
     handleSearchInputChange,
     handleSearch,
     handleStoreSelect,
     handleLocationUpdate,
     getCurrentLocation,
+    loadStoresByBounds,
   } = useMapStore();
 
   // 컴포넌트 마운트 후 지도 준비 상태 설정
@@ -104,6 +106,15 @@ const MapPage = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // 지도 bounds 변경 핸들러
+  const handleBoundsChange = useCallback(
+    (bounds) => {
+      console.log("지도 영역 변경:", bounds);
+      loadStoresByBounds(bounds);
+    },
+    [loadStoresByBounds]
+  );
 
   // 에러 상태 통합
   const hasError = storeError || mapError;
@@ -136,6 +147,7 @@ const MapPage = () => {
             currentLocation={currentLocation}
             onStoreSelect={handleStoreSelect}
             onLocationUpdate={handleLocationUpdate}
+            onBoundsChange={handleBoundsChange}
           />
         )}
 
@@ -151,6 +163,7 @@ const MapPage = () => {
           isLoading={isLoading}
           searchQuery={searchQuery}
           isSearchMode={isSearchMode}
+          currentBounds={currentBounds}
         />
       </MapContainer>
 

@@ -7,11 +7,13 @@ import HomeCardSection from "./component/HomeCardSection";
 import FloatingActionButton from "./component/FloatingActionButton";
 import ActionMenu from "./component/ActionMenu";
 import Header from "./component/Header";
+import { useUIStore } from "@/stores/uiStore";
 
 function Homepage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [homeData, setHomeData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { refreshPoints } = useUIStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,6 +21,9 @@ function Homepage() {
         setIsLoading(true);
         const res = await getHomeData();
         setHomeData(res);
+
+        // 홈페이지 로드 시 포인트도 함께 로드
+        await refreshPoints();
       } catch (error) {
         console.error("홈 데이터 로딩 실패:", error);
       } finally {
@@ -26,7 +31,7 @@ function Homepage() {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshPoints]);
 
   const handleFloatingButtonClick = () => {
     setMenuOpen(!menuOpen);

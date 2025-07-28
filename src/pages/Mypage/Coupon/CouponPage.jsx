@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
+import toast from "react-hot-toast";
 import { useUIStore } from "../../../stores/uiStore";
 import dayjs from "dayjs";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/services/couponApi";
 import PointDisplay from "@/components/PointDisplay";
 import CouponUseModal from "./component/couponUseModal.jsx";
+import ExchangeConfirmModal from "./component/ExchangeConfirmModal.jsx";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -196,6 +198,9 @@ const CouponPage = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
+  const [selectedExchangeCoupon, setSelectedExchangeCoupon] = useState(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -238,7 +243,23 @@ const CouponPage = () => {
 
     try {
       const response = await useCoupon(selectedCoupon.id, code);
-      alert("쿠폰이 성공적으로 사용되었습니다!");
+      toast.success("쿠폰을 사용했어요", {
+        style: {
+          background: "#ffffff",
+          color: "#10b981",
+          border: "none",
+          borderRadius: "20px",
+          padding: "12px 20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          fontSize: "14px",
+          fontWeight: "600",
+        },
+        icon: "✓",
+        iconTheme: {
+          primary: "#10b981",
+          secondary: "#ffffff",
+        },
+      });
       handleCloseModal();
       // 쿠폰 목록 새로고침
       const updatedMyCoupons = await getMyCoupons();
@@ -251,14 +272,64 @@ const CouponPage = () => {
       const errorMessage =
         error.response?.data?.message ||
         "쿠폰 사용에 실패했습니다. 확인 코드를 다시 입력해주세요.";
-      alert(errorMessage);
+      toast.error(errorMessage, {
+        style: {
+          background: "#ffffff",
+          color: "#ef4444",
+          border: "none",
+          borderRadius: "20px",
+          padding: "12px 20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          fontSize: "14px",
+          fontWeight: "600",
+        },
+        icon: "✕",
+        iconTheme: {
+          primary: "#ef4444",
+          secondary: "#ffffff",
+        },
+      });
     }
   };
 
   const handleExchangeCoupon = async (coupon) => {
+    setSelectedExchangeCoupon(coupon);
+    setIsExchangeModalOpen(true);
+  };
+
+  const handleCloseExchangeModal = () => {
+    setIsExchangeModalOpen(false);
+    setSelectedExchangeCoupon(null);
+  };
+
+  const handleConfirmExchange = async () => {
+    if (!selectedExchangeCoupon) return;
+
     try {
-      const response = await exchangeCoupon(coupon.id);
-      alert("쿠폰이 성공적으로 교환되었습니다!");
+      const response = await exchangeCoupon(selectedExchangeCoupon.id);
+      toast.success("쿠폰으로 교환했어요", {
+        style: {
+          background: "#ffffff",
+          color: "#10b981",
+          border: "none",
+          borderRadius: "20px",
+          padding: "12px 20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          fontSize: "14px",
+          fontWeight: "600",
+        },
+        icon: "✓",
+        iconTheme: {
+          primary: "#10b981",
+          secondary: "#ffffff",
+        },
+      });
+      handleCloseExchangeModal();
+      // 성공 메시지 표시
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
       // 쿠폰 목록 새로고침
       const updatedMyCoupons = await getMyCoupons();
       setMyCouponsData(updatedMyCoupons);
@@ -270,7 +341,24 @@ const CouponPage = () => {
       const errorMessage =
         error.response?.data?.message ||
         "쿠폰 교환에 실패했습니다. 다시 시도해주세요.";
-      alert(errorMessage);
+      toast.error(errorMessage, {
+        style: {
+          background: "#ffffff",
+          color: "#ef4444",
+          border: "none",
+          borderRadius: "20px",
+          padding: "12px 20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          fontSize: "14px",
+          fontWeight: "600",
+        },
+        icon: "✕",
+        iconTheme: {
+          primary: "#ef4444",
+          secondary: "#ffffff",
+        },
+      });
+      handleCloseExchangeModal();
     }
   };
 
@@ -332,6 +420,12 @@ const CouponPage = () => {
             <FaArrowLeft />
           </BackButton>
         </HeaderLeft>
+        {showSuccessMessage && (
+          <SuccessMessage>
+            <SuccessIcon>✓</SuccessIcon>
+            쿠폰으로 교환했어요
+          </SuccessMessage>
+        )}
         <HeaderRight>
           <PointDisplay points={points.currentPoints || 0} variant="header" />
         </HeaderRight>
@@ -406,8 +500,45 @@ const CouponPage = () => {
           onClose={handleCloseModal}
         />
       )}
+
+      {/* 교환 확인 모달 */}
+      {isExchangeModalOpen && selectedExchangeCoupon && (
+        <ExchangeConfirmModal
+          coupon={selectedExchangeCoupon}
+          onConfirm={handleConfirmExchange}
+          onCancel={handleCloseExchangeModal}
+        />
+      )}
     </PageContainer>
   );
 };
+
+// 성공 메시지 스타일 컴포넌트
+const SuccessMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #10b981;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+`;
+
+const SuccessIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+`;
 
 export default CouponPage;

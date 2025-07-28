@@ -33,8 +33,8 @@ const ButtonContainer = styled.button`
 
 const StyledNavigationIcon = styled(FiNavigation)`
   color: #80c7bc;
-  width: 48px;
-  height: 48px;
+  width: 20px;
+  height: 20px;
 `;
 
 const LocationButton = React.memo(({ onClick, disabled }) => {

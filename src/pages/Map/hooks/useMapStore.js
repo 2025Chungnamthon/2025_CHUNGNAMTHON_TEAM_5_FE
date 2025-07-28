@@ -9,6 +9,7 @@ export const useMapStore = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const [currentBounds, setCurrentBounds] = useState(null);
 
   // 가맹점 데이터 로드
   const loadStores = useCallback(async () => {
@@ -18,11 +19,70 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStores();
-      console.log("가맹점 데이터 로드 성공:", response.data?.content);
-      setStores(response.data?.content || []);
+      console.log("가맹점 데이터 로드 성공:", response);
+
+      // 백엔드 API 응답 구조에 맞게 데이터 변환
+      // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+      const storeData = response.data?.content || response.data || [];
+      const transformedStores = storeData.map((store, index) => ({
+        id: store.id || store.merchantSeq || index + 1,
+        merchantSeq: store.merchantSeq,
+        name: store.name || store.storeName || `가맹점 ${index + 1}`,
+        address: store.address || store.storeAddress || "",
+        tel: store.tel || store.phoneNumber || store.telephone || null,
+        category: store.category || "기타",
+        // 기존 더미 데이터와의 호환성을 위한 필드들
+        phoneNumber: store.tel || store.phoneNumber || store.telephone || null,
+        businessHours: store.businessHours || "09:00-18:00",
+        isOpen: store.isOpen !== undefined ? store.isOpen : true,
+        // 좌표 정보 (백엔드 API 명세에 맞게 lat, lng 사용)
+        latitude: store.lat || store.latitude || null,
+        longitude: store.lng || store.longitude || null,
+      }));
+
+      setStores(transformedStores);
     } catch (err) {
       console.error("가맹점 데이터 로드 실패:", err);
-      setError("가맹점 정보를 불러올 수 없습니다.");
+      setError(`가맹점 정보를 불러올 수 없습니다: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // bounds 기반 가맹점 조회
+  const loadStoresByBounds = useCallback(async (bounds) => {
+    if (!bounds) return;
+
+    setIsLoading(true);
+    setError(null);
+    setIsSearchMode(false);
+    setCurrentBounds(bounds);
+
+    try {
+      const response = await storeApi.getStoresByBounds(bounds);
+      console.log("bounds 기반 가맹점 조회 성공:", response);
+
+      // 백엔드 API 응답 구조에 맞게 데이터 변환
+      // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+      const storeData = response.data?.content || response.data || [];
+      const transformedStores = storeData.map((store, index) => ({
+        id: store.id || store.merchantSeq || index + 1,
+        merchantSeq: store.merchantSeq,
+        name: store.name || store.storeName || `가맹점 ${index + 1}`,
+        address: store.address || store.storeAddress || "",
+        tel: store.tel || store.phoneNumber || store.telephone || null,
+        category: store.category || "기타",
+        phoneNumber: store.tel || store.phoneNumber || store.telephone || null,
+        businessHours: store.businessHours || "09:00-18:00",
+        isOpen: store.isOpen !== undefined ? store.isOpen : true,
+        latitude: store.lat || store.latitude || null,
+        longitude: store.lng || store.longitude || null,
+      }));
+
+      setStores(transformedStores);
+    } catch (err) {
+      console.error("bounds 기반 가맹점 조회 실패:", err);
+      setError(`해당 영역의 가맹점 정보를 불러올 수 없습니다: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -34,17 +94,26 @@ export const useMapStore = () => {
       setSearchQuery(value);
       if (!value.trim()) {
         setIsSearchMode(false);
-        loadStores(); // 빈 검색어면 전체 다시 불러오기
+        // 검색어가 비어있으면 현재 bounds로 다시 조회
+        if (currentBounds) {
+          loadStoresByBounds(currentBounds);
+        } else {
+          loadStores();
+        }
       }
     },
-    [loadStores]
+    [loadStores, loadStoresByBounds, currentBounds]
   );
 
   // 키워드로 가맹점 검색 (검색 실행)
   const searchStoresByKeyword = useCallback(
     async (keyword) => {
       if (!keyword.trim()) {
-        loadStores();
+        if (currentBounds) {
+          loadStoresByBounds(currentBounds);
+        } else {
+          loadStores();
+        }
         return;
       }
 
@@ -56,17 +125,35 @@ export const useMapStore = () => {
         const response = await storeApi.searchStoresByKeyword(keyword);
         console.log("서버 검색 결과:", response);
 
-        // API 응답 구조에 따라 data 또는 content 사용
-        const searchResults = response.data || response.content || [];
-        setStores(searchResults);
+        // 백엔드 API 응답 구조에 맞게 데이터 변환
+        // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+        const searchResults = response.data?.content || response.data || [];
+
+        // 검색 결과도 동일한 구조로 변환
+        const transformedResults = searchResults.map((store, index) => ({
+          id: store.id || store.merchantSeq || index + 1,
+          merchantSeq: store.merchantSeq,
+          name: store.name || store.storeName || `가맹점 ${index + 1}`,
+          address: store.address || store.storeAddress || "",
+          tel: store.tel || store.phoneNumber || store.telephone || null,
+          category: store.category || "기타",
+          phoneNumber:
+            store.tel || store.phoneNumber || store.telephone || null,
+          businessHours: store.businessHours || "09:00-18:00",
+          isOpen: store.isOpen !== undefined ? store.isOpen : true,
+          latitude: store.lat || store.latitude || null,
+          longitude: store.lng || store.longitude || null,
+        }));
+
+        setStores(transformedResults);
       } catch (err) {
         console.error("검색 실패:", err);
-        setError("가맹점 검색에 실패했습니다.");
+        setError(`가맹점 검색에 실패했습니다: ${err.message}`);
       } finally {
         setIsLoading(false);
       }
     },
-    [loadStores]
+    [loadStores, loadStoresByBounds, currentBounds]
   );
 
   // 검색 실행 핸들러
@@ -86,7 +173,7 @@ export const useMapStore = () => {
     return stores.filter(
       (store) =>
         store.name.toLowerCase().includes(query) ||
-        store.category.toLowerCase().includes(query) ||
+        (store.category && store.category.toLowerCase().includes(query)) ||
         store.address.toLowerCase().includes(query)
     );
   }, [stores, searchQuery, isSearchMode]);
@@ -104,7 +191,7 @@ export const useMapStore = () => {
   // 현재 위치 가져오기
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert("이 브라우저는 위치 서비스를 지원하지 않습니다.");
+      console.warn("이 브라우저는 위치 서비스를 지원하지 않습니다.");
       return;
     }
 
@@ -116,12 +203,29 @@ export const useMapStore = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
+        console.log("현재 위치 가져오기 성공:", location);
         setCurrentLocation(location);
         setIsLoading(false);
       },
       (error) => {
         console.error("위치 가져오기 실패:", error);
-        alert("현재 위치를 가져올 수 없습니다.");
+        // 에러 메시지를 더 구체적으로 표시
+        let errorMessage = "현재 위치를 가져올 수 없습니다.";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage =
+              "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "위치 정보를 사용할 수 없습니다.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "위치 정보 요청 시간이 초과되었습니다.";
+            break;
+          default:
+            errorMessage = "위치 정보를 가져오는 중 오류가 발생했습니다.";
+        }
+        console.warn(errorMessage);
         setIsLoading(false);
       },
       {
@@ -145,10 +249,28 @@ export const useMapStore = () => {
           longitude,
           radius,
         });
-        setStores(response.data || []);
+
+        // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+        const nearbyResults = response.data?.content || response.data || [];
+        const transformedResults = nearbyResults.map((store, index) => ({
+          id: store.id || store.merchantSeq || index + 1,
+          merchantSeq: store.merchantSeq,
+          name: store.name || store.storeName || `가맹점 ${index + 1}`,
+          address: store.address || store.storeAddress || "",
+          tel: store.tel || store.phoneNumber || store.telephone || null,
+          category: store.category || "기타",
+          phoneNumber:
+            store.tel || store.phoneNumber || store.telephone || null,
+          businessHours: store.businessHours || "09:00-18:00",
+          isOpen: store.isOpen !== undefined ? store.isOpen : true,
+          latitude: store.lat || store.latitude || null,
+          longitude: store.lng || store.longitude || null,
+        }));
+
+        setStores(transformedResults);
       } catch (err) {
         console.error("주변 가맹점 검색 실패:", err);
-        setError("주변 가맹점을 찾을 수 없습니다.");
+        setError(`주변 가맹점을 찾을 수 없습니다: ${err.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -166,24 +288,26 @@ export const useMapStore = () => {
       return response.data;
     } catch (err) {
       console.error("가맹점 상세 정보 로드 실패:", err);
-      setError("가맹점 상세 정보를 불러올 수 없습니다.");
+      setError(`가맹점 상세 정보를 불러올 수 없습니다: ${err.message}`);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // 컴포넌트 마운트 시 데이터 로드
+  // 컴포넌트 마운트 시 데이터 로드 및 현재 위치 가져오기
   useEffect(() => {
     loadStores();
-  }, [loadStores]);
+    // 페이지 진입 시 현재 위치 자동 가져오기
+    getCurrentLocation();
+  }, [loadStores, getCurrentLocation]);
 
-  // 현재 위치 변경 시 주변 가맹점 검색
-  useEffect(() => {
-    if (currentLocation) {
-      searchNearbyStores(currentLocation.latitude, currentLocation.longitude);
-    }
-  }, [currentLocation, searchNearbyStores]);
+  // 현재 위치 변경 시 주변 가맹점 검색 - 자동 호출 제거
+  // useEffect(() => {
+  //   if (currentLocation) {
+  //     searchNearbyStores(currentLocation.latitude, currentLocation.longitude);
+  //   }
+  // }, [currentLocation, searchNearbyStores]);
 
   return {
     // 상태
@@ -195,6 +319,7 @@ export const useMapStore = () => {
     isLoading,
     error,
     isSearchMode,
+    currentBounds,
 
     // 액션
     handleSearchInputChange,
@@ -206,5 +331,6 @@ export const useMapStore = () => {
     getStoreDetail,
     loadStores,
     searchStoresByKeyword,
+    loadStoresByBounds,
   };
 };
