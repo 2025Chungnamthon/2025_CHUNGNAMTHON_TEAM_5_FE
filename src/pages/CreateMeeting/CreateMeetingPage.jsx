@@ -153,7 +153,7 @@ const FixedButtonContainer = styled.div`
   justify-content: center;
   border-radius: 16px;
   z-index: 100;
-  padding: 0 20px; /* 좌우 패딩 추가 */
+  padding: 0 20px env(safe-area-inset-bottom) 20px; /* 하단 safe area 추가 */
   box-sizing: border-box; /* 패딩 포함한 크기 계산 */
 `;
 
