@@ -87,9 +87,10 @@ const DropdownMenu = styled.div`
   right: 0;
   background: #fff;
   border: 1px solid #e5e7eb;
+  text-align: center;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  min-width: 120px;
+  min-width: 128px;
   z-index: 1001;
   animation: dropdownSlideIn 0.1s ease-out;
 
@@ -110,8 +111,8 @@ const DropdownItem = styled.button`
   background: none;
   border: none;
   box-shadow: none;
-  padding: 12px 22px;
-  text-align: left;
+  padding: 12px;
+  text-align: center;
   font-size: 13px;
   font-weight: 450;
   color: ${(props) => (props.danger ? "#fa5858" : "#374151")};

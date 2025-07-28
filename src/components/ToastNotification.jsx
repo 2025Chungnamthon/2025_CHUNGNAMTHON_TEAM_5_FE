@@ -31,6 +31,7 @@ const ToastContainer = styled.div`
   left: 50%;
   transform: translateX(-50%);
   z-index: 99999;
+  align-content: center;
   width: auto;
   max-width: 90%;
   min-width: 120px;
