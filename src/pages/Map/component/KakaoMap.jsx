@@ -100,12 +100,20 @@ const KakaoMap = ({
         throw new Error("지도 컨테이너를 찾을 수 없습니다.");
       }
 
+      // 현재 위치가 있으면 현재 위치를 중심으로, 없으면 천안 중심으로 설정
+      const centerPosition = currentLocation
+        ? new window.kakao.maps.LatLng(
+            currentLocation.latitude,
+            currentLocation.longitude
+          )
+        : new window.kakao.maps.LatLng(
+            CHEONAN_CENTER.latitude,
+            CHEONAN_CENTER.longitude
+          );
+
       const options = {
-        center: new window.kakao.maps.LatLng(
-          CHEONAN_CENTER.latitude,
-          CHEONAN_CENTER.longitude
-        ),
-        level: 8,
+        center: centerPosition,
+        level: currentLocation ? 5 : 8, // 현재 위치가 있으면 더 가까운 줌 레벨
         draggable: true,
         scrollwheel: true,
         disableDoubleClick: true,
@@ -399,6 +407,7 @@ const KakaoMap = ({
       location.longitude
     );
 
+    // 현재 위치 마커 생성
     const currentLocationMarker = new window.kakao.maps.Marker({
       position: position,
       map: map,
@@ -409,17 +418,22 @@ const KakaoMap = ({
       ),
     });
 
+    // 3초 후 마커 제거
     setTimeout(() => {
       currentLocationMarker.setMap(null);
     }, 3000);
 
+    // 지도 중심을 현재 위치로 이동
     map.panTo(position);
+
+    // 줌 레벨 조정 (현재 위치 주변을 더 잘 보이도록)
+    map.setLevel(5);
   }, []);
 
-  // 컴포넌트 마운트 시 지도 초기화
+  // 컴포넌트 마운트 시 지도 초기화 (현재 위치 변경 시에도 재초기화)
   useEffect(() => {
     initializeMap();
-  }, [initializeMap]);
+  }, [initializeMap, currentLocation]);
 
   // 가맹점 데이터 변경 시 마커 업데이트
   useEffect(() => {

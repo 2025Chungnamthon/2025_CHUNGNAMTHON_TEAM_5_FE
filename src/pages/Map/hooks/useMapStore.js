@@ -22,7 +22,8 @@ export const useMapStore = () => {
       console.log("가맹점 데이터 로드 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
-      const storeData = response.data || [];
+      // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+      const storeData = response.data?.content || response.data || [];
       const transformedStores = storeData.map((store, index) => ({
         id: store.id || store.merchantSeq || index + 1,
         merchantSeq: store.merchantSeq,
@@ -62,7 +63,8 @@ export const useMapStore = () => {
       console.log("bounds 기반 가맹점 조회 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
-      const storeData = response.data || [];
+      // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+      const storeData = response.data?.content || response.data || [];
       const transformedStores = storeData.map((store, index) => ({
         id: store.id || store.merchantSeq || index + 1,
         merchantSeq: store.merchantSeq,
@@ -124,7 +126,8 @@ export const useMapStore = () => {
         console.log("서버 검색 결과:", response);
 
         // 백엔드 API 응답 구조에 맞게 데이터 변환
-        const searchResults = response.data || [];
+        // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+        const searchResults = response.data?.content || response.data || [];
 
         // 검색 결과도 동일한 구조로 변환
         const transformedResults = searchResults.map((store, index) => ({
@@ -188,7 +191,7 @@ export const useMapStore = () => {
   // 현재 위치 가져오기
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert("이 브라우저는 위치 서비스를 지원하지 않습니다.");
+      console.warn("이 브라우저는 위치 서비스를 지원하지 않습니다.");
       return;
     }
 
@@ -200,12 +203,29 @@ export const useMapStore = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
+        console.log("현재 위치 가져오기 성공:", location);
         setCurrentLocation(location);
         setIsLoading(false);
       },
       (error) => {
         console.error("위치 가져오기 실패:", error);
-        alert("현재 위치를 가져올 수 없습니다.");
+        // 에러 메시지를 더 구체적으로 표시
+        let errorMessage = "현재 위치를 가져올 수 없습니다.";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage =
+              "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "위치 정보를 사용할 수 없습니다.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "위치 정보 요청 시간이 초과되었습니다.";
+            break;
+          default:
+            errorMessage = "위치 정보를 가져오는 중 오류가 발생했습니다.";
+        }
+        console.warn(errorMessage);
         setIsLoading(false);
       },
       {
@@ -230,7 +250,8 @@ export const useMapStore = () => {
           radius,
         });
 
-        const nearbyResults = response.data || [];
+        // response.data가 객체이고 실제 데이터는 response.data.content에 있음
+        const nearbyResults = response.data?.content || response.data || [];
         const transformedResults = nearbyResults.map((store, index) => ({
           id: store.id || store.merchantSeq || index + 1,
           merchantSeq: store.merchantSeq,
@@ -274,10 +295,12 @@ export const useMapStore = () => {
     }
   }, []);
 
-  // 컴포넌트 마운트 시 데이터 로드
+  // 컴포넌트 마운트 시 데이터 로드 및 현재 위치 가져오기
   useEffect(() => {
     loadStores();
-  }, [loadStores]);
+    // 페이지 진입 시 현재 위치 자동 가져오기
+    getCurrentLocation();
+  }, [loadStores, getCurrentLocation]);
 
   // 현재 위치 변경 시 주변 가맹점 검색 - 자동 호출 제거
   // useEffect(() => {
