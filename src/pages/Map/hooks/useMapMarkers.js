@@ -138,13 +138,55 @@ export const useMarkers = () => {
         "clusterclick",
         (cluster) => {
           const markers = cluster.getMarkers();
+
+          // 유효한 마커들만 필터링
+          const validMarkers = markers.filter((marker) => {
+            const position = marker.getPosition();
+            return (
+              position &&
+              !isNaN(position.getLat()) &&
+              !isNaN(position.getLng()) &&
+              position.getLat() !== 0 &&
+              position.getLng() !== 0
+            );
+          });
+
+          if (validMarkers.length === 0) {
+            console.warn("클러스터에 유효한 마커가 없습니다.");
+            return;
+          }
+
           const bounds = new window.kakao.maps.LatLngBounds();
 
-          markers.forEach((marker) => {
+          validMarkers.forEach((marker) => {
             bounds.extend(marker.getPosition());
           });
 
+          // bounds 유효성 검사
+          const sw = bounds.getSouthWest();
+          const ne = bounds.getNorthEast();
+
+          if (
+            isNaN(sw.getLat()) ||
+            isNaN(sw.getLng()) ||
+            isNaN(ne.getLat()) ||
+            isNaN(ne.getLng())
+          ) {
+            console.warn("계산된 bounds가 유효하지 않습니다.");
+            return;
+          }
+
           map.setBounds(bounds);
+
+          // bounds 설정 후 줌 레벨 제한 확인
+          setTimeout(() => {
+            const currentLevel = map.getLevel();
+            if (currentLevel < 1) {
+              map.setLevel(1);
+            } else if (currentLevel > 5) {
+              map.setLevel(5);
+            }
+          }, 100);
         }
       );
     } catch (error) {
@@ -337,7 +379,13 @@ export const useMarkers = () => {
 
       // 지도 중심을 현재 위치로 이동
       map.panTo(position);
-      map.setLevel(5);
+
+      // 줌 레벨 제한 적용 (최소 3, 최대 19)
+      const targetLevel = 5;
+      const minLevel = 3;
+      const maxLevel = 19;
+      const safeLevel = Math.max(minLevel, Math.min(maxLevel, targetLevel));
+      map.setLevel(safeLevel);
     },
     [createMarkerImage]
   );

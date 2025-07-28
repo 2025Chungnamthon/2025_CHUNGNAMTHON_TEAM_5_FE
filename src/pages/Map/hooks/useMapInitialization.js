@@ -13,6 +13,8 @@ const MAP_OPTIONS = {
   scaleControl: false,
   streetViewControl: false,
   overviewMapControl: false,
+  minLevel: 1, // 최소 줌 레벨 (1: 전국 단위)
+  maxLevel: 5, // 최대 줌 레벨 (5: 구 단위)
 };
 
 const BOUNDS_CHANGE_DELAY = 300;
@@ -113,6 +115,23 @@ export function useKakaoMap(mapRef, onBoundsChange, currentLocation) {
       const map = new window.kakao.maps.Map(container, options);
       mapInstanceRef.current = map;
       setIsMapLoading(false);
+
+      // 줌 레벨 제한 강제 적용
+      const enforceZoomLimits = () => {
+        const currentLevel = map.getLevel();
+        if (currentLevel < 1) {
+          map.setLevel(1);
+        } else if (currentLevel > 5) {
+          map.setLevel(5);
+        }
+      };
+
+      // 줌 변경 이벤트 리스너 추가
+      window.kakao.maps.event.addListener(
+        map,
+        "zoom_changed",
+        enforceZoomLimits
+      );
 
       handleBoundsChange(map);
 

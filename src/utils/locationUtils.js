@@ -206,3 +206,48 @@ export const CHEONAN_CENTER = {
   latitude: 36.8151,
   longitude: 127.1139,
 };
+
+// 천안시 경계 좌표 (대략적인 범위)
+export const CHEONAN_BOUNDS = {
+  north: 36.95, // 북쪽 경계
+  south: 36.68, // 남쪽 경계
+  east: 127.25, // 동쪽 경계
+  west: 126.98, // 서쪽 경계
+};
+
+// 천안시 최소 줌 레벨
+export const CHEONAN_MIN_ZOOM = 8;
+
+// 좌표가 천안시 범위 내에 있는지 확인
+export const isWithinCheonanBounds = (latitude, longitude) => {
+  return (
+    latitude >= CHEONAN_BOUNDS.south &&
+    latitude <= CHEONAN_BOUNDS.north &&
+    longitude >= CHEONAN_BOUNDS.west &&
+    longitude <= CHEONAN_BOUNDS.east
+  );
+};
+
+// 좌표를 천안시 범위로 제한
+export const clampToCheonanBounds = (latitude, longitude) => {
+  return {
+    latitude: Math.max(
+      CHEONAN_BOUNDS.south,
+      Math.min(CHEONAN_BOUNDS.north, latitude)
+    ),
+    longitude: Math.max(
+      CHEONAN_BOUNDS.west,
+      Math.min(CHEONAN_BOUNDS.east, longitude)
+    ),
+  };
+};
+
+// 천안시 중심으로부터의 거리 계산
+export const getDistanceFromCheonanCenter = (latitude, longitude) => {
+  return calculateDistance(
+    CHEONAN_CENTER.latitude,
+    CHEONAN_CENTER.longitude,
+    latitude,
+    longitude
+  );
+};

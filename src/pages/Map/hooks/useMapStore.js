@@ -10,6 +10,7 @@ export const useMapStore = () => {
   const [error, setError] = useState(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [currentBounds, setCurrentBounds] = useState(null);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   // 가맹점 데이터 로드
   const loadStores = useCallback(async () => {
@@ -41,6 +42,8 @@ export const useMapStore = () => {
       }));
 
       setStores(transformedStores);
+      setHasInitialData(true);
+      console.log("초기 데이터 로드 완료, hasInitialData 설정됨");
     } catch (err) {
       console.error("가맹점 데이터 로드 실패:", err);
       setError(`가맹점 정보를 불러올 수 없습니다: ${err.message}`);
@@ -80,6 +83,7 @@ export const useMapStore = () => {
       }));
 
       setStores(transformedStores);
+      setHasInitialData(true);
     } catch (err) {
       console.error("bounds 기반 가맹점 조회 실패:", err);
       setError(`해당 영역의 가맹점 정보를 불러올 수 없습니다: ${err.message}`);
@@ -295,7 +299,7 @@ export const useMapStore = () => {
     }
   }, []);
 
-  // 컴포넌트 마운트 시 데이터 로드 및 현재 위치 가져오기
+  // 컴포넌트 마운트 시 초기 데이터 로드 및 현재 위치 가져오기
   useEffect(() => {
     loadStores();
     // 페이지 진입 시 현재 위치 자동 가져오기
@@ -320,6 +324,7 @@ export const useMapStore = () => {
     error,
     isSearchMode,
     currentBounds,
+    hasInitialData,
 
     // 액션
     handleSearchInputChange,
