@@ -6,7 +6,7 @@ import { FaUser } from "react-icons/fa";
 import { mypageApi } from "../../../services/mypageApi";
 
 const HeaderWrap = styled.div`
-  padding: 32px 24px 0 24px;
+  padding: 66px 24px 0 24px;
   background: #f3f6f7;
 `;
 
