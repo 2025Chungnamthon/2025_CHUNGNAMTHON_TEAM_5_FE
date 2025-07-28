@@ -162,7 +162,7 @@ const GlobalStyles = createGlobalStyle`
   /* PWA 네비게이션 바 개선 */
   @media (display-mode: standalone) {
     body {
-      padding-bottom: calc(var(--safe-area-inset-bottom) + 80px);
+      padding-bottom: calc(var(--safe-area-inset-bottom) + 80px); // 네비게이션 바 높이와 정확히 일치 (100px → 80px)
     }
   }
 

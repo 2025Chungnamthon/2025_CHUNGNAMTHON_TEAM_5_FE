@@ -60,7 +60,7 @@ const HeaderRight = styled.div`
 
 const Content = styled.div`
   padding: 0 20px;
-  padding-bottom: 100px;
+  padding-bottom: 100px; // 원래대로 복원
 `;
 
 const HistoryItem = styled.div`

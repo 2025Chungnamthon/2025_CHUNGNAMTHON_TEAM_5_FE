@@ -53,7 +53,7 @@ const Title = styled.h1`
 
 const Content = styled.div`
   padding: 0 20px;
-  padding-bottom: 100px;
+  padding-bottom: 100px; // 원래대로 복원
 `;
 
 const StoreItem = styled.div`
@@ -201,31 +201,11 @@ const AffiliatedStoresPage = () => {
     retry: false,
     onError: (error) => {
       console.log("제휴업체 조회 에러 (정상 처리됨):", error);
-    }
+    },
   });
 
   if (isLoading) {
     return (
-        <PageContainer>
-          <Header>
-            <HeaderLeft>
-              <BackButton onClick={handleBack}>
-                <FaArrowLeft />
-              </BackButton>
-              <Title>이번 주 제휴 업체</Title>
-            </HeaderLeft>
-          </Header>
-          <Content>
-            <LoadingState>
-              <LoadingText>제휴 업체 정보를 불러오는 중...</LoadingText>
-            </LoadingState>
-          </Content>
-        </PageContainer>
-    );
-  }
-
-  // error가 있어도 stores가 빈 배열로 올 수 있으므로 정상 렌더링
-  return (
       <PageContainer>
         <Header>
           <HeaderLeft>
@@ -235,34 +215,56 @@ const AffiliatedStoresPage = () => {
             <Title>이번 주 제휴 업체</Title>
           </HeaderLeft>
         </Header>
-
         <Content>
-          {stores && stores.length > 0 ? (
-              stores.map((store, index) => (
-                  <StoreItem key={index}>
-                    <StoreImageContainer>
-                      <StoreImage src={store.imageUrl} alt={store.name} />
-                    </StoreImageContainer>
-                    <StoreInfo>
-                      <StoreName>{store.name}</StoreName>
-                      <StoreAddress>{store.address}</StoreAddress>
-                      <StorePhone>{store.tel}</StorePhone>
-                    </StoreInfo>
-                  </StoreItem>
-              ))
-          ) : (
-              <EmptyState>
-                <EmptyIcon>🏪</EmptyIcon>
-                <EmptyText>
-                  {error ? "제휴 업체 정보를 불러올 수 없습니다" : "제휴 업체가 없습니다"}
-                </EmptyText>
-                {error && (
-                    <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
-                )}
-              </EmptyState>
-          )}
+          <LoadingState>
+            <LoadingText>제휴 업체 정보를 불러오는 중...</LoadingText>
+          </LoadingState>
         </Content>
       </PageContainer>
+    );
+  }
+
+  // error가 있어도 stores가 빈 배열로 올 수 있으므로 정상 렌더링
+  return (
+    <PageContainer>
+      <Header>
+        <HeaderLeft>
+          <BackButton onClick={handleBack}>
+            <FaArrowLeft />
+          </BackButton>
+          <Title>이번 주 제휴 업체</Title>
+        </HeaderLeft>
+      </Header>
+
+      <Content>
+        {stores && stores.length > 0 ? (
+          stores.map((store, index) => (
+            <StoreItem key={index}>
+              <StoreImageContainer>
+                <StoreImage src={store.imageUrl} alt={store.name} />
+              </StoreImageContainer>
+              <StoreInfo>
+                <StoreName>{store.name}</StoreName>
+                <StoreAddress>{store.address}</StoreAddress>
+                <StorePhone>{store.tel}</StorePhone>
+              </StoreInfo>
+            </StoreItem>
+          ))
+        ) : (
+          <EmptyState>
+            <EmptyIcon>🏪</EmptyIcon>
+            <EmptyText>
+              {error
+                ? "제휴 업체 정보를 불러올 수 없습니다"
+                : "제휴 업체가 없습니다"}
+            </EmptyText>
+            {error && (
+              <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
+            )}
+          </EmptyState>
+        )}
+      </Content>
+    </PageContainer>
   );
 };
 
