@@ -58,15 +58,16 @@ const ImagePreview = styled.img`
     display: block;
 `;
 
+
 const RemoveButton = styled.button`
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(0, 0, 0, 0.6);
+    background: #d1d3d6;
     border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    border-radius: 20%;
+    width: 25px;
+    height: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,8 +76,15 @@ const RemoveButton = styled.button`
     transition: all 0.2s;
 
     &:hover {
-        background: rgba(0, 0, 0, 0.8);
+        background: #b3b7bd;
+        color: #fff;
         transform: scale(1.1);
+    }
+
+    &:active {
+        background: #6b7280;
+        color: #fff;
+        transform: scale(1.0);
     }
 
     svg {
@@ -231,7 +239,7 @@ const ImageUpload = ({ onImageChange, error, initialImage = null }) => {
                         onError={handleImageError}
                     />
                     <RemoveButton onClick={handleRemoveImage}>
-                        <FiX />
+                        X
                     </RemoveButton>
                     <ChangeImageButton onClick={handleChangeImage}>
                         <FiImage />

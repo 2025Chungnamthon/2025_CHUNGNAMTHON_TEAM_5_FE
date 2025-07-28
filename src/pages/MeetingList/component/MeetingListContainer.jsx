@@ -6,7 +6,7 @@ const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-bottom: 100px; /* 하단 탭바 공간 확보 - 원래대로 복원 */
+  padding-bottom: 100px;
   background: #fff;
 `;
 
