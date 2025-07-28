@@ -14,6 +14,7 @@ const Header = styled.div`
     background: white;
     padding: 16px 8px 0 8px;
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: flex-start;
 `;
@@ -58,8 +59,10 @@ const Content = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    overflow-y: auto;
+    min-height: 0;
     text-align: center;
-    padding: 150px 30px 40px 30px;
+    padding: 110px 30px 40px 30px;
 `;
 
 const EmojiContainer = styled.div`
