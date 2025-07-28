@@ -11,6 +11,8 @@ export const useMapStore = () => {
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [currentBounds, setCurrentBounds] = useState(null);
   const [hasInitialData, setHasInitialData] = useState(false);
+  // 위치 권한 관련 상태 추가
+  const [locationPermissionError, setLocationPermissionError] = useState(false);
 
   // 가맹점 데이터 로드
   const loadStores = useCallback(async () => {
@@ -229,6 +231,7 @@ export const useMapStore = () => {
     }
 
     setIsLoading(true);
+    setLocationPermissionError(false); // 에러 상태 초기화
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -247,6 +250,7 @@ export const useMapStore = () => {
           case error.PERMISSION_DENIED:
             errorMessage =
               "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.";
+            setLocationPermissionError(true); // 위치 권한 에러 상태 설정
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage = "위치 정보를 사용할 수 없습니다.";
@@ -355,6 +359,7 @@ export const useMapStore = () => {
     isSearchMode,
     currentBounds,
     hasInitialData,
+    locationPermissionError, // 위치 권한 에러 상태 추가
 
     // 액션
     handleSearchInputChange,
@@ -367,5 +372,6 @@ export const useMapStore = () => {
     loadStores,
     searchStoresByKeyword,
     loadStoresByBounds,
+    setLocationPermissionError, // 위치 권한 에러 상태 설정 함수 추가
   };
 };
