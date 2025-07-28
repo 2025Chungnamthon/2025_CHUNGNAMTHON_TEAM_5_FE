@@ -114,7 +114,11 @@ export function useKakaoMap(mapRef, onBoundsChange, currentLocation) {
 
       const map = new window.kakao.maps.Map(container, options);
       mapInstanceRef.current = map;
-      setIsMapLoading(false);
+
+      // 지도 로딩 완료 이벤트 리스너 추가
+      window.kakao.maps.event.addListener(map, "tilesloaded", () => {
+        setIsMapLoading(false);
+      });
 
       // 줌 레벨 제한 강제 적용
       const enforceZoomLimits = () => {
@@ -135,6 +139,13 @@ export function useKakaoMap(mapRef, onBoundsChange, currentLocation) {
 
       handleBoundsChange(map);
 
+      // 지도가 완전히 로드될 때까지 기다림
+      setTimeout(() => {
+        if (isMapLoading) {
+          setIsMapLoading(false);
+        }
+      }, 2000);
+
       return map;
     } catch (error) {
       console.error("카카오맵 초기화 실패:", error);
@@ -148,6 +159,7 @@ export function useKakaoMap(mapRef, onBoundsChange, currentLocation) {
     getZoomLevel,
     handleBoundsChange,
     mapRef,
+    isMapLoading,
   ]);
 
   // 컴포넌트 마운트 시 지도 초기화

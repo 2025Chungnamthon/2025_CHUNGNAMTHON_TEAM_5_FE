@@ -20,7 +20,6 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStores();
-      console.log("가맹점 데이터 로드 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
       // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -41,9 +40,11 @@ export const useMapStore = () => {
         longitude: store.lng || store.longitude || null,
       }));
 
+      // 가맹점 데이터 콘솔 출력
+      console.log("백엔드에서 받은 가맹점 데이터:", response.data);
+
       setStores(transformedStores);
       setHasInitialData(true);
-      console.log("초기 데이터 로드 완료, hasInitialData 설정됨");
     } catch (err) {
       console.error("가맹점 데이터 로드 실패:", err);
       setError(`가맹점 정보를 불러올 수 없습니다: ${err.message}`);
@@ -63,7 +64,6 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStoresByBounds(bounds);
-      console.log("bounds 기반 가맹점 조회 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
       // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -81,6 +81,9 @@ export const useMapStore = () => {
         latitude: store.lat || store.latitude || null,
         longitude: store.lng || store.longitude || null,
       }));
+
+      // 가맹점 데이터 콘솔 출력
+      console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
       setStores(transformedStores);
       setHasInitialData(true);
@@ -127,7 +130,6 @@ export const useMapStore = () => {
 
       try {
         const response = await storeApi.searchStoresByKeyword(keyword);
-        console.log("서버 검색 결과:", response);
 
         // 백엔드 API 응답 구조에 맞게 데이터 변환
         // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -148,6 +150,9 @@ export const useMapStore = () => {
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
         }));
+
+        // 가맹점 데이터 콘솔 출력
+        console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
         setStores(transformedResults);
       } catch (err) {
@@ -182,15 +187,30 @@ export const useMapStore = () => {
     );
   }, [stores, searchQuery, isSearchMode]);
 
-  // 가맹점 선택 핸들러
-  const handleStoreSelect = useCallback((store) => {
-    setSelectedStore(store);
-  }, []);
+  // 가맹점 선택 핸들러 - 같은 가맹점을 다시 클릭하면 선택 해제
+  const handleStoreSelect = useCallback(
+    (store) => {
+      // 같은 가맹점을 다시 클릭한 경우 선택 해제
+      if (selectedStore && selectedStore.id === store.id) {
+        setSelectedStore(null);
+      } else {
+        setSelectedStore(store);
+      }
+    },
+    [selectedStore]
+  );
 
-  // 위치 업데이트 핸들러
-  const handleLocationUpdate = useCallback((location) => {
-    setCurrentLocation(location);
-  }, []);
+  // 위치 업데이트 핸들러 - 현재 위치가 이미 설정되어 있으면 변경하지 않음
+  const handleLocationUpdate = useCallback(
+    (location) => {
+      // 현재 위치가 이미 설정되어 있으면 변경하지 않음 (고정)
+      if (currentLocation) {
+        return;
+      }
+      setCurrentLocation(location);
+    },
+    [currentLocation]
+  );
 
   // 현재 위치 가져오기
   const getCurrentLocation = useCallback(() => {
@@ -207,7 +227,6 @@ export const useMapStore = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-        console.log("현재 위치 가져오기 성공:", location);
         setCurrentLocation(location);
         setIsLoading(false);
       },
@@ -270,6 +289,9 @@ export const useMapStore = () => {
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
         }));
+
+        // 가맹점 데이터 콘솔 출력
+        console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
         setStores(transformedResults);
       } catch (err) {

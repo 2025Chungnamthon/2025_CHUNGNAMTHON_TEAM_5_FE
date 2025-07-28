@@ -62,6 +62,7 @@ export const useMarkers = () => {
   const infowindowsRef = useRef([]);
   const clickedMarkerIdRef = useRef(null);
   const clustererRef = useRef(null);
+  const currentOpenInfowindowRef = useRef(null);
 
   // 가맹점 정보를 HTML로 변환
   const createStoreInfoContent = useCallback((store) => {
@@ -70,44 +71,38 @@ export const useMarkers = () => {
 
   // 마커 이미지 생성
   const createMarkerImage = useCallback((imageSrc, size = "default") => {
-    const { width, height, offset } = MARKER_SIZES[size];
-    return new window.kakao.maps.MarkerImage(
-      imageSrc,
-      new window.kakao.maps.Size(width, height),
-      { offset: new window.kakao.maps.Point(offset.x, offset.y) }
-    );
+    try {
+      const { width, height, offset } = MARKER_SIZES[size];
+
+      if (!imageSrc) {
+        return null;
+      }
+
+      return new window.kakao.maps.MarkerImage(
+        imageSrc,
+        new window.kakao.maps.Size(width, height),
+        { offset: new window.kakao.maps.Point(offset.x, offset.y) }
+      );
+    } catch (error) {
+      return null;
+    }
   }, []);
 
   // 클러스터러 초기화
   const initializeClusterer = useCallback((map) => {
     if (!map || clustererRef.current) return;
 
-    // MarkerClusterer가 사용 가능한지 확인 (더 상세한 체크)
     if (!window.kakao) {
-      console.warn("Kakao Maps SDK not loaded");
       return;
     }
 
     if (!window.kakao.maps) {
-      console.warn("Kakao Maps API not available");
       return;
     }
 
     if (!window.kakao.maps.MarkerClusterer) {
-      console.warn(
-        "MarkerClusterer is not available, falling back to regular markers"
-      );
-      console.log(
-        "Available kakao.maps properties:",
-        Object.keys(window.kakao.maps)
-      );
-
-      // MarkerClusterer가 로드될 때까지 기다리기
       const checkMarkerClusterer = () => {
         if (window.kakao.maps.MarkerClusterer) {
-          console.log(
-            "MarkerClusterer now available, retrying initialization..."
-          );
           initializeClusterer(map);
         } else {
           setTimeout(checkMarkerClusterer, 100);
@@ -118,28 +113,21 @@ export const useMarkers = () => {
     }
 
     try {
-      console.log("Initializing MarkerClusterer...");
-
-      // 공식 문서에 따른 클러스터러 생성
       clustererRef.current = new window.kakao.maps.MarkerClusterer({
-        map: map, // 마커들을 클러스터로 관리하고 표시할 지도 객체
-        averageCenter: true, // 클러스터에 포함된 마커들의 평균 위치를 클러스터 마커 위치로 설정
-        minLevel: 3, // 클러스터 할 최소 지도 레벨 (더 확대된 상태에서도 클러스터링)
-        gridSize: 60, // 클러스터 그리드 크기
-        minClusterSize: 2, // 최소 클러스터 크기
-        calculator: [10, 30, 50, 100, 200], // 클러스터 크기별 계산
+        map: map,
+        averageCenter: true,
+        minLevel: 3,
+        gridSize: 60,
+        minClusterSize: 2,
+        calculator: [10, 30, 50, 100, 200],
       });
 
-      console.log("MarkerClusterer initialized successfully");
-
-      // 클러스터 클릭 이벤트 처리
       window.kakao.maps.event.addListener(
         clustererRef.current,
         "clusterclick",
         (cluster) => {
           const markers = cluster.getMarkers();
 
-          // 유효한 마커들만 필터링
           const validMarkers = markers.filter((marker) => {
             const position = marker.getPosition();
             return (
@@ -152,7 +140,6 @@ export const useMarkers = () => {
           });
 
           if (validMarkers.length === 0) {
-            console.warn("클러스터에 유효한 마커가 없습니다.");
             return;
           }
 
@@ -162,7 +149,6 @@ export const useMarkers = () => {
             bounds.extend(marker.getPosition());
           });
 
-          // bounds 유효성 검사
           const sw = bounds.getSouthWest();
           const ne = bounds.getNorthEast();
 
@@ -172,13 +158,11 @@ export const useMarkers = () => {
             isNaN(ne.getLat()) ||
             isNaN(ne.getLng())
           ) {
-            console.warn("계산된 bounds가 유효하지 않습니다.");
             return;
           }
 
           map.setBounds(bounds);
 
-          // bounds 설정 후 줌 레벨 제한 확인
           setTimeout(() => {
             const currentLevel = map.getLevel();
             if (currentLevel < 1) {
@@ -190,25 +174,36 @@ export const useMarkers = () => {
         }
       );
     } catch (error) {
-      console.error("Failed to initialize MarkerClusterer:", error);
-      console.error("Error details:", error.message, error.stack);
+      // 클러스터러 초기화 실패 시 무시
     }
   }, []);
 
   // 마커 클릭 핸들러
-  const handleMarkerClick = useCallback((storeId, infowindow) => {
-    infowindowsRef.current.forEach((infowindow) => {
-      if (infowindow) {
-        infowindow.close();
-      }
-    });
+  const handleMarkerClick = useCallback((storeId, infowindow, marker, map) => {
+    // 현재 열린 인포윈도우가 있다면 닫기
+    if (currentOpenInfowindowRef.current) {
+      currentOpenInfowindowRef.current.close();
+    }
+
+    // 같은 마커를 다시 클릭한 경우 닫기
+    if (clickedMarkerIdRef.current === storeId) {
+      clickedMarkerIdRef.current = null;
+      currentOpenInfowindowRef.current = null;
+      return;
+    }
+
+    // 새로운 마커 클릭 시 인포윈도우 열기
     clickedMarkerIdRef.current = storeId;
+    currentOpenInfowindowRef.current = infowindow;
+    infowindow.open(map, marker);
   }, []);
 
-  // 마커 생성 (클러스터링용)
+  // 마커 생성
   const createMarker = useCallback(
     (store, map, onStoreSelect) => {
-      if (!store.latitude || !store.longitude) return null;
+      if (!store.latitude || !store.longitude) {
+        return null;
+      }
 
       const position = new window.kakao.maps.LatLng(
         store.latitude,
@@ -217,7 +212,6 @@ export const useMarkers = () => {
 
       const markerImage = createMarkerImage(MARKER_IMAGES.default);
 
-      // 공식 문서에 따라 지도 객체를 설정하지 않고 마커 생성
       const marker = new window.kakao.maps.Marker({
         position: position,
         image: markerImage,
@@ -234,18 +228,15 @@ export const useMarkers = () => {
       const addMarkerEventListeners = () => {
         window.kakao.maps.event.addListener(marker, "click", () => {
           onStoreSelect(store);
-          handleMarkerClick(store.id, infowindow);
-          infowindow.open(map, marker);
+          handleMarkerClick(store.id, infowindow, marker, map);
         });
 
         window.kakao.maps.event.addListener(marker, "mouseover", () => {
-          infowindow.open(map, marker);
+          // 마우스오버 시에는 인포윈도우를 열지 않음
         });
 
         window.kakao.maps.event.addListener(marker, "mouseout", () => {
-          if (clickedMarkerIdRef.current !== store.id) {
-            infowindow.close();
-          }
+          // 마우스아웃 시에도 인포윈도우를 닫지 않음
         });
       };
 
@@ -274,15 +265,16 @@ export const useMarkers = () => {
     });
     markersRef.current = [];
     infowindowsRef.current = [];
+    clickedMarkerIdRef.current = null;
+    currentOpenInfowindowRef.current = null;
   }, []);
 
-  // 마커 업데이트 (클러스터링 적용)
+  // 마커 업데이트
   const updateMarkers = useCallback(
     (stores, map, onStoreSelect) => {
-      if (!map) return;
-
-      // 클러스터러 초기화
-      initializeClusterer(map);
+      if (!map) {
+        return;
+      }
 
       clearMarkers();
 
@@ -296,26 +288,35 @@ export const useMarkers = () => {
         }
       });
 
-      // 공식 문서에 따라 클러스터러에 마커들을 추가
-      if (clustererRef.current && markers.length > 0) {
-        console.log(`Adding ${markers.length} markers to clusterer`);
-        clustererRef.current.addMarkers(markers);
-        console.log("Markers added to clusterer successfully");
-      } else {
-        console.log("Clusterer not available, using regular markers");
-        // 클러스터러가 없으면 일반 마커로 표시
-        markers.forEach((marker) => {
-          marker.setMap(map);
-        });
-      }
+      markers.forEach((marker) => {
+        marker.setMap(map);
+      });
     },
-    [createMarker, clearMarkers, initializeClusterer]
+    [createMarker, clearMarkers]
   );
 
   // 선택된 가맹점 마커 강조
   const highlightSelectedStore = useCallback(
     (selectedStore, map) => {
-      if (!selectedStore || !map) return;
+      if (!map) return;
+
+      // selectedStore가 null인 경우 모든 마커를 기본 상태로 되돌리고 팝업 닫기
+      if (!selectedStore) {
+        // 모든 마커를 기본 이미지로 리셋
+        markersRef.current.forEach(({ marker }) => {
+          if (marker) {
+            marker.setImage(createMarkerImage(MARKER_IMAGES.default));
+          }
+        });
+
+        // 열린 팝업 닫기
+        if (currentOpenInfowindowRef.current) {
+          currentOpenInfowindowRef.current.close();
+          currentOpenInfowindowRef.current = null;
+        }
+        clickedMarkerIdRef.current = null;
+        return;
+      }
 
       // 모든 마커를 기본 이미지로 리셋
       markersRef.current.forEach(({ marker }) => {
@@ -324,14 +325,15 @@ export const useMarkers = () => {
         }
       });
 
-      // 선택된 마커 찾기 및 강조
+      // 선택된 마커 찾기 및 강조 (좌표 비교를 더 정확하게)
       const selectedMarkerData = markersRef.current.find(({ marker }) => {
         if (!marker) return false;
         const position = marker.getPosition();
-        return (
-          position.getLat() === selectedStore.latitude &&
-          position.getLng() === selectedStore.longitude
-        );
+        const latDiff = Math.abs(position.getLat() - selectedStore.latitude);
+        const lngDiff = Math.abs(position.getLng() - selectedStore.longitude);
+
+        // 부동소수점 정밀도 문제를 고려하여 작은 차이는 허용
+        return latDiff < 0.0001 && lngDiff < 0.0001;
       });
 
       if (selectedMarkerData) {
@@ -343,10 +345,17 @@ export const useMarkers = () => {
           selectedStore.latitude,
           selectedStore.longitude
         );
+
+        // 지도 중심을 선택된 마커로 이동
         map.panTo(position);
 
+        // 선택된 마커의 인포윈도우 열기
+        if (currentOpenInfowindowRef.current) {
+          currentOpenInfowindowRef.current.close();
+        }
         selectedMarkerData.infowindow.open(map, selectedMarkerData.marker);
         clickedMarkerIdRef.current = selectedStore.id;
+        currentOpenInfowindowRef.current = selectedMarkerData.infowindow;
       }
     },
     [createMarkerImage]
@@ -372,15 +381,12 @@ export const useMarkers = () => {
         shadow: null,
       });
 
-      // 3초 후 마커 제거
       setTimeout(() => {
         currentLocationMarker.setMap(null);
       }, 3000);
 
-      // 지도 중심을 현재 위치로 이동
       map.panTo(position);
 
-      // 줌 레벨 제한 적용 (최소 3, 최대 19)
       const targetLevel = 5;
       const minLevel = 3;
       const maxLevel = 19;

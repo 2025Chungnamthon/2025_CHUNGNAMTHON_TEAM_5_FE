@@ -106,9 +106,6 @@ const MapPage = () => {
     loadStoresByBounds,
   } = useMapStore();
 
-  // 디버깅을 위한 로그
-  console.log("MapPage 상태:", { hasInitialData, pendingBounds, isLoading });
-
   // 컴포넌트 마운트 후 지도 준비 상태 설정
   useEffect(() => {
     // DOM이 완전히 렌더링된 후 지도 준비
@@ -121,7 +118,6 @@ const MapPage = () => {
 
   // 지도 bounds 변경 핸들러 - 자동 로딩 비활성화
   const handleBoundsChange = useCallback((bounds) => {
-    console.log("지도 영역 변경:", bounds);
     // 자동으로 데이터를 로드하지 않고 pendingBounds에 저장
     setPendingBounds(bounds);
   }, []);
@@ -129,7 +125,6 @@ const MapPage = () => {
   // 수동 검색 버튼 클릭 핸들러
   const handleManualSearch = useCallback(() => {
     if (pendingBounds) {
-      console.log("수동 검색 실행:", pendingBounds);
       loadStoresByBounds(pendingBounds);
     }
   }, [pendingBounds, loadStoresByBounds]);

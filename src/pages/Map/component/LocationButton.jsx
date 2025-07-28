@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { FiNavigation } from "react-icons/fi";
+import { FaLocationArrow } from "react-icons/fa";
 
 const ButtonContainer = styled.button`
   position: absolute;
@@ -8,7 +8,7 @@ const ButtonContainer = styled.button`
   right: 16px;
   width: 48px;
   height: 48px;
-  background: #fff;
+  background: #80c7bc;
   border: 1px solid #ddd;
   border-radius: 50%;
   display: flex;
@@ -20,7 +20,7 @@ const ButtonContainer = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background: #f9fafb;
+    background: #6bb3a8;
     transform: scale(1.05);
   }
 
@@ -31,10 +31,12 @@ const ButtonContainer = styled.button`
   }
 `;
 
-const StyledNavigationIcon = styled(FiNavigation)`
-  color: #80c7bc;
-  width: 20px;
-  height: 20px;
+const StyledEmojiIcon = styled.span`
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const SearchButton = styled.button`
@@ -70,12 +72,15 @@ const LocationButton = React.memo(({ onClick, disabled, onSearchNearby }) => {
   return (
     <>
       <ButtonContainer onClick={onClick} disabled={disabled}>
-        <StyledNavigationIcon />
+        <StyledEmojiIcon>
+          <FaLocationArrow size={20} />
+        </StyledEmojiIcon>
       </ButtonContainer>
       {onSearchNearby && (
-        <SearchButton onClick={onSearchNearby} disabled={disabled}>
-          현재 위치에서 검색하기
-        </SearchButton>
+        <SearchButton
+          onClick={onSearchNearby}
+          disabled={disabled}
+        ></SearchButton>
       )}
     </>
   );
