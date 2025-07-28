@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import TagBadge from "../../../components/TagBadge";
 import MeetingDetailModal from "../../MeetingList/component/MeetingDetailModal";
-import { getLocationKorean } from "../../../utils/locationUtils";
+import { getLocationKorean } from "@/utils/locationUtils.js";
 
 const SectionContainer = styled.div`
   background: #fff;

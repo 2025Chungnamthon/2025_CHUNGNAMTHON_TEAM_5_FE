@@ -3,7 +3,7 @@ import { getAuthToken, logout } from "./auth.js";
 
 // API 기본 설정
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // axios 인스턴스 생성
 const apiClient = axios.create({

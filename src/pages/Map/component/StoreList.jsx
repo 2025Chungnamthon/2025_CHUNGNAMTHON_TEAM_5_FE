@@ -49,6 +49,7 @@ const StoreList = React.memo(
     isLoading,
     searchQuery,
     isSearchMode,
+    currentBounds,
   }) => {
     // stores가 배열이 아닌 경우 빈 배열로 처리
     const safeStores = Array.isArray(stores) ? stores : [];
@@ -71,6 +72,8 @@ const StoreList = React.memo(
           <EmptyText>
             {isSearchMode && searchQuery
               ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
+              : currentBounds
+              ? "현재 지도 영역에 가맹점이 없습니다."
               : "검색 결과가 없습니다."}
           </EmptyText>
         </ListContainer>
@@ -81,6 +84,19 @@ const StoreList = React.memo(
       <ListContainer>
         <DragHandle />
         <ListContent>
+          {currentBounds && !isSearchMode && (
+            <div
+              style={{
+                padding: "8px 0",
+                fontSize: "12px",
+                color: "#666",
+                borderBottom: "1px solid #e5e7eb",
+                marginBottom: "12px",
+              }}
+            >
+              현재 영역: {safeStores.length}개 가맹점
+            </div>
+          )}
           {safeStores.map((store) => (
             <StoreCard
               key={store.id}

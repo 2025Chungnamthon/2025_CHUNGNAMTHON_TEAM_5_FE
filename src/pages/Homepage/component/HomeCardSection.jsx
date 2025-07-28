@@ -61,9 +61,30 @@ const HomeCardSection = () => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    // 카드 신청 페이지로 이동 (나중에 구현)
-    alert("천안 사랑 카드 신청 페이지로 이동합니다.");
-    // navigate("/card-application");
+    // 사용자 기기 감지
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    // iOS 기기 감지
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      window.open(
+        "https://apps.apple.com/kr/app/%EC%B2%9C%EC%95%88%EC%82%AC%EB%9E%91%EC%B9%B4%EB%93%9C/id1499441122",
+        "_blank"
+      );
+    }
+    // Android 기기 감지
+    else if (/android/i.test(userAgent)) {
+      window.open(
+        "https://play.google.com/store/apps/details?id=gov.cheonan.lovecard&hl=ko",
+        "_blank"
+      );
+    }
+    // 기타 기기 (데스크톱 등) - 기본적으로 Android 링크로 이동
+    else {
+      window.open(
+        "https://play.google.com/store/apps/details?id=gov.cheonan.lovecard&hl=ko",
+        "_blank"
+      );
+    }
   };
 
   return (

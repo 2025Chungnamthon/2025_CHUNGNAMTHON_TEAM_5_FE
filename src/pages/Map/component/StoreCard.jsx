@@ -3,12 +3,12 @@ import styled from "styled-components";
 
 const CardContainer = styled.div`
   padding: 12px;
-  border: 1px solid ${(props) => (props.isSelected ? "#80c7bc" : "#e5e7eb")};
+  border: 1px solid ${(props) => (props.$isSelected ? "#80c7bc" : "#e5e7eb")};
   border-radius: 12px;
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  background: ${(props) => (props.isSelected ? "#f0fdf9" : "#fff")};
+  background: ${(props) => (props.$isSelected ? "#f0fdf9" : "#fff")};
 
   &:hover {
     border-color: #80c7bc;
@@ -50,7 +50,7 @@ const StorePhone = styled.div`
 
 const StoreCard = React.memo(({ store, isSelected, onClick }) => {
   return (
-    <CardContainer isSelected={isSelected} onClick={onClick}>
+    <CardContainer $isSelected={isSelected} onClick={onClick}>
       <StoreCategory>{store.category}</StoreCategory>
       <StoreName>{store.name}</StoreName>
       <StoreAddress>{store.address}</StoreAddress>
