@@ -208,7 +208,7 @@ const CallbackPage = () => {
           currentUrl: window.location.href,
           searchParams: window.location.search,
           apiBaseUrl:
-            import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080",
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
           environment: import.meta.env.MODE,
           isProduction: import.meta.env.PROD,
         };

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import GlobalStyles from "./styles/GlobalStyles";
 import AppRouter from "./router/AppRouter";
-import { toastConfig } from "./config/toastConfig";
+import { ToastProvider } from "./components/ToastProvider";
 
 function App() {
   useEffect(() => {}, []);
@@ -10,8 +10,9 @@ function App() {
   return (
     <>
       <GlobalStyles />
-      <AppRouter />
-      <Toaster {...toastConfig} />
+      <ToastProvider>
+        <AppRouter />
+      </ToastProvider>
     </>
   );
 }

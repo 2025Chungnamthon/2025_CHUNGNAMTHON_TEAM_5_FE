@@ -1,6 +1,6 @@
 import { useAuthStore } from "../stores/authStore";
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // 기존 API 클래스 구조 유지
 class StoreApiService {

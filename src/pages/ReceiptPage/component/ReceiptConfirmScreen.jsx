@@ -187,7 +187,69 @@ const Button = styled.button`
   `}
 `;
 
-const ReceiptConfirmScreen = ({ capturedImage, onRetake, onConfirm }) => {
+// 날짜 포맷팅 함수
+const formatDate = (dateString) => {
+    try {
+        const date = new Date(dateString);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekday = weekdays[date.getDay()];
+
+        return `${month}월 ${day}일 ${weekday}요일`;
+    } catch (error) {
+        console.error('날짜 포맷팅 오류:', error);
+        return dateString;
+    }
+};
+
+// 시간 포맷팅 함수 (문자열 "23:06:00" 형태)
+const formatTime = (dateString, timeString) => {
+    try {
+        let formattedTime = '';
+
+        if (dateString) {
+            const date = new Date(dateString);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            const weekday = weekdays[date.getDay()];
+            formattedTime = `${month}월 ${day}일 ${weekday}요일`;
+        }
+
+        if (timeString) {
+            // 시간 형식이 "23:06:00" 같은 형태
+            const timeParts = timeString.split(':');
+            if (timeParts.length >= 2) {
+                const hour = parseInt(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? '오후' : '오전';
+                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                formattedTime += ` · ${period} ${displayHour}:${minute}`;
+            } else {
+                formattedTime += ` · ${timeString}`;
+            }
+        }
+
+        return formattedTime;
+    } catch (error) {
+        console.error('시간 포맷팅 오류:', error);
+        return `${dateString} ${timeString}`;
+    }
+};
+
+const ReceiptConfirmScreen = ({ capturedImage, receiptData, onRetake, onConfirm }) => {
+    // 실제 API 응답 구조에 맞는 데이터 추출
+    const {
+        merchantName = '상점명',
+        visitDate = '',
+        visitTime = '',
+        address = '주소 정보 없음',
+        point = 0
+    } = receiptData || {};
+
+    console.log('ReceiptConfirmScreen 데이터:', receiptData);
+
     return (
         <ConfirmScreen>
             <Header>
@@ -201,22 +263,22 @@ const ReceiptConfirmScreen = ({ capturedImage, onRetake, onConfirm }) => {
 
             <Content>
                 <StoreInfo>
-                    <StoreDate>7월 25일 금요일에</StoreDate>
-                    <StoreName>한결가치컵국수 성정점에 다녀오셨네요!</StoreName>
+                    <StoreDate>{formatDate(visitDate)}에</StoreDate>
+                    <StoreName>{merchantName}에 다녀오셨네요!</StoreName>
 
                     <TimeInfo>
                         <FiClock />
-                        <span>7월 25일 금 · 오후 7:05</span>
+                        <span>{formatTime(visitDate, visitTime)}</span>
                     </TimeInfo>
 
-                    <StoreAddress>충남 천안시 서북구 성정동원길2 9-4 지하1층 101-9호</StoreAddress>
+                    <StoreAddress>{address}</StoreAddress>
                 </StoreInfo>
 
                 <ReceiptImage src={capturedImage} alt="영수증" />
 
                 <PointInfo>
                     <PointIcon>P</PointIcon>
-                    <PointText>지급 예정 포인트: 30p</PointText>
+                    <PointText>지급 예정 포인트: {point}p</PointText>
                 </PointInfo>
             </Content>
 

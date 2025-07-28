@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAuthToken } from "@/stores/authStore";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://43.200.175.218:8080";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export const getAllCoupons = async () => {
   try {

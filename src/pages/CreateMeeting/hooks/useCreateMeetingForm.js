@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { meetingApi } from '../../../services/meetingApi';
-import { isAuthenticated } from '../../../services/auth';
-import { getLocationKorean } from '../../../utils/locationUtils';
+import { meetingApi } from '@/services/meetingApi.js';
+import { isAuthenticated } from '@/services/auth.js';
+import { getLocationKorean } from '@/utils/locationUtils.js';
+import { useToastContext } from '@/components/ToastProvider.jsx';
+import { TOAST_CONFIGS } from '@/config/toastConfigs.js';
 
 const INITIAL_FORM_STATE = {
     title: "",
@@ -61,6 +63,7 @@ const validateForm = (formData) => {
 
 export const useCreateMeetingForm = () => {
     const navigate = useNavigate();
+    const { showToast } = useToastContext();
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [selectedLocation, setSelectedLocation] = useState("");
     const [selectedSchedule, setSelectedSchedule] = useState("");
@@ -68,6 +71,7 @@ export const useCreateMeetingForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [isInitialized, setIsInitialized] = useState(false); // 초기화 상태 추가
+
 
     // 이미지 관련 상태
     const [selectedImage, setSelectedImage] = useState(null);
@@ -205,26 +209,24 @@ export const useCreateMeetingForm = () => {
             console.log('전송할 데이터:', submitData);
 
             let response;
-            let successMessage;
             let redirectPath;
 
             if (isEditMode && meetingId) {
                 // 수정 모드 - 내 모임 참여중 리스트로 이동
                 response = await meetingApi.updateMeeting(meetingId, submitData);
-                successMessage = '모임이 성공적으로 수정되었습니다!';
+                showToast(TOAST_CONFIGS.MEETING_UPDATED);
                 redirectPath = '/meetings?tab=myMeetings&subTab=approved';
 
                 console.log('모임 수정 응답:', response);
             } else {
                 // 생성 모드 - 내 모임 참여중 리스트로 이동
                 response = await meetingApi.createMeeting(submitData);
-                successMessage = '모임이 성공적으로 생성되었습니다!';
+                showToast(TOAST_CONFIGS.MEETING_CREATED);
                 redirectPath = '/meetings?tab=myMeetings&subTab=approved';
 
                 console.log('모임 생성 응답:', response);
             }
 
-            alert(successMessage);
             navigate(redirectPath);
 
         } catch (error) {

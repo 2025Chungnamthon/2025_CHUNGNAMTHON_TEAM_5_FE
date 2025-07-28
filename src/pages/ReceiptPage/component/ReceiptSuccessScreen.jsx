@@ -59,11 +59,51 @@ const SuccessTitle = styled.h2`
 const SuccessSubtitle = styled.p`
     font-size: 16px;
     color: #666;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
 `;
 
-const ReceiptSuccessScreen = ({ onClose }) => {
+const PointInfo = styled.div`
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+`;
+
+const CurrentPointText = styled.div`
+    font-size: 14px;
+    color: #666;
+
+    .highlight {
+        font-weight: 600;
+        color: #80c7bc;
+    }
+`;
+
+const ReceiptSuccessScreen = ({ receiptData, onClose }) => {
     const navigate = useNavigate();
+
+    // 확정 API 응답에서 포인트 정보 추출 (스웨거 기준)
+    const {
+        pointId = 0,            // 지급된 포인트 (확정 응답)
+        currentPoint = 0,       // 현재 총 포인트 (확정 응답)
+        message = '',           // 응답 메시지
+        // 혹시 다른 필드명일 경우를 대비
+        point = 0,              // preview에서 넘어온 포인트
+        awardedPoints = 0,      // 다른 가능한 필드명
+        totalPoints = 0         // 다른 가능한 필드명
+    } = receiptData || {};
+
+    // 실제 지급된 포인트 (우선순위 순)
+    const actualAwardedPoint = pointId || point || awardedPoints || 0;
+
+    // 현재 보유 포인트 (우선순위 순)
+    const actualCurrentPoint = currentPoint || totalPoints || 0;
+
+    console.log('ReceiptSuccessScreen 데이터:', receiptData);
 
     useEffect(() => {
         // 5초 후 홈화면으로 이동
@@ -91,7 +131,30 @@ const ReceiptSuccessScreen = ({ onClose }) => {
             </IconContainer>
 
             <SuccessTitle>인증 성공!</SuccessTitle>
-            <SuccessSubtitle>300p를 지갑에 쏙 넣어드렸어요.</SuccessSubtitle>
+            <SuccessSubtitle>
+                {actualAwardedPoint > 0 ? `${actualAwardedPoint}p를 지갑에 쏙 넣어드렸어요.` : '영수증 인증이 완료되었어요.'}
+            </SuccessSubtitle>
+
+            {/* 현재 포인트 정보 표시 */}
+            {actualCurrentPoint > 0 && (
+                <PointInfo>
+                    <CurrentPointText>
+                        현재 보유 포인트: <span className="highlight">{actualCurrentPoint.toLocaleString()}p</span>
+                    </CurrentPointText>
+                </PointInfo>
+            )}
+
+            {/* API 메시지가 있으면 표시 */}
+            {message && (
+                <div style={{
+                    fontSize: '14px',
+                    color: '#888',
+                    marginTop: '8px',
+                    fontStyle: 'italic'
+                }}>
+                    {message}
+                </div>
+            )}
         </SuccessScreen>
     );
 };

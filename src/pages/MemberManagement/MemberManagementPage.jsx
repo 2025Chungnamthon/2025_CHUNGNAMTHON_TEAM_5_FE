@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { FiArrowLeft } from "react-icons/fi";
 import { useParams, useNavigate } from "react-router-dom";
-import { meetingApi } from "../../services/meetingApi";
+import { meetingApi } from "@/services/meetingApi.js";
 
 const MOBILE_MAX_WIDTH = 430;
 
