@@ -5,7 +5,8 @@ import { isAuthenticated } from '@/services/auth.js';
 import ReceiptCameraScreen from './component/ReceiptCameraScreen';
 import ReceiptConfirmScreen from './component/ReceiptConfirmScreen';
 import ReceiptSuccessScreen from './component/ReceiptSuccessScreen';
-import ReceiptFailedScreen from './component/ReceiptFailedScreen'; // 새로 추가
+import ReceiptFailedScreen from './component/ReceiptFailedScreen';
+import ReceiptDuplicateScreen from './component/ReceiptDuplicateScreen'; // 새로 추가
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -59,7 +60,7 @@ const LoadingText = styled.div`
 `;
 
 const ReceiptPage = ({ isOpen, onClose }) => {
-    const [step, setStep] = useState('camera'); // 'camera', 'confirm', 'success', 'failed' 추가
+    const [step, setStep] = useState('camera'); // 'camera', 'confirm', 'success', 'failed', 'duplicate' 추가
     const [capturedImage, setCapturedImage] = useState(null);
     const [receiptData, setReceiptData] = useState(null); // API 응답 데이터
     const [loading, setLoading] = useState(false);
@@ -94,8 +95,13 @@ const ReceiptPage = ({ isOpen, onClose }) => {
         } catch (error) {
             console.error('영수증 처리 실패:', error);
 
-            // alert 대신 실패 화면으로 이동
-            setStep('failed');
+            // 중복 영수증 에러 확인
+            if (error.message.includes('이미 처리') || error.message.includes('중복')) {
+                setStep('duplicate');
+            } else {
+                // 다른 에러는 실패 화면으로
+                setStep('failed');
+            }
         } finally {
             setLoading(false);
             setLoadingMessage('');
@@ -137,8 +143,8 @@ const ReceiptPage = ({ isOpen, onClose }) => {
             if (error.message.includes('찾을 수 없습니다')) {
                 handleRetakePhoto();
                 return;
-            } else if (error.message.includes('이미 처리')) {
-                alert('이미 처리된 영수증입니다.');
+            } else if (error.message.includes('이미 처리') || error.message.includes('중복')) {
+                setStep('duplicate');
             } else {
                 // 다른 에러는 실패 화면으로
                 setStep('failed');
@@ -186,9 +192,17 @@ const ReceiptPage = ({ isOpen, onClose }) => {
                 />
             )}
 
-            {/* 새로 추가된 실패 화면 */}
+            {/* 실패 화면 */}
             {step === 'failed' && (
                 <ReceiptFailedScreen
+                    onRetry={handleRetakePhoto}
+                    onClose={handleClose}
+                />
+            )}
+
+            {/* 중복 영수증 화면 */}
+            {step === 'duplicate' && (
+                <ReceiptDuplicateScreen
                     onRetry={handleRetakePhoto}
                     onClose={handleClose}
                 />
