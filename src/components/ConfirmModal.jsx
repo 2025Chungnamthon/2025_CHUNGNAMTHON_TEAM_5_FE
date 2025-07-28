@@ -48,8 +48,8 @@ const Button = styled.button`
     transition: all 0.2s;
     border: none;
 
-    ${props => props.variant === 'primary' ? `
-        background: ${props.primaryColor || '#80c7bc'};
+    ${props => props.$variant === 'primary' ? `
+        background: ${props.$primaryColor || '#80c7bc'};
         color: white;
         
         &:hover {
@@ -106,8 +106,8 @@ const ConfirmModal = ({
                         {cancelText}
                     </Button>
                     <Button
-                        variant="primary"
-                        primaryColor={primaryColor}
+                        $variant="primary"
+                        $primaryColor={primaryColor}
                         onClick={handleConfirm}
                     >
                         {confirmText}

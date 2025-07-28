@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { meetingApi } from '../../../services/meetingApi';
-import { useToastContext } from '../../../components/ToastNotification';
-import { TOAST_CONFIGS } from '../../../config/toastConfigs';
+import { meetingApi } from '@/services/meetingApi.js';
+import { useToastContext } from '@/components/ToastProvider.jsx';
+import { TOAST_CONFIGS } from '@/config/toastConfigs.js';
 
 export const useMeetingModalHandlers = (currentMeeting, onClose, onRefresh) => {
     const navigate = useNavigate();

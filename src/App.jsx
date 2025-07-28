@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GlobalStyles from "./styles/GlobalStyles";
 import AppRouter from "./router/AppRouter";
-import { ToastProvider } from "./components/ToastNotification";
+import { ToastProvider } from "./components/ToastProvider";
 
 function App() {
     useEffect(() => {

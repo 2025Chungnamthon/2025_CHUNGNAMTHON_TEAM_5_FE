@@ -1,6 +1,5 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { useToast } from '../hooks/useToast';
 
 // ===== 애니메이션 =====
 const slideDown = keyframes`
@@ -31,29 +30,32 @@ const ToastContainer = styled.div`
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 9999;
-    width: 100%;
-    max-width: 430px;
+    z-index: 99999;
+    width: auto;
+    max-width: 90%;
+    min-width: 120px;
     pointer-events: none;
 `;
 
 const ToastMessage = styled.div`
     background: #fff;
     color: #000;
-    padding: 16px 20px;
+    padding: 16px 24px;
     margin: 12px 20px 0 20px;
-    border-radius: 12px;
+    border-radius: 20px;
     font-size: 15px;
-    font-weight: 400;
+    font-weight: 300;
     text-align: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(10px);
-    
-    ${props => props.isVisible && css`
+    white-space: nowrap;
+    display: inline-block;
+
+    ${props => props.$isVisible && css`
         animation: ${slideDown} 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     `}
-    
-    ${props => props.isLeaving && css`
+
+    ${props => props.$isLeaving && css`
         animation: ${slideUp} 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     `}
 `;
@@ -67,7 +69,7 @@ const SuccessIcon = styled.span`
     border-radius: 50%;
     position: relative;
     vertical-align: middle;
-    
+
     &::after {
         content: '✓';
         position: absolute;
@@ -111,40 +113,13 @@ const ToastNotification = ({
     return (
         <ToastContainer>
             <ToastMessage
-                isVisible={isVisible && !isLeaving}
-                isLeaving={isLeaving}
+                $isVisible={isVisible && !isLeaving}
+                $isLeaving={isLeaving}
             >
                 {showIcon && <SuccessIcon />}
                 {message}
             </ToastMessage>
         </ToastContainer>
-    );
-};
-
-// ===== Context 설정 =====
-const ToastContext = createContext();
-
-export const useToastContext = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToastContext must be used within ToastProvider');
-    }
-    return context;
-};
-
-export const ToastProvider = ({ children }) => {
-    const { toast, showToast, hideToast } = useToast();
-
-    return (
-        <ToastContext.Provider value={{ showToast }}>
-            {children}
-            <ToastNotification
-                message={toast.message}
-                isVisible={toast.isVisible}
-                onClose={hideToast}
-                showIcon={toast.showIcon}
-            />
-        </ToastContext.Provider>
     );
 };
 

@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import styled from "styled-components";
-import { getLocationKorean } from "../../../utils/locationUtils";
+import { getLocationKorean } from "@/utils/locationUtils.js";
 import TagBadge from "../../../components/TagBadge";
-import { meetingApi } from "../../../services/meetingApi";
+import { meetingApi } from "@/services/meetingApi.js";
 import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
 import ConfirmModal from "../../../components/ConfirmModal";
-import { useModal } from "../../../hooks/useModal";
-import { MODAL_CONFIGS } from "../../../config/modalConfigs";
+import { useModal } from "@/hooks/useModal.js";
+import { MODAL_CONFIGS } from "@/config/modalConfigs.js";
 
 const ModalOverlay = styled.div`
   position: fixed;

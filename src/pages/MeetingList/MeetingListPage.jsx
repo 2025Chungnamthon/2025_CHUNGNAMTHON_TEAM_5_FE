@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { meetingApi } from "../../services/meetingApi";
-import { isAuthenticated } from "../../services/auth";
+import { meetingApi } from "@/services/meetingApi.js";
+import { isAuthenticated } from "@/services/auth.js";
 import MeetingCard from "./component/MeetingCard";
 import MeetingDetailModal from "./component/MeetingDetailModal";
 import ConfirmModal from "../../components/ConfirmModal";
-import { useModal } from "../../hooks/useModal";
-import { MODAL_CONFIGS } from "../../config/modalConfigs";
-import { useToastContext } from "../../components/ToastNotification";
-import { TOAST_CONFIGS } from "../../config/toastConfigs";
+import { useModal } from "@/hooks/useModal.js";
+import { MODAL_CONFIGS } from "@/config/modalConfigs.js";
+import { useToastContext } from "../../components/ToastProvider";
+import { TOAST_CONFIGS } from "@/config/toastConfigs.js";
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -174,7 +174,7 @@ const LoginButton = styled.button`
 const MeetingListPage = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { showToast } = useToastContext(); // 토스트 훅 추가
+    const { showToast } = useToastContext();
 
     // URL 파라미터에서 초기값 설정
     const initialMainTab = searchParams.get('tab') || 'meetings';
