@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { FiUsers, FiCamera } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import ReceiptPage from "../../ReceiptPage/ReceiptPage";
 import LoginRequiredModal from "@/components/LoginRequiredModal";
@@ -10,20 +9,20 @@ const Overlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.18);
-  z-index: 99;
+  z-index: 999; /* 기존 99 → 999로 증가 */
 `;
 
 const Menu = styled.div`
   position: fixed;
   right: calc(50% - 210px + 17px);
   bottom: calc(
-    158px + env(safe-area-inset-bottom)
+      158px + env(safe-area-inset-bottom)
   ); // PWA 환경에서 safe area 추가 (168px → 158px)
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.1);
   min-width: 188px;
-  z-index: 100;
+  z-index: 1000; /* 기존 100 → 1000으로 증가 */
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -100,24 +99,24 @@ export default function ActionMenu({ onClose }) {
   };
 
   return (
-    <>
-      <Overlay onClick={onClose} />
-      <Menu>
-        <MenuItem onClick={handleCreateGroup}>
-          <MenuIcon src="/UI/people.svg" alt="모임 생성" />
-          모임 생성하기
-        </MenuItem>
-        <MenuItem onClick={handleCertifyReceipt}>
-          <MenuIcon src="/UI/camera.svg" alt="영수증 인증" />
-          영수증 인증하기
-        </MenuItem>
-      </Menu>
+      <>
+        <Overlay onClick={onClose} />
+        <Menu>
+          <MenuItem onClick={handleCreateGroup}>
+            <MenuIcon src="/UI/people.svg" alt="모임 생성" />
+            모임 생성하기
+          </MenuItem>
+          <MenuItem onClick={handleCertifyReceipt}>
+            <MenuIcon src="/UI/camera.svg" alt="영수증 인증" />
+            영수증 인증하기
+          </MenuItem>
+        </Menu>
 
-      {/* 영수증 인증 플로우 */}
-      <ReceiptPage isOpen={isReceiptOpen} onClose={handleReceiptClose} />
+        {/* 영수증 인증 플로우 */}
+        <ReceiptPage isOpen={isReceiptOpen} onClose={handleReceiptClose} />
 
-      {/* 로그인 모달 */}
-      <LoginRequiredModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
-    </>
+        {/* 로그인 모달 */}
+        <LoginRequiredModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+      </>
   );
 }

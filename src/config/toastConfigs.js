@@ -25,6 +25,7 @@ export const ERROR_TOAST_CONFIGS = {
   LEAVE_MEETING_FAILED: "모임 나가기에 실패했습니다.",
   DELETE_MEETING_FAILED: "모임 삭제에 실패했습니다.",
   CANCEL_APPLICATION_FAILED: "신청 취소에 실패했습니다.",
+  KICKED_MEMBER_CANNOT_JOIN: "모임에서 강퇴당하여 다시 참여할 수 없습니다.",
 
   // 파일 업로드 관련 에러
   FILE_SIZE_LIMIT: "파일 크기는 5MB 이하로 선택해주세요",
