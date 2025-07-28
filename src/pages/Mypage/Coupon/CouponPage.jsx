@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { PiTicketFill } from "react-icons/pi";
-import toast from "react-hot-toast";
 import { useUIStore } from "../../../stores/uiStore";
 import dayjs from "dayjs";
 import {
@@ -15,6 +14,8 @@ import {
 import PointDisplay from "@/components/PointDisplay";
 import CouponUseModal from "./component/couponUseModal.jsx";
 import ExchangeConfirmModal from "./component/ExchangeConfirmModal.jsx";
+import { useToastContext } from "@/components/ToastProvider";
+import { createSuccessToast, createApiErrorToast } from "@/utils/toastUtils";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -191,6 +192,7 @@ const LoadingText = styled.div`
 const CouponPage = () => {
   const navigate = useNavigate();
   const { tabs, setTab, points, refreshPoints } = useUIStore();
+  const { showToast } = useToastContext();
   const activeTab = tabs.coupon || "exchange";
 
   const [exchangeCouponsData, setExchangeCouponsData] = useState([]);
@@ -243,23 +245,7 @@ const CouponPage = () => {
 
     try {
       const response = await useCoupon(selectedCoupon.id, code);
-      toast.success("쿠폰을 사용했어요", {
-        style: {
-          background: "#ffffff",
-          color: "#10b981",
-          border: "none",
-          borderRadius: "20px",
-          padding: "12px 20px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          fontSize: "14px",
-          fontWeight: "600",
-        },
-        icon: "✓",
-        iconTheme: {
-          primary: "#10b981",
-          secondary: "#ffffff",
-        },
-      });
+      showToast("쿠폰을 사용했어요");
       handleCloseModal();
       // 쿠폰 목록 새로고침
       const updatedMyCoupons = await getMyCoupons();
@@ -272,23 +258,7 @@ const CouponPage = () => {
       const errorMessage =
         error.response?.data?.message ||
         "쿠폰 사용에 실패했습니다. 확인 코드를 다시 입력해주세요.";
-      toast.error(errorMessage, {
-        style: {
-          background: "#ffffff",
-          color: "#ef4444",
-          border: "none",
-          borderRadius: "20px",
-          padding: "12px 20px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          fontSize: "14px",
-          fontWeight: "600",
-        },
-        icon: "✕",
-        iconTheme: {
-          primary: "#ef4444",
-          secondary: "#ffffff",
-        },
-      });
+      showToast(errorMessage, { type: "error" });
     }
   };
 
@@ -307,23 +277,7 @@ const CouponPage = () => {
 
     try {
       const response = await exchangeCoupon(selectedExchangeCoupon.id);
-      toast.success("쿠폰으로 교환했어요", {
-        style: {
-          background: "#ffffff",
-          color: "#10b981",
-          border: "none",
-          borderRadius: "20px",
-          padding: "12px 20px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          fontSize: "14px",
-          fontWeight: "600",
-        },
-        icon: "✓",
-        iconTheme: {
-          primary: "#10b981",
-          secondary: "#ffffff",
-        },
-      });
+      showToast("쿠폰으로 교환했어요");
       handleCloseExchangeModal();
       // 성공 메시지 표시
       setShowSuccessMessage(true);
@@ -341,23 +295,7 @@ const CouponPage = () => {
       const errorMessage =
         error.response?.data?.message ||
         "쿠폰 교환에 실패했습니다. 다시 시도해주세요.";
-      toast.error(errorMessage, {
-        style: {
-          background: "#ffffff",
-          color: "#ef4444",
-          border: "none",
-          borderRadius: "20px",
-          padding: "12px 20px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          fontSize: "14px",
-          fontWeight: "600",
-        },
-        icon: "✕",
-        iconTheme: {
-          primary: "#ef4444",
-          secondary: "#ffffff",
-        },
-      });
+      showToast(errorMessage, { type: "error" });
       handleCloseExchangeModal();
     }
   };

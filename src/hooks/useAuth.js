@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
 import {
   userProfileOptions,
@@ -13,6 +14,40 @@ import {
   startSocialLogin,
   handleOAuthCallback,
 } from "../services/auth.js";
+
+// ============================================================================
+// 앱 초기화 훅 (토큰 복원)
+// ============================================================================
+
+export const useAuthInitializer = () => {
+  const { refreshTokens, setAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const initializeAuth = () => {
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (accessToken && refreshToken) {
+        console.log("🔄 앱 초기화: 토큰 복원 중...");
+
+        // Zustand 스토어에 토큰 복원
+        refreshTokens({
+          accessToken,
+          refreshToken,
+        });
+
+        // 인증 상태 설정
+        setAuthenticated(true);
+
+        console.log("✅ 토큰 복원 완료");
+      } else {
+        console.log("ℹ️ 저장된 토큰이 없습니다. 로그인이 필요합니다.");
+      }
+    };
+
+    initializeAuth();
+  }, [refreshTokens, setAuthenticated]);
+};
 
 // ============================================================================
 // 사용자 프로필 조회 훅
