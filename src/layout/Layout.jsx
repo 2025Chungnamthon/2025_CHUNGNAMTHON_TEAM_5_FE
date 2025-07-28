@@ -17,20 +17,6 @@ import {
 
 const MOBILE_MAX_WIDTH = 430;
 
-// 상태바 영역을 위한 컨테이너
-const StatusBarContainer = styled.div`
-  width: 100%;
-  max-width: ${MOBILE_MAX_WIDTH}px;
-  margin: 0 auto;
-  background: #fff;
-  height: env(safe-area-inset-top);
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-`;
-
 // 전체 앱을 감싸는 최상위 컨테이너 (모바일 앱 프레임 역할)
 const RootContainer = styled.div`
   width: 100%;
@@ -51,15 +37,14 @@ const AppContainer = styled.div`
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.08); // 앱 프레임 그림자 강화
   position: relative;
   overflow-x: hidden; // 가로 스크롤 방지
-  padding-top: env(safe-area-inset-top); // 상태바 영역만큼 상단 패딩
 `;
 
 const Content = styled.main`
   flex: 1;
   padding: 0 0
     ${(props) =>
-      props.$hideTabBar ? "0" : "calc(80px + env(safe-area-inset-bottom))"}
-    0; // 탭 바 숨김 여부에 따라 패딩 조정, safe area 추가
+      props.$hideTabBar ? "0" : "calc(60px + env(safe-area-inset-bottom))"}
+    0; // 탭 바 숨김 여부에 따라 패딩 조정, safe area 추가 (70px → 60px)
   background: #fff;
   min-height: 0;
   width: 100%;
@@ -80,7 +65,7 @@ const TabBar = styled.nav`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: calc(80px + env(safe-area-inset-bottom)); // 높이에 safe area 추가
+  height: calc(60px + env(safe-area-inset-bottom)); // 높이 조정 (70px → 60px)
   z-index: 99;
   padding-bottom: env(safe-area-inset-bottom); // iOS 하단 안전영역 대응
   border-top: 1px solid #f0f0f0; // 상단 경계선 추가
@@ -94,14 +79,14 @@ const TabItem = styled.div`
   color: ${(props) => (props.isActive ? "#23272F" : "#B0B5BB")};
   cursor: pointer;
   transition: all 0.2s;
-  padding: 12px 0; // 패딩 증가로 터치 영역 확대
+  padding: 8px 0 4px 0; // 패딩 조정: 상단 12px → 8px, 하단 0px → 4px로 줄이기
   font-weight: ${(props) => (props.isActive ? "600" : "400")};
-  min-height: 60px; // 최소 높이 설정
+  min-height: 50px; // 최소 높이 설정 (60px → 50px로 줄이기)
   justify-content: center;
 
   svg {
     font-size: 26px; // 아이콘 크기 증가 (24px → 26px)
-    margin-bottom: 6px; // 마진 증가
+    margin-bottom: 4px; // 마진 조정 (6px → 4px로 줄이기)
     color: ${(props) => (props.isActive ? "#23272F" : "#B0B5BB")};
     transition: color 0.2s;
   }
@@ -145,7 +130,6 @@ export default function Layout() {
 
   return (
     <RootContainer>
-      <StatusBarContainer />
       <AppContainer>
         <Content $hideTabBar={shouldHideTabBar()}>
           <Outlet />
