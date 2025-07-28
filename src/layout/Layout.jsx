@@ -1,6 +1,11 @@
 import React from "react";
 import styled from "styled-components";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import {
   FaHome,
   FaUsers,
@@ -51,7 +56,7 @@ const AppContainer = styled.div`
 
 const Content = styled.main`
   flex: 1;
-  padding: 0 0 90px 0; // 네비게이션 바 높이 증가로 인한 패딩 증가
+  padding: 0 0 ${(props) => (props.$hideTabBar ? "0" : "90px")} 0; // 탭 바 숨김 여부에 따라 패딩 조정
   background: #fff;
   min-height: 0;
   width: 100%;
@@ -106,6 +111,19 @@ const TabItem = styled.div`
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // 탭 바를 숨길 조건들
+  const shouldHideTabBar = () => {
+    // 모임 수정 모드일 때 탭 바 숨김
+    if (
+      location.pathname === "/create-meeting" &&
+      searchParams.get("mode") === "edit"
+    ) {
+      return true;
+    }
+    return false;
+  };
 
   const isActive = (path) => {
     if (path === "/") {
@@ -126,38 +144,40 @@ export default function Layout() {
     <RootContainer>
       <StatusBarContainer />
       <AppContainer>
-        <Content>
+        <Content $hideTabBar={shouldHideTabBar()}>
           <Outlet />
         </Content>
-        <TabBar>
-          <TabItem
-            isActive={isActive("/")}
-            onClick={() => handleNavigation("/")}
-          >
-            <FaHome />홈
-          </TabItem>
-          <TabItem
-            isActive={isActive("/map")}
-            onClick={() => handleNavigation("/map")}
-          >
-            <FaMapMarkerAlt />
-            지도
-          </TabItem>
-          <TabItem
-            isActive={isActive("/meetings")}
-            onClick={() => handleNavigation("/meetings")}
-          >
-            <FaCloud />
-            모임
-          </TabItem>
-          <TabItem
-            isActive={isActive("/mypage")}
-            onClick={() => handleNavigation("/mypage")}
-          >
-            <FaUser />
-            My
-          </TabItem>
-        </TabBar>
+        {!shouldHideTabBar() && (
+          <TabBar>
+            <TabItem
+              isActive={isActive("/")}
+              onClick={() => handleNavigation("/")}
+            >
+              <FaHome />홈
+            </TabItem>
+            <TabItem
+              isActive={isActive("/map")}
+              onClick={() => handleNavigation("/map")}
+            >
+              <FaMapMarkerAlt />
+              지도
+            </TabItem>
+            <TabItem
+              isActive={isActive("/meetings")}
+              onClick={() => handleNavigation("/meetings")}
+            >
+              <FaCloud />
+              모임
+            </TabItem>
+            <TabItem
+              isActive={isActive("/mypage")}
+              onClick={() => handleNavigation("/mypage")}
+            >
+              <FaUser />
+              My
+            </TabItem>
+          </TabBar>
+        )}
       </AppContainer>
     </RootContainer>
   );
