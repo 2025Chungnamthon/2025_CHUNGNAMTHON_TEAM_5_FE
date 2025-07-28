@@ -22,7 +22,6 @@ const Menu = styled.div`
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.1);
-  padding: 10px 0 10px 0;
   min-width: 188px;
   z-index: 100;
   display: flex;
@@ -36,9 +35,11 @@ const MenuItem = styled.button`
   color: #222;
   font-size: 16px;
   display: flex;
+  box-shadow: none;
   align-items: center;
+  font-weight: 500;
   gap: 10px;
-  padding: 10px 24px;
+  padding: 15px 24px;
   cursor: pointer;
   transition: background 0.2s;
 
@@ -49,6 +50,12 @@ const MenuItem = styled.button`
   &:not(:last-child) {
     border-bottom: 1px solid #f3f4f6;
   }
+`;
+
+const MenuIcon = styled.img`
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
 `;
 
 export default function ActionMenu({ onClose }) {
@@ -97,10 +104,12 @@ export default function ActionMenu({ onClose }) {
       <Overlay onClick={onClose} />
       <Menu>
         <MenuItem onClick={handleCreateGroup}>
-          <FiUsers /> 모임 생성하기
+          <MenuIcon src="/UI/people.svg" alt="모임 생성" />
+          모임 생성하기
         </MenuItem>
         <MenuItem onClick={handleCertifyReceipt}>
-          <FiCamera /> 영수증 인증하기
+          <MenuIcon src="/UI/camera.svg" alt="영수증 인증" />
+          영수증 인증하기
         </MenuItem>
       </Menu>
 
