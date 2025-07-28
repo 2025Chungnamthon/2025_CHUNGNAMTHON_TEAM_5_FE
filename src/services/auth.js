@@ -9,15 +9,28 @@ const API_BASE_URL =
 // ============================================================================
 
 export const getAuthToken = () => {
+  // localStorage에서 직접 가져오기 (더 안전함)
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    return token;
+  }
+  // localStorage에 없으면 Zustand 스토어에서 가져오기
   return useAuthStore.getState().accessToken;
 };
 
 export const getRefreshToken = () => {
+  // localStorage에서 직접 가져오기 (더 안전함)
+  const token = localStorage.getItem("refreshToken");
+  if (token) {
+    return token;
+  }
+  // localStorage에 없으면 Zustand 스토어에서 가져오기
   return useAuthStore.getState().refreshToken;
 };
 
 export const isAuthenticated = () => {
-  return useAuthStore.getState().isAuthenticated;
+  const token = getAuthToken();
+  return token && isTokenValid(token);
 };
 
 export const getCurrentUser = () => {
@@ -33,10 +46,10 @@ export const decodeToken = (token) => {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
-        atob(base64)
-            .split("")
-            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -148,7 +161,7 @@ export const createAuthHeaders = () => {
 export const handleOAuthCallback = async () => {
   const accessToken = getTokenFromUrl();
   const refreshToken = new URLSearchParams(window.location.search).get(
-      "refreshToken"
+    "refreshToken"
   );
   const error = getErrorFromUrl();
   const code = getCodeFromUrl();
@@ -160,11 +173,11 @@ export const handleOAuthCallback = async () => {
   // accessToken이 있으면 바로 처리
   if (accessToken) {
     login(
-        {
-          accessToken,
-          refreshToken: refreshToken || null,
-        },
-        null
+      {
+        accessToken,
+        refreshToken: refreshToken || null,
+      },
+      null
     );
     cleanUrl();
     return { success: true };
@@ -188,11 +201,11 @@ export const handleOAuthCallback = async () => {
 
     if (data.data && data.data.accessToken) {
       login(
-          {
-            accessToken: data.data.accessToken,
-            refreshToken: data.data.refreshToken,
-          },
-          null
+        {
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
+        },
+        null
       );
       cleanUrl();
       return { success: true };

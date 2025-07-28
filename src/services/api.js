@@ -14,6 +14,24 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+// 토큰 갱신 중인지 확인하는 플래그
+let isRefreshing = false;
+// 토큰 갱신 대기 중인 요청들을 저장하는 배열
+let failedQueue = [];
+
+// 대기 중인 요청들을 처리하는 함수
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
 // 요청 인터셉터 - 토큰 자동 추가
 apiClient.interceptors.request.use(
   (config) => {
@@ -40,39 +58,85 @@ apiClient.interceptors.response.use(
 
     // 401 에러이고 재시도하지 않은 요청인 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // 이미 토큰 갱신 중인 경우, 대기열에 추가
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        // 토큰 갱신 시도
+        // localStorage에서 refreshToken 가져오기
         const refreshToken = localStorage.getItem("refreshToken");
-        if (refreshToken) {
-          const response = await axios.post(
-            `${API_BASE_URL}/api/auth/refresh`,
-            {
-              refreshToken,
-            }
-          );
 
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            response.data;
+        if (!refreshToken) {
+          throw new Error("Refresh token not found");
+        }
 
-          if (newAccessToken) {
-            // Zustand 스토어 업데이트
-            const { refreshTokens } = await import("../stores/authStore");
-            refreshTokens({
-              accessToken: newAccessToken,
-              refreshToken: newRefreshToken,
-            });
+        console.log("🔄 토큰 갱신 시도...");
+
+        // 토큰 갱신 요청
+        const response = await axios.post(
+          `${API_BASE_URL}/api/auth/refresh`,
+          {
+            refreshToken: refreshToken,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
+        );
+
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+          response.data;
+
+        if (newAccessToken) {
+          console.log("✅ 토큰 갱신 성공");
+
+          // Zustand 스토어 업데이트
+          const { refreshTokens } = await import("../stores/authStore");
+          refreshTokens({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken || refreshToken,
+          });
+
+          // localStorage 업데이트
+          localStorage.setItem("accessToken", newAccessToken);
+          if (newRefreshToken) {
+            localStorage.setItem("refreshToken", newRefreshToken);
+          }
+
+          // 대기 중인 요청들 처리
+          processQueue(null, newAccessToken);
 
           // 원래 요청 재시도
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
+        } else {
+          throw new Error("새로운 access token을 받지 못했습니다");
         }
       } catch (refreshError) {
-        console.error("토큰 갱신 실패:", refreshError);
+        console.error("❌ 토큰 갱신 실패:", refreshError);
+
+        // 대기 중인 요청들 처리 (에러와 함께)
+        processQueue(refreshError, null);
+
         // 토큰 갱신 실패 시 로그아웃 처리
         logout();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
