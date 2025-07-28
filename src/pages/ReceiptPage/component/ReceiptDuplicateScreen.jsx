@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { FiArrowLeft } from 'react-icons/fi';
 
-const FailedScreen = styled.div`
+const DuplicateScreen = styled.div`
     background: white;
     width: 100%;
     height: 100vh;
@@ -14,9 +14,9 @@ const Header = styled.div`
     background: white;
     padding: 16px 8px 0 8px;
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     justify-content: flex-start;
+    flex-shrink: 0; /* 헤더 크기 고정 */
 `;
 
 const HeaderButton = styled.button`
@@ -59,33 +59,35 @@ const Content = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    overflow-y: auto;
-    min-height: 0;
     text-align: center;
-    padding: 110px 30px 40px 30px;
+    padding: 80px 30px 40px 30px;
+    overflow-y: auto; /* 스크롤 가능 */
+    min-height: 0; /* 플렉스 아이템이 축소될 수 있도록 */
 `;
 
-const EmojiContainer = styled.div`
-    font-size: 80px;
-    margin-bottom: 40px;
+const IconContainer = styled.div`
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
-const SadFaceIcon = styled.img`
+const WarningIcon = styled.img`
     width: 80px;
     height: 80px;
 `;
 
-const FailedTitle = styled.h2`
+const DuplicateTitle = styled.h2`
     font-size: 24px;
     font-weight: 600;
     color: #333;
     margin: 0 0 16px 0;
 `;
 
-const FailedSubDescription = styled.p`
+const DuplicateDescription = styled.p`
     font-size: 14px;
     color: #777;
-    margin: 0 50px 80px 50px;
+    margin: 0 20px 40px 20px;
     line-height: 1.6;
 `;
 
@@ -100,6 +102,7 @@ const RetryButton = styled.button`
     cursor: pointer;
     transition: all 0.2s;
     min-width: 120px;
+    margin-bottom: 20px; /* 하단 여백 추가 */
 
     &:hover {
         background: #6bb8b0;
@@ -110,9 +113,9 @@ const RetryButton = styled.button`
     }
 `;
 
-const ReceiptFailedScreen = ({ onRetry, onClose }) => {
+const ReceiptDuplicateScreen = ({ onRetry, onClose }) => {
     return (
-        <FailedScreen>
+        <DuplicateScreen>
             <Header>
                 <HeaderButton onClick={onClose}>
                     <FiArrowLeft />
@@ -120,23 +123,22 @@ const ReceiptFailedScreen = ({ onRetry, onClose }) => {
             </Header>
 
             <Content>
-                <EmojiContainer>
-                    <SadFaceIcon src="/UI/sad-face.svg" alt="슬픈 얼굴" />
-                </EmojiContainer>
+                <IconContainer>
+                    <WarningIcon src="/UI/warning.svg" alt="경고" />
+                </IconContainer>
 
-                <FailedTitle>영수증 인식 실패</FailedTitle>
+                <DuplicateTitle>이미 인증된 영수증입니다</DuplicateTitle>
 
-                <FailedSubDescription>
-                    영수증을 인식할 수 없어요.<br/>
-                    촬영한 영수증이 흐릿하거나 잘리지 <br/>않았는지 확인해주세요.
-                </FailedSubDescription>
+                <DuplicateDescription>
+                    다른 영수증을 인증해주세요
+                </DuplicateDescription>
 
                 <RetryButton onClick={onRetry}>
                     다시 촬영하기
                 </RetryButton>
             </Content>
-        </FailedScreen>
+        </DuplicateScreen>
     );
 };
 
-export default ReceiptFailedScreen;
+export default ReceiptDuplicateScreen;

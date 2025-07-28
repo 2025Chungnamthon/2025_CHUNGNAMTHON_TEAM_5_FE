@@ -4,7 +4,7 @@ import { meetingApi } from '@/services/meetingApi.js';
 import { isAuthenticated } from '@/services/auth.js';
 import { getLocationKorean } from '@/utils/locationUtils.js';
 import { useToastContext } from '@/components/ToastProvider.jsx';
-import { TOAST_CONFIGS } from '@/config/toastConfigs.js';
+import { TOAST_CONFIGS, ERROR_TOAST_CONFIGS } from '@/config/toastConfigs.js';
 
 const INITIAL_FORM_STATE = {
     title: "",
@@ -177,9 +177,9 @@ export const useCreateMeetingForm = () => {
     }, [isInitialized]); // isInitialized 의존성 추가
 
     const handleSubmit = async (meetingId = null, isEditMode = false) => {
-        // 인증 상태 확인
+        // 인증 상태 확인 - 토스트로 변경
         if (!isAuthenticated()) {
-            alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+            showToast(ERROR_TOAST_CONFIGS.LOGIN_REQUIRED, { type: "error" });
             navigate('/login');
             return;
         }
@@ -189,7 +189,8 @@ export const useCreateMeetingForm = () => {
         if (!validation.isValid) {
             setErrors(validation.errors);
             const firstErrorMessage = Object.values(validation.errors)[0];
-            alert(firstErrorMessage);
+            // alert을 토스트로 변경
+            showToast(firstErrorMessage, { type: "error" });
             return;
         }
 
@@ -232,25 +233,30 @@ export const useCreateMeetingForm = () => {
         } catch (error) {
             console.error(`모임 ${isEditMode ? '수정' : '생성'} 오류:`, error);
 
-            // 에러 메시지 세분화
+            // 에러 메시지 세분화 - 모든 alert을 토스트로 변경
             let errorMessage = `모임 ${isEditMode ? '수정' : '생성'} 중 오류가 발생했습니다.`;
 
             if (error.message.includes('로그인')) {
-                errorMessage = '로그인이 필요합니다. 로그인 페이지로 이동합니다.';
+                errorMessage = ERROR_TOAST_CONFIGS.LOGIN_REQUIRED;
+                showToast(errorMessage, { type: "error" });
                 navigate('/login');
             } else if (error.message.includes('권한')) {
-                errorMessage = `모임을 ${isEditMode ? '수정' : '생성'}할 권한이 없습니다.`;
+                errorMessage = ERROR_TOAST_CONFIGS.NO_PERMISSION;
+                showToast(errorMessage, { type: "error" });
             } else if (error.message.includes('찾을 수 없습니다')) {
-                errorMessage = '수정하려는 모임을 찾을 수 없습니다.';
+                errorMessage = ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND;
+                showToast(errorMessage, { type: "error" });
             } else if (error.message.includes('네트워크')) {
-                errorMessage = '인터넷 연결을 확인해주세요.';
+                errorMessage = ERROR_TOAST_CONFIGS.NETWORK_ERROR;
+                showToast(errorMessage, { type: "error" });
             } else if (error.message.includes('입력')) {
-                errorMessage = '입력 정보를 다시 확인해주세요.';
+                errorMessage = "입력 정보를 다시 확인해주세요";
+                showToast(errorMessage, { type: "error" });
             } else if (error.message) {
-                errorMessage = error.message;
+                showToast(error.message, { type: "error" });
+            } else {
+                showToast(errorMessage, { type: "error" });
             }
-
-            alert(errorMessage);
         } finally {
             setIsLoading(false);
         }

@@ -10,12 +10,10 @@ const ConfirmScreen = styled.div`
     flex-direction: column;
 `;
 
-const Header = styled.div`
+const FixedHeader = styled.div`
     background: white;
     padding: 16px 8px 0 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    flex-shrink: 0; /* 고정 헤더 */
 `;
 
 const TopRow = styled.div`
@@ -40,8 +38,7 @@ const HeaderButton = styled.button`
     justify-content: center;
     outline: none;
     box-shadow: none;
-    margin: 0;
-    margin-left: 8px;
+    margin: 0 0 0 8px;
 
     &:focus {
         outline: none;
@@ -61,22 +58,22 @@ const HeaderButton = styled.button`
 
 const HeaderTitle = styled.h2`
     color: #333;
-    margin: 0;
+    margin: 0 0 24px 0;
     font-size: 20px;
     font-weight: 600;
     text-align: left;
     width: 100%;
-    margin-left: 20px;
+    padding-left: 20px;
 `;
 
 const Content = styled.div`
     flex: 1;
-    padding: 60px 20px 24px 20px;
+    padding: 20px 20px 24px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-y: auto;
-    min-height: 0;
+    overflow-y: auto; /* 스크롤 가능 */
+    min-height: 0; /* 플렉스 아이템이 축소될 수 있도록 */
 `;
 
 const StoreInfo = styled.div`
@@ -157,19 +154,22 @@ const PointText = styled.div`
 const ButtonContainer = styled.div`
     display: flex;
     gap: 12px;
-    margin-top: auto;
-    padding: 20px;
+    padding: 20px 0;
+    flex-shrink: 0; /* 버튼 영역 크기 고정 */
+    background: white; /* 스크롤시 배경 유지 */
 `;
 
 const Button = styled.button`
-    flex: 1;
-    padding: 16px;
+    flex: 0 1 auto;
+    min-width: 120px;
+    padding: 16px 20px;
     border-radius: 12px;
     box-shadow: none;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
 
     ${props => props.primary ? `
     background: #80c7bc;
@@ -255,16 +255,17 @@ const ReceiptConfirmScreen = ({ capturedImage, receiptData, onRetake, onConfirm 
 
     return (
         <ConfirmScreen>
-            <Header>
+            <FixedHeader>
                 <TopRow>
                     <HeaderButton onClick={onRetake}>
                         <FiArrowLeft />
                     </HeaderButton>
                 </TopRow>
-                <HeaderTitle>영수증 인증 확인</HeaderTitle>
-            </Header>
+            </FixedHeader>
 
             <Content>
+                <HeaderTitle>영수증 인증 확인</HeaderTitle>
+
                 <StoreInfo>
                     <StoreDate>{formatDate(visitDate)}에</StoreDate>
                     <StoreName>{merchantName}에 다녀오셨네요!</StoreName>
@@ -283,16 +284,16 @@ const ReceiptConfirmScreen = ({ capturedImage, receiptData, onRetake, onConfirm 
                     <PointIcon>P</PointIcon>
                     <PointText>지급 예정 포인트: {point}p</PointText>
                 </PointInfo>
+                <ButtonContainer>
+                    <Button onClick={onRetake}>
+                        이 장소가 아니에요
+                    </Button>
+                    <Button primary onClick={onConfirm}>
+                        이 장소가 맞아요
+                    </Button>
+                </ButtonContainer>
             </Content>
 
-            <ButtonContainer>
-                <Button onClick={onRetake}>
-                    이 장소가 아니에요
-                </Button>
-                <Button primary onClick={onConfirm}>
-                    이 장소가 맞아요
-                </Button>
-            </ButtonContainer>
         </ConfirmScreen>
     );
 };

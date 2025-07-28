@@ -326,13 +326,10 @@ const MemberManagementPage = () => {
 
             await meetingApi.approveMember(meetingId, userId);
 
-            alert("멤버를 승인했습니다.");
-
             // 멤버 리스트 새로고침
             await fetchMembers();
         } catch (err) {
             console.error("승인 실패:", err);
-            alert(err.message || "승인에 실패했습니다.");
         } finally {
             setActionLoading(null);
         }
@@ -342,55 +339,39 @@ const MemberManagementPage = () => {
     const handleReject = useCallback(async (userId) => {
         if (actionLoading === userId) return;
 
-        const member = members.find(m => m.userId === userId);
-        const memberName = member?.userNickName || `사용자 ${userId}`;
+        try {
+            setActionLoading(userId);
+            console.log(`멤버 ${userId} 거절 시작`);
 
-        if (window.confirm(`정말로 ${memberName}님의 가입 신청을 거절하시겠습니까?`)) {
-            try {
-                setActionLoading(userId);
-                console.log(`멤버 ${userId} 거절 시작`);
+            await meetingApi.rejectMember(meetingId, userId);
 
-                await meetingApi.rejectMember(meetingId, userId);
-
-                alert("멤버를 거절했습니다.");
-
-                // 멤버 리스트 새로고침
-                await fetchMembers();
-            } catch (err) {
-                console.error("거절 실패:", err);
-                alert(err.message || "거절에 실패했습니다.");
-            } finally {
-                setActionLoading(null);
-            }
+            // 멤버 리스트 새로고침
+            await fetchMembers();
+        } catch (err) {
+            console.error("거절 실패:", err);
+        } finally {
+            setActionLoading(null);
         }
-    }, [meetingId, fetchMembers, actionLoading, members]);
+    }, [meetingId, fetchMembers, actionLoading]);
 
     // 멤버 내보내기 처리
     const handleKick = useCallback(async (userId) => {
         if (actionLoading === userId) return;
 
-        const member = members.find(m => m.userId === userId);
-        const memberName = member?.userNickName || `사용자 ${userId}`;
+        try {
+            setActionLoading(userId);
+            console.log(`멤버 ${userId} 내보내기 시작`);
 
-        if (window.confirm(`정말로 ${memberName}님을 모임에서 내보내시겠습니까?\n\n내보낸 멤버는 다시 참여할 수 있습니다.`)) {
-            try {
-                setActionLoading(userId);
-                console.log(`멤버 ${userId} 내보내기 시작`);
+            await meetingApi.kickMember(meetingId, userId);
 
-                await meetingApi.kickMember(meetingId, userId);
-
-                alert(`${memberName}님을 모임에서 내보냈습니다.`);
-
-                // 멤버 리스트 새로고침
-                await fetchMembers();
-            } catch (err) {
-                console.error("내보내기 실패:", err);
-                alert(err.message || "내보내기에 실패했습니다.");
-            } finally {
-                setActionLoading(null);
-            }
+            // 멤버 리스트 새로고침
+            await fetchMembers();
+        } catch (err) {
+            console.error("내보내기 실패:", err);
+        } finally {
+            setActionLoading(null);
         }
-    }, [meetingId, fetchMembers, actionLoading, members]);
+    }, [meetingId, fetchMembers, actionLoading]);
 
     // 저장하기 (현재는 닫기만)
     const handleSave = useCallback(() => {

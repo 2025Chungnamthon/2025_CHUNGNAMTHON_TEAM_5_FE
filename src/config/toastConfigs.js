@@ -26,6 +26,12 @@ export const ERROR_TOAST_CONFIGS = {
   DELETE_MEETING_FAILED: "모임 삭제에 실패했습니다.",
   CANCEL_APPLICATION_FAILED: "신청 취소에 실패했습니다.",
 
+  // 파일 업로드 관련 에러
+  FILE_SIZE_LIMIT: "파일 크기는 5MB 이하로 선택해주세요",
+  INVALID_FILE_TYPE: "이미지 파일만 업로드 가능합니다",
+  FILE_UPLOAD_FAILED: "이미지 업로드에 실패했습니다",
+
+
   // 권한 관련 에러
   NO_PERMISSION: "권한이 없습니다.",
   LOGIN_REQUIRED: "로그인이 필요합니다.",
