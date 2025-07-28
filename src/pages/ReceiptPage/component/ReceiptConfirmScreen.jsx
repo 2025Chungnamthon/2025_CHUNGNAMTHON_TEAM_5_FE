@@ -75,6 +75,8 @@ const Content = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-y: auto;
+    min-height: 0;
 `;
 
 const StoreInfo = styled.div`
@@ -163,6 +165,7 @@ const Button = styled.button`
     flex: 1;
     padding: 16px;
     border-radius: 12px;
+    box-shadow: none;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
