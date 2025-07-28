@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import styled from "styled-components";
 import { FiCamera, FiX, FiImage } from "react-icons/fi";
+import { useToastContext } from "../../../components/ToastProvider";
+import { ERROR_TOAST_CONFIGS } from "@/config/toastConfigs.js";
 
 const ImageUploadContainer = styled.div`
     display: flex;
@@ -129,6 +131,7 @@ const ImageUpload = ({ onImageChange, error, initialImage = null }) => {
     const [imagePreview, setImagePreview] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const fileInputRef = useRef(null);
+    const { showToast } = useToastContext();
 
     // 초기 이미지 설정
     useEffect(() => {
@@ -140,31 +143,43 @@ const ImageUpload = ({ onImageChange, error, initialImage = null }) => {
         }
     }, [initialImage]);
 
-    // 파일 선택 처리
+    // 파일 선택 처리 (토스트 적용)
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // 파일 크기 체크 (5MB 제한)
+        // 파일 크기 체크 (5MB 제한) - 토스트로 변경
         if (file.size > 5 * 1024 * 1024) {
-            alert('파일 크기는 5MB 이하로 선택해주세요.');
+            showToast(ERROR_TOAST_CONFIGS.FILE_SIZE_LIMIT, { type: "error" });
             return;
         }
 
-        // 파일 타입 체크
+        // 파일 타입 체크 - 토스트로 변경
         if (!file.type.startsWith('image/')) {
-            alert('이미지 파일만 업로드 가능합니다.');
+            showToast(ERROR_TOAST_CONFIGS.INVALID_FILE_TYPE, { type: "error" });
             return;
         }
 
         // 파일 미리보기 생성
         const reader = new FileReader();
+
         reader.onload = (e) => {
-            setImagePreview(e.target.result);
-            setImageFile(file);
-            // 부모 컴포넌트에 파일 정보 전달
-            onImageChange?.(file, e.target.result);
+            try {
+                setImagePreview(e.target.result);
+                setImageFile(file);
+                // 부모 컴포넌트에 파일 정보 전달
+                onImageChange?.(file, e.target.result);
+            } catch (error) {
+                console.error('이미지 처리 실패:', error);
+                showToast(ERROR_TOAST_CONFIGS.FILE_UPLOAD_FAILED, { type: "error" });
+            }
         };
+
+        reader.onerror = () => {
+            console.error('파일 읽기 실패');
+            showToast(ERROR_TOAST_CONFIGS.FILE_UPLOAD_FAILED, { type: "error" });
+        };
+
         reader.readAsDataURL(file);
     };
 
@@ -189,10 +204,13 @@ const ImageUpload = ({ onImageChange, error, initialImage = null }) => {
         fileInputRef.current?.click();
     };
 
-    // 이미지 로드 에러 처리
+    // 이미지 로드 에러 처리 (토스트 적용)
     const handleImageError = (e) => {
         console.error('이미지 로드 실패:', e.target.src);
+        // 기본 이미지로 대체
         e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80";
+        // 에러 토스트 표시
+        showToast(ERROR_TOAST_CONFIGS.FILE_UPLOAD_FAILED, { type: "error" });
     };
 
     return (

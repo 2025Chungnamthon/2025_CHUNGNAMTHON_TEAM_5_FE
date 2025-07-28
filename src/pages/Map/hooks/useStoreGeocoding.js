@@ -29,9 +29,6 @@ const attemptGeocoding = async (address, storeName) => {
     try {
       const alternativeAddress = createAlternativeAddress(address);
       const alternativeResult = await geocodeAddress(alternativeAddress);
-      console.log(
-        `대체 주소로 변환 성공 (${storeName}): ${alternativeAddress}`
-      );
       return alternativeResult;
     } catch (alternativeError) {
       console.warn(
