@@ -157,6 +157,11 @@ const MapPage = () => {
     setIsListExpanded(expanded);
   }, []);
 
+  // 제휴업체 버튼 클릭 핸들러
+  const handleAffiliateClick = useCallback(() => {
+    // console.log("제휴업체 버튼 클릭됨");
+  }, []);
+
   return (
     <PageContainer>
       <Header>
@@ -194,6 +199,7 @@ const MapPage = () => {
           <LocationButton
             onClick={getCurrentLocation}
             disabled={isLoading || !isMapReady}
+            onAffiliateClick={handleAffiliateClick}
           />
         )}
 
