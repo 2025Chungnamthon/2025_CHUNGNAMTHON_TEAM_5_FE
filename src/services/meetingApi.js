@@ -93,21 +93,41 @@ const transformMeetingData = (meetingData) => {
     };
 };
 
+const buildFormData = (meetingData, imageFile, isEditMode = false) => {
+    const formData = new FormData();
+
+    const meetingJson = {
+        title: meetingData.title,
+        description: meetingData.description,
+        location: getLocationCode(meetingData.location),
+        schedule: convertScheduleToAPI(meetingData.schedule),
+        openChatUrl: meetingData.openchat_url
+    };
+
+    const blob = new Blob([JSON.stringify(meetingJson)], { type: 'application/json' });
+    formData.append('meeting', blob);
+
+    if (imageFile || !isEditMode) {
+        formData.append('image', imageFile);
+    }
+
+    return formData;
+};
+
 export const meetingApi = {
     // 모임 생성
-    createMeeting: async (meetingData) => {
-        try {
-            const requestData = transformMeetingData(meetingData);
+    createMeeting: async (meetingData, imageFile) => {
+        const formData = buildFormData(meetingData, imageFile);
+        const token = getAuthToken();
 
-            console.log('원본 데이터:', meetingData);
-            console.log('API 요청 데이터:', requestData);
+        const response = await axios.post(`${API_BASE_URL}/api/meetings`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
 
-            const response = await apiClient.post('/api/meetings', requestData);
-            return response.data;
-        } catch (error) {
-            console.error('모임 생성 API 오류:', error);
-            throw error;
-        }
+        return response.data;
     },
 
     // 모임 목록 조회
@@ -179,24 +199,18 @@ export const meetingApi = {
     },
 
     // 모임 수정
-    updateMeeting: async (meetingId, meetingData) => {
-        try {
-            const requestData = transformMeetingData(meetingData);
+    updateMeeting: async (meetingId, meetingData, imageFile) => {
+        const formData = buildFormData(meetingData, imageFile, true);
+        const token = getAuthToken();
 
-            const response = await apiClient.patch(`/api/meetings/${meetingId}`, requestData);
-            return response.data;
-        } catch (error) {
-            console.error('모임 수정 API 오류:', error);
+        const response = await axios.patch(`${API_BASE_URL}/api/meetings/${meetingId}`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
 
-            // 특별한 에러 메시지 처리
-            if (error.response?.status === 403) {
-                throw new Error('모임을 수정할 권한이 없습니다.');
-            }
-            if (error.response?.status === 404) {
-                throw new Error('모임을 찾을 수 없습니다.');
-            }
-            throw error;
-        }
+        return response.data;
     },
 
     // 모임 삭제
