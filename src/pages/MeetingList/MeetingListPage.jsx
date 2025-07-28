@@ -26,7 +26,17 @@ const PageContainer = styled.div`
 // 상단 헤더 (모임 제목)
 const PageHeader = styled.div`
   background: #fff;
-  padding: 66px 20px 0 20px;
+  padding: 0px 20px 0 20px;
+
+  /* PWA 환경에서만 상단 여백 추가 */
+  @media (display-mode: standalone) {
+    padding: 66px 20px 0 20px;
+  }
+
+  /* JavaScript로 감지한 PWA 환경에서도 적용 */
+  &[data-pwa="true"] {
+    padding: 66px 20px 0 20px;
+  }
 `;
 
 // 메인 탭 (모임 / 내 모임)
@@ -176,6 +186,7 @@ const LoginButton = styled.button`
 const MeetingListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isPWA, setIsPWA] = useState(false);
   const { showToast } = useToastContext();
   const { isLoginModalOpen, closeLoginModal } = useLoginModal();
 
@@ -199,6 +210,33 @@ const MeetingListPage = () => {
   // 확인창 모달 상태
   const confirmModal = useModal();
   const [meetingToLeave, setMeetingToLeave] = useState(null);
+
+  // PWA 환경 감지
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches;
+      const isFullscreen = window.matchMedia(
+        "(display-mode: fullscreen)"
+      ).matches;
+      const isMinimalUI = window.matchMedia(
+        "(display-mode: minimal-ui)"
+      ).matches;
+      const isIOSStandalone = window.navigator.standalone === true;
+
+      const isPWAEnvironment =
+        isStandalone || isFullscreen || isMinimalUI || isIOSStandalone;
+      setIsPWA(isPWAEnvironment);
+    };
+
+    checkPWA();
+    window.addEventListener("orientationchange", checkPWA);
+
+    return () => {
+      window.removeEventListener("orientationchange", checkPWA);
+    };
+  }, []);
 
   // 전체 모임 데이터 불러오기
   const fetchMeetings = async () => {
@@ -441,7 +479,7 @@ const MeetingListPage = () => {
   if (loading) {
     return (
       <PageContainer>
-        <PageHeader>
+        <PageHeader data-pwa={isPWA}>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -466,7 +504,7 @@ const MeetingListPage = () => {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader>
+        <PageHeader data-pwa={isPWA}>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -494,7 +532,7 @@ const MeetingListPage = () => {
   if (mainTab === "myMeetings" && !isAuthenticated()) {
     return (
       <PageContainer>
-        <PageHeader>
+        <PageHeader data-pwa={isPWA}>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -541,7 +579,7 @@ const MeetingListPage = () => {
 
     return (
       <PageContainer>
-        <PageHeader>
+        <PageHeader data-pwa={isPWA}>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -585,7 +623,7 @@ const MeetingListPage = () => {
   // 메인 렌더링
   return (
     <PageContainer>
-      <PageHeader>
+      <PageHeader data-pwa={isPWA}>
         <MainTabContainer>
           <MainTab
             active={mainTab === "meetings"}
