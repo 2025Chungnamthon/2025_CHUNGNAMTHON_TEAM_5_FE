@@ -91,7 +91,7 @@ const HomeCardSection = () => {
     <SectionContainer onClick={handleCardClick}>
       <CardContent>
         <CardInfo>
-          <CardImage src="/UI/card.png" alt="천안사랑카드" />
+          <CardImage src="/UI/card.svg" alt="천안사랑카드" />
           <CardTitle>천안사랑카드 신청하러 가기</CardTitle>
         </CardInfo>
         <ArrowIcon />

@@ -5,7 +5,7 @@ import { useUIStore } from "@/stores/uiStore";
 
 const Header = styled.header`
   background-color: #fff;
-  padding: 20px 20px 12px 20px;
+  padding: calc(20px + env(safe-area-inset-top)) 20px 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -62,7 +62,7 @@ function HeaderComponent() {
   return (
     <Header>
       <LogoRow onClick={handleLogoClick}>
-        <LogoImg src="/logo.png" alt="Cheon:On 로고" />
+        <LogoImg src="/logo.svg" alt="Cheon:On 로고" />
       </LogoRow>
       <PointBadge>
         <PointDisplay
