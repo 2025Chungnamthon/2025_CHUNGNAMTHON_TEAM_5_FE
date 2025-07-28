@@ -25,6 +25,15 @@ const StoreName = styled.div`
   color: #111827;
   margin-bottom: 6px;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const AffiliateIcon = styled.img`
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
 `;
 
 const StoreCategory = styled.div`
@@ -50,7 +59,12 @@ const StoreCard = React.memo(({ store, isSelected, onClick }) => {
   return (
     <CardContainer $isSelected={isSelected} onClick={onClick}>
       <StoreCategory>{store.category}</StoreCategory>
-      <StoreName>{store.name}</StoreName>
+      <StoreName>
+        {store.isAffiliate && (
+          <AffiliateIcon src="/UI/specialstore.png" alt="제휴업체" />
+        )}
+        {store.name}
+      </StoreName>
       <StoreAddress>{store.address}</StoreAddress>
       {store.phoneNumber && <StorePhone>{store.phoneNumber}</StorePhone>}
     </CardContainer>

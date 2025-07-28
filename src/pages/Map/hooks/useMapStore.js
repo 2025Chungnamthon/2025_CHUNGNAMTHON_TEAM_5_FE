@@ -38,10 +38,9 @@ export const useMapStore = () => {
         // 좌표 정보 (백엔드 API 명세에 맞게 lat, lng 사용)
         latitude: store.lat || store.latitude || null,
         longitude: store.lng || store.longitude || null,
+        // 제휴업체 여부
+        isAffiliate: store.isAffiliate || false,
       }));
-
-      // 가맹점 데이터 콘솔 출력
-      console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
       setStores(transformedStores);
       setHasInitialData(true);
@@ -80,10 +79,9 @@ export const useMapStore = () => {
         isOpen: store.isOpen !== undefined ? store.isOpen : true,
         latitude: store.lat || store.latitude || null,
         longitude: store.lng || store.longitude || null,
+        // 제휴업체 여부
+        isAffiliate: store.isAffiliate || false,
       }));
-
-      // 가맹점 데이터 콘솔 출력
-      console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
       setStores(transformedStores);
       setHasInitialData(true);
@@ -149,10 +147,9 @@ export const useMapStore = () => {
           isOpen: store.isOpen !== undefined ? store.isOpen : true,
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
+          // 제휴업체 여부
+          isAffiliate: store.isAffiliate || false,
         }));
-
-        // 가맹점 데이터 콘솔 출력
-        console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
         setStores(transformedResults);
       } catch (err) {
@@ -288,10 +285,9 @@ export const useMapStore = () => {
           isOpen: store.isOpen !== undefined ? store.isOpen : true,
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
+          // 제휴업체 여부
+          isAffiliate: store.isAffiliate || false,
         }));
-
-        // 가맹점 데이터 콘솔 출력
-        console.log("백엔드에서 받은 가맹점 데이터:", response.data);
 
         setStores(transformedResults);
       } catch (err) {

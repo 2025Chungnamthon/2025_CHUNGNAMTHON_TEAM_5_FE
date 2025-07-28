@@ -5,6 +5,7 @@ import StoreInfoWindow from "../component/StorePopup";
 const MARKER_IMAGES = {
   default: "/UI/Subtract.png",
   selected: "/UI/Subtract.png",
+  affiliate: "/UI/specialstore.png",
   currentLocation:
     "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
 };
@@ -210,7 +211,11 @@ export const useMarkers = () => {
         store.longitude
       );
 
-      const markerImage = createMarkerImage(MARKER_IMAGES.default);
+      // isAffiliate 속성에 따라 마커 이미지 결정
+      const markerImageSrc = store.isAffiliate
+        ? MARKER_IMAGES.affiliate
+        : MARKER_IMAGES.default;
+      const markerImage = createMarkerImage(markerImageSrc);
 
       const marker = new window.kakao.maps.Marker({
         position: position,
@@ -283,7 +288,7 @@ export const useMarkers = () => {
         const markerData = createMarker(store, map, onStoreSelect);
         if (markerData) {
           markers.push(markerData.marker);
-          markersRef.current.push(markerData);
+          markersRef.current.push({ ...markerData, store }); // store 정보도 함께 저장
           infowindowsRef.current.push(markerData.infowindow);
         }
       });
@@ -303,9 +308,12 @@ export const useMarkers = () => {
       // selectedStore가 null인 경우 모든 마커를 기본 상태로 되돌리고 팝업 닫기
       if (!selectedStore) {
         // 모든 마커를 기본 이미지로 리셋
-        markersRef.current.forEach(({ marker }) => {
+        markersRef.current.forEach(({ marker, store }) => {
           if (marker) {
-            marker.setImage(createMarkerImage(MARKER_IMAGES.default));
+            const markerImageSrc = store?.isAffiliate
+              ? MARKER_IMAGES.affiliate
+              : MARKER_IMAGES.default;
+            marker.setImage(createMarkerImage(markerImageSrc));
           }
         });
 
@@ -319,9 +327,12 @@ export const useMarkers = () => {
       }
 
       // 모든 마커를 기본 이미지로 리셋
-      markersRef.current.forEach(({ marker }) => {
+      markersRef.current.forEach(({ marker, store }) => {
         if (marker) {
-          marker.setImage(createMarkerImage(MARKER_IMAGES.default));
+          const markerImageSrc = store?.isAffiliate
+            ? MARKER_IMAGES.affiliate
+            : MARKER_IMAGES.default;
+          marker.setImage(createMarkerImage(markerImageSrc));
         }
       });
 
@@ -337,9 +348,11 @@ export const useMarkers = () => {
       });
 
       if (selectedMarkerData) {
-        selectedMarkerData.marker.setImage(
-          createMarkerImage(MARKER_IMAGES.selected)
-        );
+        // 선택된 마커는 selected 이미지로 강조하되, 제휴업체인 경우 affiliate 이미지 기반으로 선택
+        const selectedImageSrc = selectedMarkerData.store?.isAffiliate
+          ? MARKER_IMAGES.affiliate
+          : MARKER_IMAGES.selected;
+        selectedMarkerData.marker.setImage(createMarkerImage(selectedImageSrc));
 
         const position = new window.kakao.maps.LatLng(
           selectedStore.latitude,
