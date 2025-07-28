@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { receiptApi } from '../../services/receiptApi';
-import { isAuthenticated } from '../../services/auth';
+import { receiptApi } from '@/services/receiptApi.js';
+import { isAuthenticated } from '@/services/auth.js';
 import ReceiptCameraScreen from './component/ReceiptCameraScreen';
 import ReceiptConfirmScreen from './component/ReceiptConfirmScreen';
 import ReceiptSuccessScreen from './component/ReceiptSuccessScreen';

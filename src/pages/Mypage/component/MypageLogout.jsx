@@ -1,6 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { useLogout } from "../../../hooks/useAuth";
+import { useLogout } from "@/hooks/useAuth.js";
+import ConfirmModal from "../../../components/ConfirmModal";
+import { useModal } from "@/hooks/useModal.js";
+import { MODAL_CONFIGS } from "@/config/modalConfigs.js";
 
 const LogoutContainer = styled.div`
   padding: 0 16px;
@@ -16,21 +19,27 @@ const LogoutText = styled.div`
 `;
 
 const MypageLogout = () => {
-  const logoutMutation = useLogout();
+    const logoutMutation = useLogout();
+    const logoutModal = useModal();
 
-  const handleLogout = () => {
-    if (window.confirm("정말 로그아웃 하시겠습니까?")) {
-      logoutMutation.mutate();
-    }
-  };
+    const handleLogout = () => {
+        logoutMutation.mutate();
+    };
 
-  return (
-    <LogoutContainer>
-      <LogoutText onClick={handleLogout}>
-        {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
-      </LogoutText>
-    </LogoutContainer>
-  );
+    return (
+        <LogoutContainer>
+            <LogoutText onClick={logoutModal.openModal}>
+                {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+            </LogoutText>
+
+            <ConfirmModal
+                isOpen={logoutModal.isOpen}
+                onClose={logoutModal.closeModal}
+                onConfirm={handleLogout}
+                {...MODAL_CONFIGS.LOGOUT}
+            />
+        </LogoutContainer>
+    );
 };
 
 export default MypageLogout;
