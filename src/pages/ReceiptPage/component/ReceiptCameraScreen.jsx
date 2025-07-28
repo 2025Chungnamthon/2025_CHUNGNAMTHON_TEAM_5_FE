@@ -47,8 +47,8 @@ const HeaderButton = styled.button`
     box-shadow: none;
 
     svg {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
     }
 
     &:focus {
@@ -62,23 +62,34 @@ const HeaderButton = styled.button`
     }
 `;
 
-const FlashButton = styled(HeaderButton)`
-    color: ${props => props.$active ? '#ffd700' : 'white'};
+const FlashButton = styled.button`
+    background: none !important;
+    border: none;
+    color: ${props => props.disabled ? '#666' : props.$active ? '#ffd700' : 'white'};
     font-size: 22px;
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    box-shadow: none;
 
     svg {
-        width: 22px;
-        height: 22px;
+        width: 25px;
+        height: 25px;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    &:active {
+        outline: none;
+        box-shadow: none;
     }
 `;
-
-const HeaderTitle = styled.h2`
-    color: white;
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-`;
-
 const CameraPreview = styled.video`
     width: 100%;
     height: 100%;
@@ -104,20 +115,6 @@ const GuideOverlay = styled.div`
         height: 60%;
         background: transparent;
         box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
-    }
-
-    &::after {
-        content: '영수증을 네모 가이드 안에 맞춰 촬영해주세요.';
-        position: absolute;
-        top: calc(50% - 35%);
-        left: 50%;
-        transform: translateX(-50%);
-        color: white;
-        padding: 6px 12px;
-        font-size: 14px;
-        white-space: nowrap;
-        z-index: 101;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     }
 `;
 
@@ -229,19 +226,21 @@ const CaptureButton = styled.button`
     border-radius: 50%;
     background: white;
     border: 4px solid #ccc;
-    cursor: pointer;
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: ${props => props.disabled ? 0.5 : 1};
+    color: ${props => props.disabled ? '#999' : '#333'};
 
     &:active {
-        transform: scale(0.95);
+        transform: ${props => props.disabled ? 'none' : 'scale(0.95)'};
     }
 `;
 
 const GalleryButton = styled.button`
-    width: 42px;
-    height: 42px;
+    width: 52px;
+    height: 52px;
     border-radius: 8px;
     background: white;
     border: none;
@@ -252,17 +251,17 @@ const GalleryButton = styled.button`
     justify-content: center;
 
     svg {
-        width: 28px;
-        height: 28px;
-        display: none;
+        width: 20px;
+        height: 20px;
     }
 `;
 
 const SwitchCameraButton = styled.button`
-    background: none;
+    background: none !important;
     border: none;
-    color: white;
-    cursor: pointer;
+    box-shadow: none;
+    color: ${props => props.disabled ? '#666' : 'white'};
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
     padding: 0;
     width: 50px;
     height: 50px;
@@ -279,6 +278,61 @@ const SwitchCameraButton = styled.button`
 
 const HiddenFileInput = styled.input`
     display: none;
+`;
+
+// 권한 모달
+const PermissionModal = styled.div`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    padding: 40px 32px;
+    max-width: 320px;
+    width: 90%;
+    z-index: 103;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+`;
+
+const PermissionIcon = styled.div`
+    width: 100px;
+    height: 100px;
+    background: transparent;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2px auto;
+    color: #9ca3af;
+    font-size: 50px;
+    position: relative;
+
+    /* 카메라 금지 선 */
+    &::after {
+        content: '';
+        position: absolute;
+        width: 70px;
+        height: 2px;
+        background: #ef4444;
+        transform: rotate(45deg);
+        border-radius: 1px;
+    }
+`;
+
+const PermissionTitle = styled.h2`
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 12px 0;
+`;
+
+const PermissionDescription = styled.p`
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
 `;
 
 const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
@@ -308,10 +362,6 @@ const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
         } catch (error) {
             console.error('카메라 접근 오류:', error);
             setCameraError(true);
-            // 한 번만 알림 표시
-            if (!cameraError) {
-                alert('카메라에 접근할 수 없습니다. 갤러리에서 선택해주세요.');
-            }
         }
     };
 
@@ -325,7 +375,7 @@ const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
 
     // 사진 촬영
     const capturePhoto = () => {
-        if (!videoRef.current) return;
+        if (!videoRef.current || cameraError) return;
 
         const canvas = canvasRef.current;
         const video = videoRef.current;
@@ -359,15 +409,16 @@ const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
         }
     };
 
-    // 플래시 토글
+    // 플래시 토글 (권한 없을 때는 동작 안함)
     const toggleFlash = () => {
+        if (cameraError) return;
         setFlashOn(!flashOn);
-        // 실제 플래시 기능은 브라우저 제한으로 구현 어려움
         console.log('플래시', flashOn ? 'OFF' : 'ON');
     };
 
-    // 카메라 전환
+    // 카메라 전환 (권한 없을 때는 동작 안함)
     const switchCamera = () => {
+        if (cameraError) return;
         stopCamera();
         setFacingMode(prevMode => prevMode === 'environment' ? 'user' : 'environment');
     };
@@ -382,7 +433,11 @@ const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
         <CameraScreen>
             <Header>
                 <HeaderLeft>
-                    <FlashButton $active={flashOn} onClick={toggleFlash}>
+                    <FlashButton
+                        $active={flashOn}
+                        onClick={toggleFlash}
+                        disabled={cameraError}
+                    >
                         {flashOn ? <FiZap /> : <FiZapOff />}
                     </FlashButton>
                 </HeaderLeft>
@@ -393,29 +448,47 @@ const ReceiptCameraScreen = ({ onClose, onImageCapture }) => {
                 </HeaderRight>
             </Header>
 
-            <CameraPreview
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-            />
+            {/* 카메라 권한이 있을 때만 비디오 표시 */}
+            {!cameraError && (
+                <CameraPreview
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                />
+            )}
 
             <GuideOverlay />
             <GuideFrame />
             <GuideCornerTopRight />
             <GuideCornerBottomLeft />
 
+            {/* 카메라 권한이 없을 때 모달 표시 */}
+            {cameraError && (
+                <PermissionModal>
+                    <PermissionIcon>
+                        <FiCamera />
+                    </PermissionIcon>
+                    <PermissionTitle>카메라 권한이 필요합니다.</PermissionTitle>
+                    <PermissionDescription>
+                        영수증 촬영을 위해 카메라<br />
+                        권한을 허용해 주세요.
+                    </PermissionDescription>
+                </PermissionModal>
+            )}
+
             <Controls>
                 <GalleryButton onClick={selectFromGallery}>
+                    <FiFolder />
                 </GalleryButton>
 
                 <CenterCaptureButton>
-                    <CaptureButton onClick={capturePhoto}>
+                    <CaptureButton onClick={capturePhoto} disabled={cameraError}>
                         <FiCamera size={30} />
                     </CaptureButton>
                 </CenterCaptureButton>
 
-                <SwitchCameraButton onClick={switchCamera}>
+                <SwitchCameraButton onClick={switchCamera} disabled={cameraError}>
                     <FiRotateCw />
                 </SwitchCameraButton>
             </Controls>
