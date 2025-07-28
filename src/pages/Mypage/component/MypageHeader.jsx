@@ -6,8 +6,18 @@ import { FaUser } from "react-icons/fa";
 import { mypageApi } from "../../../services/mypageApi";
 
 const HeaderWrap = styled.div`
-  padding: 66px 24px 0 24px;
+  padding: 20px 24px 0 24px;
   background: #f3f6f7;
+
+  /* PWA 환경에서만 상단 여백 추가 */
+  @media (display-mode: standalone) {
+    padding: 66px 24px 0 24px;
+  }
+
+  /* JavaScript로 감지한 PWA 환경에서도 적용 */
+  &[data-pwa="true"] {
+    padding: 66px 24px 0 24px;
+  }
 `;
 
 const Title = styled.h1`
@@ -147,6 +157,34 @@ const MypageHeader = ({ isGuest = false }) => {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+
+  // PWA 환경 감지
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches;
+      const isFullscreen = window.matchMedia(
+        "(display-mode: fullscreen)"
+      ).matches;
+      const isMinimalUI = window.matchMedia(
+        "(display-mode: minimal-ui)"
+      ).matches;
+      const isIOSStandalone = window.navigator.standalone === true;
+
+      const isPWAEnvironment =
+        isStandalone || isFullscreen || isMinimalUI || isIOSStandalone;
+      setIsPWA(isPWAEnvironment);
+    };
+
+    checkPWA();
+    window.addEventListener("orientationchange", checkPWA);
+
+    return () => {
+      window.removeEventListener("orientationchange", checkPWA);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -198,7 +236,7 @@ const MypageHeader = ({ isGuest = false }) => {
 
   if (isGuest) {
     return (
-      <HeaderWrap>
+      <HeaderWrap data-pwa={isPWA}>
         <Title>마이페이지</Title>
         <GuestHeaderSection onClick={handleLoginClick}>
           <ProfileRow>
@@ -220,7 +258,7 @@ const MypageHeader = ({ isGuest = false }) => {
   // 로딩 중일 때
   if (isLoading) {
     return (
-      <HeaderWrap>
+      <HeaderWrap data-pwa={isPWA}>
         <Title>마이페이지</Title>
         <ProfileRow>
           <LoadingSpinner />
@@ -235,7 +273,7 @@ const MypageHeader = ({ isGuest = false }) => {
   // 에러가 발생했을 때
   if (error || !profile || typeof profile !== "object") {
     return (
-      <HeaderWrap>
+      <HeaderWrap data-pwa={isPWA}>
         <Title>마이페이지</Title>
         <ProfileRow>
           <ProfileIcon>
@@ -251,7 +289,7 @@ const MypageHeader = ({ isGuest = false }) => {
   }
 
   return (
-    <HeaderWrap>
+    <HeaderWrap data-pwa={isPWA}>
       <Title>마이페이지</Title>
       <ProfileRow>
         {profile?.profileImageUrl ? (
