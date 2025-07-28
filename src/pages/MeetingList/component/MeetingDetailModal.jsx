@@ -5,7 +5,9 @@ import TagBadge from "../../../components/TagBadge";
 import { meetingApi } from "@/services/meetingApi.js";
 import { useMeetingModalHandlers } from "./useMeetingModalHandlers";
 import ConfirmModal from "../../../components/ConfirmModal";
+import LoginRequiredModal from "../../../components/LoginRequiredModal";
 import { useModal } from "@/hooks/useModal.js";
+import { useLoginModal } from "@/hooks/useLoginModal.js";
 import { MODAL_CONFIGS } from "@/config/modalConfigs.js";
 import { useToastContext } from "@/components/ToastProvider.jsx";
 import { ERROR_TOAST_CONFIGS } from "@/config/toastConfigs.js";
@@ -57,7 +59,7 @@ const MenuButton = styled.button`
   background: none;
   border: none;
   font-size: 20px;
-  color: #9D9FA1;
+  color: #9d9fa1;
   box-shadow: none;
   cursor: pointer;
   padding: 8px;
@@ -285,6 +287,7 @@ const MeetingDetailModal = ({
   const confirmModal = useModal();
   const [confirmAction, setConfirmAction] = useState(null);
   const { showToast } = useToastContext();
+  const { isLoginModalOpen, closeLoginModal, openLoginModal } = useLoginModal();
 
   // 현재 표시할 모임 데이터
   const currentMeeting = detailData || meeting;
@@ -297,7 +300,12 @@ const MeetingDetailModal = ({
     handleConfirmDeleteMeeting,
     handleConfirmLeaveMeeting,
     handleConfirmCancelApplication,
-  } = useMeetingModalHandlers(currentMeeting, onClose, onRefresh);
+  } = useMeetingModalHandlers(
+    currentMeeting,
+    onClose,
+    onRefresh,
+    openLoginModal
+  );
 
   // 모임 상세 정보 불러오기
   const fetchMeetingDetail = async () => {
@@ -308,10 +316,8 @@ const MeetingDetailModal = ({
     try {
       setLoading(true);
       const response = await meetingApi.getMeetingDetail(meetingId);
-      console.log("모임 상세 정보:", response);
       setDetailData(response.data);
     } catch (error) {
-      console.error("모임 상세 정보 조회 실패:", error);
       showToast(ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND, { type: "error" });
       setDetailData(meeting);
     } finally {
@@ -396,11 +402,6 @@ const MeetingDetailModal = ({
   // 상태에 따른 버튼 설정
   const buttonConfig = useMemo(() => {
     const meetingId = currentMeeting?.meetingId || currentMeeting?.id;
-    console.log("🔧 버튼 설정 계산:", {
-      isHost: currentMeeting?.isHost,
-      meetingStatus,
-      meetingId: meetingId,
-    });
 
     if (currentMeeting?.isHost) {
       return { text: "오픈채팅 참가하기", disabled: false, action: "openChat" };
@@ -589,6 +590,9 @@ const MeetingDetailModal = ({
         onConfirm={handleConfirmAction}
         primaryColor={getConfirmModalConfig().primaryColor}
       />
+
+      {/* 로그인 필요 모달 */}
+      <LoginRequiredModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
     </>
   );
 };
