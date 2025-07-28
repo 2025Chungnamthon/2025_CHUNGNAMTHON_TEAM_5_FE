@@ -7,7 +7,9 @@ const MOBILE_MAX_WIDTH = 430;
 const FabButton = styled.button`
   position: fixed;
   right: calc(50% - ${MOBILE_MAX_WIDTH / 2}px + 24px);
-  bottom: 88px; // 원래 위치로 복원 (100px → 88px)
+  bottom: calc(
+    88px + env(safe-area-inset-bottom)
+  ); // PWA 환경에서 safe area 추가
   width: 64px;
   height: 64px;
   border-radius: 50%;

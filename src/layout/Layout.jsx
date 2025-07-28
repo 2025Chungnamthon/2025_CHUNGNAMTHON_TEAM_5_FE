@@ -56,7 +56,10 @@ const AppContainer = styled.div`
 
 const Content = styled.main`
   flex: 1;
-  padding: 0 0 ${(props) => (props.$hideTabBar ? "0" : "80px")} 0; // 탭 바 숨김 여부에 따라 패딩 조정 (100px → 80px)
+  padding: 0 0
+    ${(props) =>
+      props.$hideTabBar ? "0" : "calc(80px + env(safe-area-inset-bottom))"}
+    0; // 탭 바 숨김 여부에 따라 패딩 조정, safe area 추가
   background: #fff;
   min-height: 0;
   width: 100%;
@@ -77,7 +80,7 @@ const TabBar = styled.nav`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 80px; // 높이 증가 (64px → 80px)
+  height: calc(80px + env(safe-area-inset-bottom)); // 높이에 safe area 추가
   z-index: 99;
   padding-bottom: env(safe-area-inset-bottom); // iOS 하단 안전영역 대응
   border-top: 1px solid #f0f0f0; // 상단 경계선 추가

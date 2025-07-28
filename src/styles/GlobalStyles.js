@@ -1,20 +1,4 @@
-import { createGlobalStyle, css } from "styled-components";
-
-// 반응형 미디어 쿼리 유틸리티 (JS 객체로 직접 추가)
-const sizes = {
-  giant: 1170,
-  desktop: 992,
-  tablet: 768,
-  phone: 420,
-};
-export const media = Object.keys(sizes).reduce((acc, label) => {
-  acc[label] = (...args) => css`
-    @media (max-width: ${sizes[label] / 16}em) {
-      ${css(...args)};
-    }
-  `;
-  return acc;
-}, {});
+import { createGlobalStyle } from "styled-components";
 
 const GlobalStyles = createGlobalStyle`
   :root {
@@ -162,7 +146,12 @@ const GlobalStyles = createGlobalStyle`
   /* PWA 네비게이션 바 개선 */
   @media (display-mode: standalone) {
     body {
-      padding-bottom: calc(var(--safe-area-inset-bottom) + 80px); // 네비게이션 바 높이와 정확히 일치 (100px → 80px)
+      padding-bottom: calc(var(--safe-area-inset-bottom) + 80px); // 네비게이션 바 높이와 정확히 일치
+    }
+    
+    /* PWA 환경에서 하단 safe area 추가 처리 */
+    #root {
+      padding-bottom: env(safe-area-inset-bottom);
     }
   }
 
