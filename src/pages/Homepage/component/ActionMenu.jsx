@@ -3,6 +3,8 @@ import styled from "styled-components";
 import { FiUsers, FiCamera } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import ReceiptPage from "../../ReceiptPage/ReceiptPage";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
+import { isAuthenticated } from "@/services/auth";
 
 const Overlay = styled.div`
   position: fixed;
@@ -50,40 +52,61 @@ const MenuItem = styled.button`
 export default function ActionMenu({ onClose }) {
   const navigate = useNavigate();
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+  };
 
   const handleCreateGroup = () => {
-    console.log("모임 생성하기 클릭 - /create-meeting으로 이동");
+    // 로그인 체크
+    if (!isAuthenticated()) {
+      openLoginModal();
+      return;
+    }
+
+    // 로그인이 되어있으면 모임 생성 페이지로 이동
     navigate("/create-meeting");
     onClose();
   };
 
   const handleCertifyReceipt = () => {
-    console.log("영수증 인증하기 클릭");
+    // 로그인 체크
+    if (!isAuthenticated()) {
+      openLoginModal();
+      return;
+    }
+
+    // 로그인이 되어있으면 영수증 인증 페이지 열기
     setIsReceiptOpen(true);
   };
-  const handleReceiptClose = () => {
 
+  const handleReceiptClose = () => {
     setIsReceiptOpen(false);
     onClose();
   };
 
   return (
-      <>
-        <Overlay onClick={onClose} />
-        <Menu>
-          <MenuItem onClick={handleCreateGroup}>
-            <FiUsers /> 모임 생성하기
-          </MenuItem>
-          <MenuItem onClick={handleCertifyReceipt}>
-            <FiCamera /> 영수증 인증하기
-          </MenuItem>
-        </Menu>
+    <>
+      <Overlay onClick={onClose} />
+      <Menu>
+        <MenuItem onClick={handleCreateGroup}>
+          <FiUsers /> 모임 생성하기
+        </MenuItem>
+        <MenuItem onClick={handleCertifyReceipt}>
+          <FiCamera /> 영수증 인증하기
+        </MenuItem>
+      </Menu>
 
-        {/* 영수증 인증 플로우 */}
-        <ReceiptPage
-            isOpen={isReceiptOpen}
-            onClose={handleReceiptClose}
-        />
-      </>
+      {/* 영수증 인증 플로우 */}
+      <ReceiptPage isOpen={isReceiptOpen} onClose={handleReceiptClose} />
+
+      {/* 로그인 모달 */}
+      <LoginRequiredModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+    </>
   );
 }

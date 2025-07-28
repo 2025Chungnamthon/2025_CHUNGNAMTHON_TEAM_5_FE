@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
-// 기존 컴포넌트들 (게스트 모드 지원)
+import { isAuthenticated } from "@/services/auth.js";
+import { mypageApi } from "@/services/mypageApi";
 import MypageHeader from "./component/MypageHeader";
 import MypageSummaryCard from "./component/MypageSummaryCard";
 import MypageLogout from "./component/MypageLogout";
-
-// 인증 유틸리티
-import { isAuthenticated } from "../../services/auth";
-import { mypageApi } from "../../services/mypageApi";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
+import { useLoginModal } from "@/hooks/useLoginModal";
 
 const PageContainer = styled.div`
   background: #f3f6f7;
@@ -42,6 +40,8 @@ const CouponLinkCard = styled.div`
 const MyPage = () => {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
+  const { isLoginModalOpen, closeLoginModal, navigateWithAuth } =
+    useLoginModal();
 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,34 +80,33 @@ const MyPage = () => {
   }, [isLoggedIn]);
 
   const handleGuestCouponClick = () => {
-    if (isLoggedIn) {
-      navigate("/coupon");
-    } else {
-      navigate("/login");
-    }
+    navigateWithAuth(navigate, "/coupon");
   };
 
   return (
-      <PageContainer>
-        <MypageHeader
-            name={user?.name || ""}
-            profileImg={user?.profileImg || ""}
-            isGuest={!isLoggedIn}
+    <PageContainer>
+      <MypageHeader
+        name={user?.name || ""}
+        profileImg={user?.profileImg || ""}
+        isGuest={!isLoggedIn}
+      />
+      <Section>
+        <MypageSummaryCard
+          point={user?.point || 0}
+          couponCount={user?.couponCount || 0}
+          isGuest={!isLoggedIn}
         />
-        <Section>
-          <MypageSummaryCard
-              point={user?.point || 0}
-              couponCount={user?.couponCount || 0}
-              isGuest={!isLoggedIn}
-          />
-        </Section>
-        <Section>
-          <CouponLinkCard onClick={handleGuestCouponClick}>
-            쿠폰 교환하러 가기
-          </CouponLinkCard>
-          {isLoggedIn && <MypageLogout />}
-        </Section>
-      </PageContainer>
+      </Section>
+      <Section>
+        <CouponLinkCard onClick={handleGuestCouponClick}>
+          쿠폰 교환하러 가기
+        </CouponLinkCard>
+        {isLoggedIn && <MypageLogout />}
+      </Section>
+
+      {/* 로그인 모달 */}
+      <LoginRequiredModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
+    </PageContainer>
   );
 };
 

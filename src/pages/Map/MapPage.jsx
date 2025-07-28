@@ -7,6 +7,7 @@ import StoreList from "./component/StoreList";
 import LocationButton from "./component/LocationButton";
 import ResearchButton from "./component/ResearchButton";
 import ToastNotification from "../../components/ToastNotification";
+import LocationPermissionModal from "../../components/LocationPermissionModal";
 import { useMapStore } from "./hooks/useMapStore";
 import { useToast } from "../../hooks/useToast";
 
@@ -98,12 +99,14 @@ const MapPage = () => {
     isSearchMode,
     currentBounds,
     hasInitialData,
+    locationPermissionError,
     handleSearchInputChange,
     handleSearch,
     handleStoreSelect,
     handleLocationUpdate,
     getCurrentLocation,
     loadStoresByBounds,
+    setLocationPermissionError,
   } = useMapStore();
 
   // 컴포넌트 마운트 후 지도 준비 상태 설정
@@ -161,6 +164,17 @@ const MapPage = () => {
   const handleAffiliateClick = useCallback(() => {
     // console.log("제휴업체 버튼 클릭됨");
   }, []);
+
+  // 위치 권한 모달 닫기 핸들러
+  const handleLocationPermissionClose = useCallback(() => {
+    setLocationPermissionError(false);
+  }, [setLocationPermissionError]);
+
+  // 위치 권한 재시도 핸들러
+  const handleLocationPermissionRetry = useCallback(() => {
+    setLocationPermissionError(false);
+    getCurrentLocation();
+  }, [setLocationPermissionError, getCurrentLocation]);
 
   return (
     <PageContainer>
@@ -262,6 +276,13 @@ const MapPage = () => {
         onClose={hideToast}
         type={toast.type}
         showIcon={toast.showIcon}
+      />
+
+      {/* 위치 권한 모달 */}
+      <LocationPermissionModal
+        isOpen={locationPermissionError}
+        onClose={handleLocationPermissionClose}
+        onRetry={handleLocationPermissionRetry}
       />
     </PageContainer>
   );
