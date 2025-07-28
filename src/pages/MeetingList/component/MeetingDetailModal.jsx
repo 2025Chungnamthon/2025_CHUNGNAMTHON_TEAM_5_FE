@@ -89,7 +89,7 @@ const DropdownMenu = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  min-width: 135px;
+  min-width: 120px;
   z-index: 1001;
   animation: dropdownSlideIn 0.1s ease-out;
 
@@ -110,7 +110,7 @@ const DropdownItem = styled.button`
   background: none;
   border: none;
   box-shadow: none;
-  padding: 12px 16px;
+  padding: 12px 22px;
   text-align: left;
   font-size: 13px;
   font-weight: 450;
@@ -120,7 +120,7 @@ const DropdownItem = styled.button`
   border-radius: 15px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 
   &:last-child {
     margin-bottom: 0;
@@ -132,6 +132,13 @@ const DropdownItem = styled.button`
 
   &:active {
     background: ${(props) => (props.danger ? "#fee2e2" : "#f3f4f6")};
+  }
+
+  img {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    object-fit: contain;
   }
 `;
 
@@ -365,12 +372,22 @@ const MeetingDetailModal = ({
 
     if (currentMeeting.isHost) {
       return [
-        { key: "edit", label: "수정하기", icon: "✏️", action: "edit" },
-        { key: "members", label: "멤버 관리", icon: "👥", action: "members" },
+        {
+          key: "edit",
+          label: "수정하기",
+          icon: "/UI/fix-btn.svg",
+          action: "edit",
+        },
+        {
+          key: "members",
+          label: "멤버 관리",
+          icon: "/UI/people-btn.svg",
+          action: "members",
+        },
         {
           key: "delete",
           label: "삭제하기",
-          icon: "🗑️",
+          icon: "/UI/trash-btn.svg",
           action: "delete",
           danger: true,
         },
@@ -532,7 +549,11 @@ const MeetingDetailModal = ({
                           onClick={() => handleMenuItemClick(item)}
                           disabled={actionLoading}
                         >
-                          <span>{item.icon}</span>
+                          {item.icon.startsWith("/") ? (
+                            <img src={item.icon} alt={item.label} />
+                          ) : (
+                            <span>{item.icon}</span>
+                          )}
                           {item.label}
                         </DropdownItem>
                       ))}
