@@ -11,18 +11,15 @@ const INITIAL_FORM_STATE = {
     description: "",
     location: "",
     openchat_url: "",
-    schedule: "",
-    image_url: ""
+    schedule: ""
 };
 
-// 초기 지역 옵션
 const INITIAL_LOCATION_OPTIONS = ["검색", "성정1동", "부성1동", "부성2동"];
 
-// API 스케줄 -> UI 스케줄 변환
 const API_TO_UI_SCHEDULE_MAP = {
-    'FULL': 'ALL',      // FULL -> 전체
-    'WEEKDAY': 'WEEKDAY', // WEEKDAY -> 평일
-    'WEEKEND': 'WEEKEND'  // WEEKEND -> 주말
+    'FULL': 'ALL',
+    'WEEKDAY': 'WEEKDAY',
+    'WEEKEND': 'WEEKEND'
 };
 
 const validateForm = (formData) => {
@@ -64,16 +61,15 @@ const validateForm = (formData) => {
 export const useCreateMeetingForm = () => {
     const navigate = useNavigate();
     const { showToast } = useToastContext();
+
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [selectedLocation, setSelectedLocation] = useState("");
     const [selectedSchedule, setSelectedSchedule] = useState("");
     const [locationOptions, setLocationOptions] = useState(INITIAL_LOCATION_OPTIONS);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
-    const [isInitialized, setIsInitialized] = useState(false); // 초기화 상태 추가
+    const [isInitialized, setIsInitialized] = useState(false);
 
-
-    // 이미지 관련 상태
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
 
@@ -91,12 +87,10 @@ export const useCreateMeetingForm = () => {
             const currentLocations = prev.slice(1);
             const existingIndex = currentLocations.indexOf(newLocation);
 
-            if (existingIndex !== -1) {
-                return prev;
-            } else {
-                const updatedLocations = [newLocation, ...currentLocations].slice(0, 3);
-                return ["검색", ...updatedLocations];
-            }
+            if (existingIndex !== -1) return prev;
+
+            const updatedLocations = [newLocation, ...currentLocations].slice(0, 3);
+            return ["검색", ...updatedLocations];
         });
     };
 
@@ -114,70 +108,33 @@ export const useCreateMeetingForm = () => {
     const handleImageUpload = (file, preview) => {
         setSelectedImage(file);
         setImagePreview(preview);
-
-        if (file) {
-            updateFormData('image_url', "https://example.com/meeting.jpg");
-        } else {
-            updateFormData('image_url', "");
-        }
     };
 
-    // 수정 모드 초기화 함수 - useCallback으로 감싸서 불필요한 재생성 방지
     const initializeEditMode = useCallback((meetingData) => {
-        // 이미 초기화되었으면 무시
-        if (isInitialized) {
-            console.log('⏭️ 이미 초기화됨, 스킵');
-            return;
-        }
+        if (isInitialized) return;
 
-        console.log('🔧 수정 모드 데이터 초기화 시작:', meetingData);
-
-        if (!meetingData) {
-            console.error('❌ meetingData가 없습니다!');
-            return;
-        }
-
-        // API 스케줄을 UI 형식으로 변환
         const uiSchedule = API_TO_UI_SCHEDULE_MAP[meetingData.schedule] || meetingData.schedule;
-        console.log('📅 스케줄 변환:', meetingData.schedule, '->', uiSchedule);
-
-        // 지역을 한글명으로 변환 (API에서는 지역 코드로 옴)
         const locationKorean = getLocationKorean(meetingData.location);
-        console.log('📍 지역 변환:', meetingData.location, '->', locationKorean);
 
-        // 폼 데이터 설정 (API 응답 구조에 맞춤)
         const initialData = {
             title: meetingData.title || "",
             description: meetingData.description || "",
             location: locationKorean || "",
-            openchat_url: meetingData.openChatUrl || "", // API 필드명 확인
-            schedule: uiSchedule || "",
-            image_url: meetingData.imageUrl || ""
+            openchat_url: meetingData.openChatUrl || "",
+            schedule: uiSchedule || ""
         };
-
-        console.log('📝 초기화할 폼 데이터:', initialData);
 
         setFormData(initialData);
         setSelectedLocation(locationKorean || "");
         setSelectedSchedule(uiSchedule || "");
 
-        // 지역 옵션에 현재 지역 추가
-        if (locationKorean) {
-            updateLocationOptions(locationKorean);
-        }
+        if (locationKorean) updateLocationOptions(locationKorean);
+        if (meetingData.imageUrl) setImagePreview(meetingData.imageUrl);
 
-        // 기존 이미지가 있으면 미리보기 설정
-        if (meetingData.imageUrl) {
-            setImagePreview(meetingData.imageUrl);
-            console.log('🖼️ 이미지 미리보기 설정:', meetingData.imageUrl);
-        }
-
-        setIsInitialized(true); // 초기화 완료 표시
-        console.log('✅ 수정 모드 초기화 완료!');
-    }, [isInitialized]); // isInitialized 의존성 추가
+        setIsInitialized(true);
+    }, [isInitialized]);
 
     const handleSubmit = async (meetingId = null, isEditMode = false) => {
-        // 인증 상태 확인 - 토스트로 변경
         if (!isAuthenticated()) {
             showToast(ERROR_TOAST_CONFIGS.LOGIN_REQUIRED, { type: "error" });
             navigate('/login');
@@ -185,11 +142,9 @@ export const useCreateMeetingForm = () => {
         }
 
         const validation = validateForm(formData);
-
         if (!validation.isValid) {
             setErrors(validation.errors);
             const firstErrorMessage = Object.values(validation.errors)[0];
-            // alert을 토스트로 변경
             showToast(firstErrorMessage, { type: "error" });
             return;
         }
@@ -203,59 +158,40 @@ export const useCreateMeetingForm = () => {
                 description: formData.description.trim(),
                 location: formData.location.trim(),
                 schedule: formData.schedule.trim(),
-                openchat_url: formData.openchat_url.trim() || "https://open.kakao.com/o/default",
-                image_url: formData.image_url || "https://example.com/default.jpg"
+                openchat_url: formData.openchat_url.trim() || "https://open.kakao.com/o/default"
             };
 
-            console.log('전송할 데이터:', submitData);
-
-            let response;
-            let redirectPath;
+            let response, redirectPath;
 
             if (isEditMode && meetingId) {
-                // 수정 모드 - 내 모임 참여중 리스트로 이동
-                response = await meetingApi.updateMeeting(meetingId, submitData);
+                response = await meetingApi.updateMeeting(meetingId, submitData, selectedImage);
                 showToast(TOAST_CONFIGS.MEETING_UPDATED);
                 redirectPath = '/meetings?tab=myMeetings&subTab=approved';
-
-                console.log('모임 수정 응답:', response);
             } else {
-                // 생성 모드 - 내 모임 참여중 리스트로 이동
-                response = await meetingApi.createMeeting(submitData);
+                response = await meetingApi.createMeeting(submitData, selectedImage);
                 showToast(TOAST_CONFIGS.MEETING_CREATED);
                 redirectPath = '/meetings?tab=myMeetings&subTab=approved';
-
-                console.log('모임 생성 응답:', response);
             }
 
             navigate(redirectPath);
-
         } catch (error) {
             console.error(`모임 ${isEditMode ? '수정' : '생성'} 오류:`, error);
 
-            // 에러 메시지 세분화 - 모든 alert을 토스트로 변경
             let errorMessage = `모임 ${isEditMode ? '수정' : '생성'} 중 오류가 발생했습니다.`;
 
             if (error.message.includes('로그인')) {
-                errorMessage = ERROR_TOAST_CONFIGS.LOGIN_REQUIRED;
-                showToast(errorMessage, { type: "error" });
+                showToast(ERROR_TOAST_CONFIGS.LOGIN_REQUIRED, { type: "error" });
                 navigate('/login');
             } else if (error.message.includes('권한')) {
-                errorMessage = ERROR_TOAST_CONFIGS.NO_PERMISSION;
-                showToast(errorMessage, { type: "error" });
+                showToast(ERROR_TOAST_CONFIGS.NO_PERMISSION, { type: "error" });
             } else if (error.message.includes('찾을 수 없습니다')) {
-                errorMessage = ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND;
-                showToast(errorMessage, { type: "error" });
+                showToast(ERROR_TOAST_CONFIGS.MEETING_NOT_FOUND, { type: "error" });
             } else if (error.message.includes('네트워크')) {
-                errorMessage = ERROR_TOAST_CONFIGS.NETWORK_ERROR;
-                showToast(errorMessage, { type: "error" });
+                showToast(ERROR_TOAST_CONFIGS.NETWORK_ERROR, { type: "error" });
             } else if (error.message.includes('입력')) {
-                errorMessage = "입력 정보를 다시 확인해주세요";
-                showToast(errorMessage, { type: "error" });
-            } else if (error.message) {
-                showToast(error.message, { type: "error" });
+                showToast("입력 정보를 다시 확인해주세요", { type: "error" });
             } else {
-                showToast(errorMessage, { type: "error" });
+                showToast(error.message || errorMessage, { type: "error" });
             }
         } finally {
             setIsLoading(false);
@@ -266,10 +202,7 @@ export const useCreateMeetingForm = () => {
         const hasChanges = formData.title || formData.description || formData.location ||
             formData.openchat_url || selectedImage;
 
-        if (hasChanges) {
-            const confirmMessage = "작성 중인 내용이 있습니다. 정말 나가시겠습니까?";
-            if (!window.confirm(confirmMessage)) return;
-        }
+        if (hasChanges && !window.confirm("작성 중인 내용이 있습니다. 정말 나가시겠습니까?")) return;
 
         navigate(-1);
     };
@@ -298,6 +231,6 @@ export const useCreateMeetingForm = () => {
         handleBack,
         canSubmit,
         initializeEditMode,
-        isInitialized // 초기화 상태도 반환
+        isInitialized
     };
 };
