@@ -88,10 +88,13 @@ export const receiptApi = {
             const imageFile = blobToFile(imageBlob, 'receipt.jpg');
             formData.append('receiptImage', imageFile);
 
-            // 위도, 경도만 추가
+            // request JSON 객체 생성
+            const requestData = {};
+
+            // 위도, 경도를 request 객체에 추가
             if (locationResult.success && locationResult.data) {
-                formData.append('latitude', locationResult.data.latitude.toString());
-                formData.append('longitude', locationResult.data.longitude.toString());
+                requestData.latitude = locationResult.data.latitude;
+                requestData.longitude = locationResult.data.longitude;
 
                 console.log('위치 정보 포함:', {
                     latitude: locationResult.data.latitude,
@@ -102,7 +105,11 @@ export const receiptApi = {
                 console.warn('위치 정보 없이 API 호출');
             }
 
+            // request를 JSON 문자열로 변환해서 추가
+            formData.append('request', JSON.stringify(requestData));
+
             console.log('FormData 생성 완료, API 호출 시작');
+            console.log('request 데이터:', requestData);
 
             // 3. API 호출
             const response = await apiClient.post('/api/receipts/preview', formData, {
