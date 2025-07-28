@@ -105,7 +105,7 @@ export default function Layout() {
   const shouldHideTabBar = () => {
     // 모임 수정 모드일 때 탭 바 숨김
     if (
-      location.pathname === "/create-meeting" &&
+      location.pathname === "/create-meeting" ||
       searchParams.get("mode") === "edit"
     ) {
       return true;
