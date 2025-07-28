@@ -116,6 +116,7 @@ const StoreList = React.memo(
               현재 영역: {safeStores.length}개 가맹점
             </div>
           )}
+
           {safeStores.map((store) => (
             <StoreCard
               key={store.id}

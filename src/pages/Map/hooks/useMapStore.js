@@ -171,17 +171,29 @@ export const useMapStore = () => {
     [searchStoresByKeyword]
   );
 
-  // 검색어 기반 필터링 (클라이언트 사이드)
+  // 검색어 기반 필터링 및 제휴업체 우선 정렬 (클라이언트 사이드)
   const filteredStores = useMemo(() => {
-    if (!searchQuery.trim() || isSearchMode) return stores;
+    let filtered = stores;
 
-    const query = searchQuery.toLowerCase();
-    return stores.filter(
-      (store) =>
-        store.name.toLowerCase().includes(query) ||
-        (store.category && store.category.toLowerCase().includes(query)) ||
-        store.address.toLowerCase().includes(query)
-    );
+    // 검색어가 있고 검색 모드가 아닌 경우 필터링
+    if (searchQuery.trim() && !isSearchMode) {
+      const query = searchQuery.toLowerCase();
+      filtered = stores.filter(
+        (store) =>
+          store.name.toLowerCase().includes(query) ||
+          (store.category && store.category.toLowerCase().includes(query)) ||
+          store.address.toLowerCase().includes(query)
+      );
+    }
+
+    // 제휴업체를 우선적으로 정렬
+    return filtered.sort((a, b) => {
+      // 제휴업체가 아닌 경우를 먼저 처리
+      if (!a.isAffiliate && !b.isAffiliate) return 0;
+      if (!a.isAffiliate && b.isAffiliate) return 1; // a가 제휴업체가 아니면 뒤로
+      if (a.isAffiliate && !b.isAffiliate) return -1; // a가 제휴업체면 앞으로
+      return 0; // 둘 다 제휴업체이거나 둘 다 제휴업체가 아닌 경우 순서 유지
+    });
   }, [stores, searchQuery, isSearchMode]);
 
   // 가맹점 선택 핸들러 - 같은 가맹점을 다시 클릭하면 선택 해제
