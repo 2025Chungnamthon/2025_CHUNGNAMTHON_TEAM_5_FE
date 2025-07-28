@@ -5,7 +5,7 @@ import { useUIStore } from "@/stores/uiStore";
 
 const Header = styled.header`
   background-color: #fff;
-  padding: 20px 20px 12px 20px;
+  padding: calc(20px + env(safe-area-inset-top)) 20px 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;

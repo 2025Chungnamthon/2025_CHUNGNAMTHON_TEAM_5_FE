@@ -74,6 +74,28 @@ const GlobalStyles = createGlobalStyle`
     background: #fafbfc;
   }
 
+  /* PWA 상태바 영역 스타일 */
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: max(var(--safe-area-inset-top), 0px);
+      padding-bottom: max(var(--safe-area-inset-bottom), 0px);
+    }
+  }
+
+  /* iOS 상태바 영역 배경색 */
+  @supports (padding: env(safe-area-inset-top)) {
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: env(safe-area-inset-top);
+      background: #fff;
+      z-index: 9999;
+    }
+  }
+
   a {
     color: var(--primary);
     text-decoration: none;
@@ -135,6 +157,23 @@ const GlobalStyles = createGlobalStyle`
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* PWA 네비게이션 바 개선 */
+  @media (display-mode: standalone) {
+    body {
+      padding-bottom: calc(var(--safe-area-inset-bottom) + 80px);
+    }
+  }
+
+  /* 터치 피드백 개선 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS Safari에서 스크롤 바운스 효과 제거 */
+  html {
+    -webkit-overflow-scrolling: touch;
   }
 `;
 
