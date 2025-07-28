@@ -16,7 +16,7 @@ const Overlay = styled.div`
 const Menu = styled.div`
   position: fixed;
   right: calc(50% - 210px + 17px);
-  bottom: 168px;
+  bottom: 168px; // 원래 위치로 복원 (180px → 168px)
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.1);

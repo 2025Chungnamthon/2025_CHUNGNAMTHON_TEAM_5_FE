@@ -56,7 +56,7 @@ const AppContainer = styled.div`
 
 const Content = styled.main`
   flex: 1;
-  padding: 0 0 ${(props) => (props.$hideTabBar ? "0" : "90px")} 0; // 탭 바 숨김 여부에 따라 패딩 조정
+  padding: 0 0 ${(props) => (props.$hideTabBar ? "0" : "80px")} 0; // 탭 바 숨김 여부에 따라 패딩 조정 (100px → 80px)
   background: #fff;
   min-height: 0;
   width: 100%;
