@@ -20,7 +20,7 @@ export const MODAL_CONFIGS = {
         title: "정말 모임을 나갈까요?",
         cancelText: "취소",
         confirmText: "나가기",
-        primaryColor: "#ff6b6b"
+        primaryColor: "#EB6570"
     },
 
     // 4. 승인 대기중인 모임 가입 신청 그만두기
@@ -28,7 +28,7 @@ export const MODAL_CONFIGS = {
         title: "정말 가입 신청을 그만둘까요?",
         cancelText: "취소",
         confirmText: "그만두기",
-        primaryColor: "#ff6b6b"
+        primaryColor: "#EB6570"
     },
 
     // 5. 모임원이 모임 나가기
@@ -36,7 +36,7 @@ export const MODAL_CONFIGS = {
         title: "정말 모임을 나갈까요?",
         cancelText: "취소",
         confirmText: "나가기",
-        primaryColor: "#ff6b6b"
+        primaryColor: "#EB6570"
     },
 
     // 6. 모임장이 모임 삭제하기
@@ -44,6 +44,6 @@ export const MODAL_CONFIGS = {
         title: "정말 모임을 삭제할까요?",
         cancelText: "취소",
         confirmText: "삭제하기",
-        primaryColor: "#ff6b6b"
+        primaryColor: "#EB6570"
     }
 };

@@ -36,7 +36,7 @@ const ModalContainer = styled.div`
 `;
 
 const ModalContent = styled.div`
-  padding: 24px;
+  padding: 30px 24px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -57,7 +57,8 @@ const MenuButton = styled.button`
   background: none;
   border: none;
   font-size: 20px;
-  color: #666;
+  color: #9D9FA1;
+  box-shadow: none;
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
@@ -111,10 +112,10 @@ const DropdownItem = styled.button`
   text-align: left;
   font-size: 13px;
   font-weight: 450;
-  color: ${(props) => (props.danger ? "#ef4444" : "#374151")};
+  color: ${(props) => (props.danger ? "#fa5858" : "#374151")};
   cursor: pointer;
   transition: background 0.15s;
-  border-radius: 8px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -133,8 +134,8 @@ const DropdownItem = styled.button`
 `;
 
 const MeetingImage = styled.img`
-  width: 73px;
-  height: 73px;
+  width: 78px;
+  height: 78px;
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
@@ -150,7 +151,7 @@ const MeetingInfo = styled.div`
 
 const HostInfo = styled.div`
   font-size: 13px;
-  color: #666;
+  color: #444;
   display: flex;
   align-items: center;
 `;
@@ -178,7 +179,7 @@ const TagContainer = styled.div`
 const ContentWrapper = styled.div`
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 15px;
   padding: 16px;
   margin-bottom: 24px;
   flex: 1;
@@ -382,7 +383,7 @@ const MeetingDetailModal = ({
       return [
         {
           key: "cancel",
-          label: "신청 취소하기",
+          label: "신청 그만두기",
           icon: "❌",
           action: "cancel",
           danger: true,
