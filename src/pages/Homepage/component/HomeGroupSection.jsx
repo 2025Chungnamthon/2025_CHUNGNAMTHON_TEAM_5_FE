@@ -113,19 +113,18 @@ const TagRow = styled.div`
 `;
 
 const ViewButton = styled.button`
-  background: #f3f4f6;
+  background: #F2F4F4;
   color: #222;
   border: none;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  padding: 8px 18px;
-  box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.06);
-  transition: background 0.18s, box-shadow 0.18s;
+  padding: 10px 18px;
+  transition: background 0.18s;
+  box-shadow: none;
   cursor: pointer;
   &:hover {
-    background: #e5e7eb;
-    box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);
+    background: #F2F4F4;
   }
 `;
 
@@ -195,10 +194,9 @@ const HomeGroupSection = ({ meetings = [] }) => {
     setSelectedMeeting(null);
   };
 
-  const handleModalAction = (meetingId) => {
-    console.log(`모임 ${meetingId} 가입 신청`);
-    alert(`모임 ${meetingId}에 가입 신청하시겠습니까?`);
-    setIsModalOpen(false);
+  const handleRefreshAfterAction = () => {
+    // 홈페이지 데이터 새로고침이 필요한 경우 여기서 처리
+    console.log("홈페이지 데이터 새로고침");
   };
 
   return (
@@ -257,9 +255,7 @@ const HomeGroupSection = ({ meetings = [] }) => {
         meeting={selectedMeeting}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onAction={handleModalAction}
-        actionButtonText="가입 신청하기"
-        isActionDisabled={false}
+        onRefresh={handleRefreshAfterAction}
         meetingStatus="available"
       />
     </SectionContainer>

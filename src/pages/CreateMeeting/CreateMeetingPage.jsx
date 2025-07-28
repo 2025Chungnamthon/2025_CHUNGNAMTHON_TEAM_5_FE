@@ -56,7 +56,7 @@ const HeaderTitle = styled.h1`
 `;
 
 const Content = styled.div`
-    padding: 0 20px 80px 20px;
+    padding: 0 20px 120px 20px; /* 하단 패딩을 더 늘려서 버튼과 겹치지 않게 */
     display: flex;
     flex-direction: column;
     gap: 32px;
@@ -138,30 +138,51 @@ const ErrorText = styled.span`
     margin-top: 4px;
 `;
 
+/* 하단 고정 버튼 컨테이너 */
+const FixedButtonContainer = styled.div`
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px; /* MOBILE_MAX_WIDTH와 동일 */
+    background: transparent;
+    box-shadow: none;
+    display: flex; /* 추가 */
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 100;
+    padding: 0 20px; /* 좌우 패딩 추가 */
+    box-sizing: border-box; /* 패딩 포함한 크기 계산 */
+`;
+
+/* 제출 버튼 */
 const SubmitButton = styled.button`
     background: ${props => props.disabled ? '#d1d5db' : '#80c7bc'};
     color: #fff;
     border: none;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 18px;
     font-size: 16px;
     font-weight: 600;
+    margin: 0 0 40px 0; /* 좌우 마진 제거, 하단만 유지 */
+    box-shadow: none;
     cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-    width: 100%;
+    width: 100%; /* 컨테이너 패딩 내에서 100% */
+    max-width: 390px; /* 최대 너비 제한 (430px - 40px padding) */
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 24px;
 
     &:hover {
-        background: ${props => props.disabled ? '#d1d5db' : '#5fa89e'};
-        transform: ${props => props.disabled ? 'none' : 'translateY(-2px)'};
+        background: ${props => props.disabled ? '#d1d5db' : '#6bb8b0'};
     }
 
     &:active {
-        transform: ${props => props.disabled ? 'none' : 'translateY(0)'};
+        transform: ${props => props.disabled ? 'none' : 'scale(0.98)'};
     }
 `;
 
@@ -344,8 +365,10 @@ const CreateMeetingPage = () => {
                         initialImage={isEditMode ? formData.image_url : null}
                     />
                 </FormSection>
+            </Content>
 
-                {/* 제출 버튼 */}
+            {/* 하단 고정 제출 버튼 */}
+            <FixedButtonContainer>
                 <SubmitButton
                     onClick={handleFormSubmit}
                     disabled={!canSubmit || isLoading}
@@ -359,7 +382,7 @@ const CreateMeetingPage = () => {
                         isEditMode ? "모임 수정하기" : "모임 만들기"
                     )}
                 </SubmitButton>
-            </Content>
+            </FixedButtonContainer>
 
             {/* 지역 검색 모달 */}
             <LocationSearchModal
