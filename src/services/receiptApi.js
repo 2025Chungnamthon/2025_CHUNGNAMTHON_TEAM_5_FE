@@ -1,8 +1,13 @@
 import axios from 'axios';
 import { getAuthToken } from './auth';
-import { getLocationForReceipt } from '@/utils/geolocationUtils.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+// 테스트용 고정 위치 (필요시 주석 해제)
+const FIXED_TEST_LOCATION = {
+    latitude: 36.823289,
+    longitude: 127.126473
+};
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -66,12 +71,20 @@ export const receiptApi = {
         try {
             console.log('영수증 미리보기 시작:', imageBlob);
 
-            // 1. 위치 정보 가져오기
+            // 🔧 테스트용: 고정 위치 사용
+            console.log('🧪 테스트 모드: 고정 위치 사용');
+            const locationResult = {
+                success: true,
+                data: FIXED_TEST_LOCATION,
+                accuracy: 10 // 가상의 정확도
+            };
+
+            // 실제 위치 정보를 사용하려면 아래 주석을 해제하세요:
+            /*
             console.log('위치 정보 가져오는 중...');
             const locationResult = await getLocationForReceipt();
 
             if (!locationResult.success) {
-                // 위치 정보를 가져올 수 없는 경우 사용자에게 알림
                 const shouldContinue = window.confirm(
                     `${locationResult.error}\n\n위치 정보 없이 계속 진행하시겠습니까?`
                 );
@@ -80,6 +93,7 @@ export const receiptApi = {
                     throw new Error('영수증 인증을 위해 위치 정보가 필요합니다.');
                 }
             }
+            */
 
             // 2. FormData 생성
             const formData = new FormData();

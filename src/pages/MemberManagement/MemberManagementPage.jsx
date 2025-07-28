@@ -53,7 +53,7 @@ const HeaderTitle = styled.h1`
 `;
 
 const Content = styled.div`
-    padding: 0 20px 100px 20px;
+    padding: 0 20px 120px 20px; /* 하단 패딩을 더 늘려서 버튼과 겹치지 않게 */
     display: flex;
     flex-direction: column;
     gap: 32px;
@@ -153,9 +153,10 @@ const ActionButton = styled.button`
     }};
     border: none;
     border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: none;
+    padding: 12px 16px;
     cursor: pointer;
     transition: all 0.2s;
     min-width: 60px;
@@ -163,8 +164,8 @@ const ActionButton = styled.button`
     &:hover {
         background: ${(props) => {
             if (props.variant === 'approve') return '#e5e7eb';
-            if (props.variant === 'reject') return '#dc2626';
-            return '#dc2626';
+            if (props.variant === 'reject') return '#f84d5b';
+            return '#f84d5b';
         }};
     }
 

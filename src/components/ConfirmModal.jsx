@@ -7,7 +7,7 @@ const ModalOverlay = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(87, 87, 87, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,7 +17,7 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
     background: white;
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 32px 24px 24px 24px;
     width: 100%;
     max-width: 320px;
@@ -27,7 +27,7 @@ const ModalContent = styled.div`
 
 const ModalTitle = styled.h3`
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
     color: #333;
     margin: 0 0 24px 0;
     line-height: 1.4;
@@ -41,7 +41,7 @@ const ButtonContainer = styled.div`
 const Button = styled.button`
     flex: 1;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 23px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;

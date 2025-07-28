@@ -59,7 +59,7 @@ const MainTab = styled.div`
     }
 `;
 
-// 서브 탭 (참여중 / 승인 대기 중) - 내 모임일 때만 표시
+// 서브 탭 (참여 중 / 승인 대기 중) - 내 모임일 때만 표시
 const SubTabContainer = styled.div`
     display: flex;
     background: #fff;
@@ -67,12 +67,12 @@ const SubTabContainer = styled.div`
 `;
 
 const SubTab = styled.button`
-    padding: 12px 16px;
+    padding: 10px 16px;
     background: ${props => props.active ? '#494E4D' : 'transparent'};
     border: none;
     border-radius: 20px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: ${props => props.active ? '#fff' : '#666'};
     cursor: pointer;
     transition: all 0.2s;
@@ -566,7 +566,7 @@ const MeetingListPage = () => {
                                 active={subTab === 'approved'}
                                 onClick={() => handleSubTabChange('approved')}
                             >
-                                참여중
+                                참여 중
                             </SubTab>
                             <SubTab
                                 active={subTab === 'pending'}
@@ -610,7 +610,7 @@ const MeetingListPage = () => {
                             active={subTab === 'approved'}
                             onClick={() => handleSubTabChange('approved')}
                         >
-                            참여중
+                            참여 중
                         </SubTab>
                         <SubTab
                             active={subTab === 'pending'}

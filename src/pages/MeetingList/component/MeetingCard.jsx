@@ -8,6 +8,7 @@ const MeetingCardWrapper = styled.div`
     position: relative;
     overflow: hidden;
     background: #fff;
+    box-shadow: none;
     touch-action: pan-y; /* 세로 스크롤은 허용, 가로 스와이프는 제어 */
     border-bottom: 1px solid #f3f4f6;
 
@@ -22,7 +23,8 @@ const SwipeAction = styled.div`
     right: 0;
     top: 0;
     height: 100%;
-    background: #ff4757;
+    background: #F66570;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -36,6 +38,7 @@ const LeaveButton = styled.button`
     color: #fff;
     font-size: 14px;
     font-weight: 600;
+    box-shadow: none;
     cursor: pointer;
     padding: 8px 12px;
     outline: none;
@@ -136,15 +139,14 @@ const ActionButton = styled.button`
     border-radius: 12px;
     font-size: 15px;
     font-weight: 600;
-    padding: 8px 18px;
+    padding: 10px 18px;
+    box-shadow: none;
+    transition: background 0.18s;
     cursor: pointer;
-    transition: all 0.18s;
     flex-shrink: 0;
-    box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.06);
 
     &:hover {
-        background: #e5e7eb;
-        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);
+        background: #F2F4F4;
     }
 
     &:active {
@@ -230,19 +232,27 @@ const MeetingCard = ({
         if (!isDragging || !showSwipeAction) return;
 
         e.preventDefault();
-        const deltaX = startX - clientX;
+        const deltaX = startX - clientX; // 양수: 왼쪽으로 스와이프, 음수: 오른쪽으로 스와이프
 
         let newTranslateX = 0;
 
         if (swiped) {
-            // 이미 스와이프된 상태: 왼쪽으로 더 밀면 삭제 영역으로 이동
-            // 현재 -80px 위치에서 시작해서 더 왼쪽으로 갈 수 있도록
-            const currentDelta = deltaX;
-            newTranslateX = Math.max(-SWIPE_DISTANCE - 40, -SWIPE_DISTANCE - currentDelta);
-        } else {
-            // 일반 상태: 오른쪽으로만 스와이프 허용 (deltaX > 0)
+            // 이미 스와이프된 상태
             if (deltaX > 0) {
+                // 왼쪽으로 더 밀기 (삭제 영역으로 이동)
+                newTranslateX = Math.max(-SWIPE_DISTANCE - 40, -SWIPE_DISTANCE - deltaX);
+            } else {
+                // 오른쪽으로 밀기 (원래 위치로 복귀하려는 동작)
+                newTranslateX = Math.min(0, -SWIPE_DISTANCE - deltaX);
+            }
+        } else {
+            // 일반 상태: 왼쪽으로만 스와이프 허용
+            if (deltaX > 0) {
+                // 왼쪽으로 스와이프만 허용
                 newTranslateX = Math.max(-SWIPE_DISTANCE, -deltaX);
+            } else {
+                // 오른쪽으로 스와이프 시도시 무시 (0으로 고정)
+                newTranslateX = 0;
             }
         }
 

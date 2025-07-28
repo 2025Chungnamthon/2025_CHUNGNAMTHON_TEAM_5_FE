@@ -113,19 +113,18 @@ const TagRow = styled.div`
 `;
 
 const ViewButton = styled.button`
-  background: #f3f4f6;
+  background: #F2F4F4;
   color: #222;
   border: none;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  padding: 8px 18px;
-  box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.06);
-  transition: background 0.18s, box-shadow 0.18s;
+  padding: 10px 18px;
+  transition: background 0.18s;
+  box-shadow: none;
   cursor: pointer;
   &:hover {
-    background: #e5e7eb;
-    box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.1);
+    background: #F2F4F4;
   }
 `;
 
