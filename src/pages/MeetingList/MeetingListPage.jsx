@@ -89,7 +89,7 @@ const SubTab = styled.button`
 const MeetingList = styled.div`
   background: #fff;
   margin-top: 20px;
-  padding-bottom: 100px; /* 하단 탭바 공간 확보 */
+  padding-bottom: 100px; /* 하단 탭바 공간 확보 - 원래대로 복원 */
 `;
 
 // 로딩/에러/빈 상태 컨테이너들
