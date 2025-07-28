@@ -26,7 +26,15 @@ const PageContainer = styled.div`
 // 상단 헤더 (모임 제목)
 const PageHeader = styled.div`
   background: #fff;
-  padding: 50px 20px 0 20px;
+  padding: 66px 20px 0 20px;
+`;
+
+// 페이지 제목 (마이페이지와 동일한 스타일)
+const PageTitle = styled.h1`
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 22px;
 `;
 
 // 메인 탭 (모임 / 내 모임)
@@ -442,6 +450,7 @@ const MeetingListPage = () => {
     return (
       <PageContainer>
         <PageHeader>
+          <PageTitle>모임</PageTitle>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -467,6 +476,7 @@ const MeetingListPage = () => {
     return (
       <PageContainer>
         <PageHeader>
+          <PageTitle>모임</PageTitle>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -495,6 +505,7 @@ const MeetingListPage = () => {
     return (
       <PageContainer>
         <PageHeader>
+          <PageTitle>모임</PageTitle>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -542,6 +553,7 @@ const MeetingListPage = () => {
     return (
       <PageContainer>
         <PageHeader>
+          <PageTitle>모임</PageTitle>
           <MainTabContainer>
             <MainTab
               active={mainTab === "meetings"}
@@ -586,6 +598,7 @@ const MeetingListPage = () => {
   return (
     <PageContainer>
       <PageHeader>
+        <PageTitle>모임</PageTitle>
         <MainTabContainer>
           <MainTab
             active={mainTab === "meetings"}

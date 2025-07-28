@@ -25,7 +25,7 @@ const PageContainer = styled.div`
 
 const Header = styled.div`
   background: #fff;
-  padding: 12px 16px;
+  padding: 66px 16px 12px 16px;
   border-bottom: 1px solid #f3f4f6;
   position: relative;
   z-index: 10;
