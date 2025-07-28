@@ -10,6 +10,7 @@ export const useMapStore = () => {
   const [error, setError] = useState(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [currentBounds, setCurrentBounds] = useState(null);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   // 가맹점 데이터 로드
   const loadStores = useCallback(async () => {
@@ -19,7 +20,6 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStores();
-      console.log("가맹점 데이터 로드 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
       // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -38,9 +38,12 @@ export const useMapStore = () => {
         // 좌표 정보 (백엔드 API 명세에 맞게 lat, lng 사용)
         latitude: store.lat || store.latitude || null,
         longitude: store.lng || store.longitude || null,
+        // 제휴업체 여부
+        isAffiliate: store.isAffiliate || false,
       }));
 
       setStores(transformedStores);
+      setHasInitialData(true);
     } catch (err) {
       console.error("가맹점 데이터 로드 실패:", err);
       setError(`가맹점 정보를 불러올 수 없습니다: ${err.message}`);
@@ -60,7 +63,6 @@ export const useMapStore = () => {
 
     try {
       const response = await storeApi.getStoresByBounds(bounds);
-      console.log("bounds 기반 가맹점 조회 성공:", response);
 
       // 백엔드 API 응답 구조에 맞게 데이터 변환
       // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -77,9 +79,12 @@ export const useMapStore = () => {
         isOpen: store.isOpen !== undefined ? store.isOpen : true,
         latitude: store.lat || store.latitude || null,
         longitude: store.lng || store.longitude || null,
+        // 제휴업체 여부
+        isAffiliate: store.isAffiliate || false,
       }));
 
       setStores(transformedStores);
+      setHasInitialData(true);
     } catch (err) {
       console.error("bounds 기반 가맹점 조회 실패:", err);
       setError(`해당 영역의 가맹점 정보를 불러올 수 없습니다: ${err.message}`);
@@ -123,7 +128,6 @@ export const useMapStore = () => {
 
       try {
         const response = await storeApi.searchStoresByKeyword(keyword);
-        console.log("서버 검색 결과:", response);
 
         // 백엔드 API 응답 구조에 맞게 데이터 변환
         // response.data가 객체이고 실제 데이터는 response.data.content에 있음
@@ -143,6 +147,8 @@ export const useMapStore = () => {
           isOpen: store.isOpen !== undefined ? store.isOpen : true,
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
+          // 제휴업체 여부
+          isAffiliate: store.isAffiliate || false,
         }));
 
         setStores(transformedResults);
@@ -165,28 +171,55 @@ export const useMapStore = () => {
     [searchStoresByKeyword]
   );
 
-  // 검색어 기반 필터링 (클라이언트 사이드)
+  // 검색어 기반 필터링 및 제휴업체 우선 정렬 (클라이언트 사이드)
   const filteredStores = useMemo(() => {
-    if (!searchQuery.trim() || isSearchMode) return stores;
+    let filtered = stores;
 
-    const query = searchQuery.toLowerCase();
-    return stores.filter(
-      (store) =>
-        store.name.toLowerCase().includes(query) ||
-        (store.category && store.category.toLowerCase().includes(query)) ||
-        store.address.toLowerCase().includes(query)
-    );
+    // 검색어가 있고 검색 모드가 아닌 경우 필터링
+    if (searchQuery.trim() && !isSearchMode) {
+      const query = searchQuery.toLowerCase();
+      filtered = stores.filter(
+        (store) =>
+          store.name.toLowerCase().includes(query) ||
+          (store.category && store.category.toLowerCase().includes(query)) ||
+          store.address.toLowerCase().includes(query)
+      );
+    }
+
+    // 제휴업체를 우선적으로 정렬
+    return filtered.sort((a, b) => {
+      // 제휴업체가 아닌 경우를 먼저 처리
+      if (!a.isAffiliate && !b.isAffiliate) return 0;
+      if (!a.isAffiliate && b.isAffiliate) return 1; // a가 제휴업체가 아니면 뒤로
+      if (a.isAffiliate && !b.isAffiliate) return -1; // a가 제휴업체면 앞으로
+      return 0; // 둘 다 제휴업체이거나 둘 다 제휴업체가 아닌 경우 순서 유지
+    });
   }, [stores, searchQuery, isSearchMode]);
 
-  // 가맹점 선택 핸들러
-  const handleStoreSelect = useCallback((store) => {
-    setSelectedStore(store);
-  }, []);
+  // 가맹점 선택 핸들러 - 같은 가맹점을 다시 클릭하면 선택 해제
+  const handleStoreSelect = useCallback(
+    (store) => {
+      // 같은 가맹점을 다시 클릭한 경우 선택 해제
+      if (selectedStore && selectedStore.id === store.id) {
+        setSelectedStore(null);
+      } else {
+        setSelectedStore(store);
+      }
+    },
+    [selectedStore]
+  );
 
-  // 위치 업데이트 핸들러
-  const handleLocationUpdate = useCallback((location) => {
-    setCurrentLocation(location);
-  }, []);
+  // 위치 업데이트 핸들러 - 현재 위치가 이미 설정되어 있으면 변경하지 않음
+  const handleLocationUpdate = useCallback(
+    (location) => {
+      // 현재 위치가 이미 설정되어 있으면 변경하지 않음 (고정)
+      if (currentLocation) {
+        return;
+      }
+      setCurrentLocation(location);
+    },
+    [currentLocation]
+  );
 
   // 현재 위치 가져오기
   const getCurrentLocation = useCallback(() => {
@@ -203,7 +236,6 @@ export const useMapStore = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-        console.log("현재 위치 가져오기 성공:", location);
         setCurrentLocation(location);
         setIsLoading(false);
       },
@@ -265,6 +297,8 @@ export const useMapStore = () => {
           isOpen: store.isOpen !== undefined ? store.isOpen : true,
           latitude: store.lat || store.latitude || null,
           longitude: store.lng || store.longitude || null,
+          // 제휴업체 여부
+          isAffiliate: store.isAffiliate || false,
         }));
 
         setStores(transformedResults);
@@ -295,7 +329,7 @@ export const useMapStore = () => {
     }
   }, []);
 
-  // 컴포넌트 마운트 시 데이터 로드 및 현재 위치 가져오기
+  // 컴포넌트 마운트 시 초기 데이터 로드 및 현재 위치 가져오기
   useEffect(() => {
     loadStores();
     // 페이지 진입 시 현재 위치 자동 가져오기
@@ -320,6 +354,7 @@ export const useMapStore = () => {
     error,
     isSearchMode,
     currentBounds,
+    hasInitialData,
 
     // 액션
     handleSearchInputChange,
