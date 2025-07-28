@@ -25,11 +25,21 @@ const PageContainer = styled.div`
 
 const Header = styled.div`
   background: #fff;
-  padding: 12px 16px;
+  padding: 20px 16px 12px 16px;
   border-bottom: 1px solid #f3f4f6;
   position: relative;
   z-index: 10;
   flex-shrink: 0;
+
+  /* PWA 환경에서만 상단 여백 추가 */
+  @media (display-mode: standalone) {
+    padding: 66px 16px 12px 16px;
+  }
+
+  /* JavaScript로 감지한 PWA 환경에서도 적용 */
+  &[data-pwa="true"] {
+    padding: 66px 16px 12px 16px;
+  }
 `;
 
 const HeaderTitle = styled.h1`
@@ -86,8 +96,36 @@ const MapPage = () => {
   const [mapError, setMapError] = useState(null);
   const [pendingBounds, setPendingBounds] = useState(null);
   const [isListExpanded, setIsListExpanded] = useState(false); // 리스트 확장 상태 추가
+  const [isPWA, setIsPWA] = useState(false);
 
   const { toast, showToast, hideToast } = useToast();
+
+  // PWA 환경 감지
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches;
+      const isFullscreen = window.matchMedia(
+        "(display-mode: fullscreen)"
+      ).matches;
+      const isMinimalUI = window.matchMedia(
+        "(display-mode: minimal-ui)"
+      ).matches;
+      const isIOSStandalone = window.navigator.standalone === true;
+
+      const isPWAEnvironment =
+        isStandalone || isFullscreen || isMinimalUI || isIOSStandalone;
+      setIsPWA(isPWAEnvironment);
+    };
+
+    checkPWA();
+    window.addEventListener("orientationchange", checkPWA);
+
+    return () => {
+      window.removeEventListener("orientationchange", checkPWA);
+    };
+  }, []);
 
   const {
     filteredStores,
@@ -178,7 +216,7 @@ const MapPage = () => {
 
   return (
     <PageContainer>
-      <Header>
+      <Header data-pwa={isPWA}>
         <HeaderTitle>천안사랑카드 가맹점 조회</HeaderTitle>
         <SearchBar
           value={searchQuery}

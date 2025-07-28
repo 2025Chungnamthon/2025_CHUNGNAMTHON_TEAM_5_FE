@@ -5,7 +5,7 @@ import { useUIStore } from "@/stores/uiStore";
 
 const Header = styled.header`
   background-color: #fff;
-  padding: calc(20px + env(safe-area-inset-top)) 20px 12px 20px;
+  padding: 12px 20px 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -14,6 +14,16 @@ const Header = styled.header`
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+
+  /* PWA 환경에서만 상단 여백 추가 */
+  @media (display-mode: standalone) {
+    padding: 66px 20px 12px 20px;
+  }
+
+  /* JavaScript로 감지한 PWA 환경에서도 적용 */
+  &[data-pwa="true"] {
+    padding: 66px 20px 12px 20px;
+  }
 `;
 
 const LogoRow = styled.div`
@@ -47,6 +57,34 @@ const PointBadge = styled.div`
 
 function HeaderComponent() {
   const { points, refreshPoints } = useUIStore();
+  const [isPWA, setIsPWA] = React.useState(false);
+
+  // PWA 환경 감지
+  React.useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches;
+      const isFullscreen = window.matchMedia(
+        "(display-mode: fullscreen)"
+      ).matches;
+      const isMinimalUI = window.matchMedia(
+        "(display-mode: minimal-ui)"
+      ).matches;
+      const isIOSStandalone = window.navigator.standalone === true;
+
+      const isPWAEnvironment =
+        isStandalone || isFullscreen || isMinimalUI || isIOSStandalone;
+      setIsPWA(isPWAEnvironment);
+    };
+
+    checkPWA();
+    window.addEventListener("orientationchange", checkPWA);
+
+    return () => {
+      window.removeEventListener("orientationchange", checkPWA);
+    };
+  }, []);
 
   const handleLogoClick = () => {
     window.location.href = "/";
@@ -60,7 +98,7 @@ function HeaderComponent() {
   }, [points.currentPoints, points.lastUpdated, refreshPoints]);
 
   return (
-    <Header>
+    <Header data-pwa={isPWA}>
       <LogoRow onClick={handleLogoClick}>
         <LogoImg src="/logo.svg" alt="Cheon:On 로고" />
       </LogoRow>

@@ -17,8 +17,8 @@ const Menu = styled.div`
   position: fixed;
   right: calc(50% - 210px + 17px);
   bottom: calc(
-    168px + env(safe-area-inset-bottom)
-  ); // PWA 환경에서 safe area 추가
+    158px + env(safe-area-inset-bottom)
+  ); // PWA 환경에서 safe area 추가 (168px → 158px)
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.1);
