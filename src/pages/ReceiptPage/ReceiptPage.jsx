@@ -5,6 +5,7 @@ import { isAuthenticated } from '@/services/auth.js';
 import ReceiptCameraScreen from './component/ReceiptCameraScreen';
 import ReceiptConfirmScreen from './component/ReceiptConfirmScreen';
 import ReceiptSuccessScreen from './component/ReceiptSuccessScreen';
+import ReceiptFailedScreen from './component/ReceiptFailedScreen'; // 새로 추가
 
 const MOBILE_MAX_WIDTH = 430;
 
@@ -58,7 +59,7 @@ const LoadingText = styled.div`
 `;
 
 const ReceiptPage = ({ isOpen, onClose }) => {
-    const [step, setStep] = useState('camera'); // 'camera', 'confirm', 'success'
+    const [step, setStep] = useState('camera'); // 'camera', 'confirm', 'success', 'failed' 추가
     const [capturedImage, setCapturedImage] = useState(null);
     const [receiptData, setReceiptData] = useState(null); // API 응답 데이터
     const [loading, setLoading] = useState(false);
@@ -93,23 +94,8 @@ const ReceiptPage = ({ isOpen, onClose }) => {
         } catch (error) {
             console.error('영수증 처리 실패:', error);
 
-            let errorMessage = '영수증 처리 중 오류가 발생했습니다.';
-
-            if (error.message.includes('로그인')) {
-                errorMessage = '로그인이 필요합니다.';
-            } else if (error.message.includes('올바르지 않은')) {
-                errorMessage = '올바른 영수증 이미지를 촬영해주세요.';
-            } else if (error.message.includes('네트워크')) {
-                errorMessage = '네트워크 연결을 확인해주세요.';
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            alert(errorMessage);
-
-            // 에러 발생시 카메라 화면으로 돌아가기
-            setReceiptData(null);
-            setStep('camera');
+            // alert 대신 실패 화면으로 이동
+            setStep('failed');
         } finally {
             setLoading(false);
             setLoadingMessage('');
@@ -126,8 +112,7 @@ const ReceiptPage = ({ isOpen, onClose }) => {
     // 장소 확인 완료 후 포인트 지급
     const handleConfirmLocation = async () => {
         if (!receiptData?.previewId) {
-            alert('영수증 정보가 없습니다. 다시 촬영해주세요.');
-            handleRetakePhoto();
+            setStep('failed');
             return;
         }
 
@@ -149,19 +134,15 @@ const ReceiptPage = ({ isOpen, onClose }) => {
         } catch (error) {
             console.error('영수증 확정 실패:', error);
 
-            let errorMessage = '포인트 지급 중 오류가 발생했습니다.';
-
             if (error.message.includes('찾을 수 없습니다')) {
-                errorMessage = '영수증 정보를 찾을 수 없습니다. 다시 촬영해주세요.';
                 handleRetakePhoto();
                 return;
             } else if (error.message.includes('이미 처리')) {
-                errorMessage = '이미 처리된 영수증입니다.';
-            } else if (error.message) {
-                errorMessage = error.message;
+                alert('이미 처리된 영수증입니다.');
+            } else {
+                // 다른 에러는 실패 화면으로
+                setStep('failed');
             }
-
-            alert(errorMessage);
         } finally {
             setLoading(false);
             setLoadingMessage('');
@@ -201,6 +182,14 @@ const ReceiptPage = ({ isOpen, onClose }) => {
             {step === 'success' && receiptData && (
                 <ReceiptSuccessScreen
                     receiptData={receiptData}
+                    onClose={handleClose}
+                />
+            )}
+
+            {/* 새로 추가된 실패 화면 */}
+            {step === 'failed' && (
+                <ReceiptFailedScreen
+                    onRetry={handleRetakePhoto}
                     onClose={handleClose}
                 />
             )}
