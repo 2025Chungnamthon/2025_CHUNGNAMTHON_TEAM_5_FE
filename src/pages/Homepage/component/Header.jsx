@@ -62,7 +62,7 @@ function HeaderComponent() {
   return (
     <Header>
       <LogoRow onClick={handleLogoClick}>
-        <LogoImg src="/logo.png" alt="Cheon:On 로고" />
+        <LogoImg src="/logo.svg" alt="Cheon:On 로고" />
       </LogoRow>
       <PointBadge>
         <PointDisplay

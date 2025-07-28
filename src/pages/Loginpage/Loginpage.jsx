@@ -38,11 +38,11 @@ const Loginpage = () => {
   return (
     <PageContainer>
       <LogoSection>
-        <LogoImg src="/login-logo.png" alt="천온 로고" />
+        <LogoImg src="UI/login-logo.svg" alt="천온 로고" />
       </LogoSection>
 
       <KakaoButton
-        src="/UI/kakao.png"
+        src="/UI/kakao-login-btn.svg"
         onClick={() => {
           startSocialLogin("kakao");
         }}

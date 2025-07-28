@@ -48,8 +48,8 @@ const SuccessContainer = styled.div`
 `;
 
 const SuccessImage = styled.img`
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
   margin-bottom: 30px;
   animation: bounce 2s ease-in-out infinite;
 
@@ -71,7 +71,7 @@ const SuccessImage = styled.img`
 `;
 
 const SuccessText = styled.h1`
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: #000000;
   margin-bottom: 12px;
@@ -319,11 +319,11 @@ const CallbackPage = () => {
         ))}
 
         <SuccessContainer>
-          <SuccessImage src="/UI/success.png" alt="성공" />
+          <SuccessImage src="/UI/success.svg" alt="성공" />
 
           <SuccessText>로그인 성공!</SuccessText>
 
-          <RedirectText>잠시 후 홈페이지로 이동합니다...</RedirectText>
+          <RedirectText>잠시 후 홈페이지로 이동합니다</RedirectText>
         </SuccessContainer>
       </PageContainer>
     );
