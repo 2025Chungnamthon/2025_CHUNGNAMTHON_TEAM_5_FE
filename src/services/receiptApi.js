@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAuthToken } from './auth';
+import { getLocationForReceipt } from '@/utils/geolocationUtils.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
@@ -60,20 +61,50 @@ const blobToFile = (blob, fileName = 'receipt.jpg') => {
 };
 
 export const receiptApi = {
-    // 영수증 미리보기 (이미지 업로드 후 정보 추출)
+    // 영수증 미리보기 (이미지 + 위치 정보 업로드)
     previewReceipt: async (imageBlob) => {
         try {
             console.log('영수증 미리보기 시작:', imageBlob);
 
-            // FormData 생성
+            // 1. 위치 정보 가져오기
+            console.log('위치 정보 가져오는 중...');
+            const locationResult = await getLocationForReceipt();
+
+            if (!locationResult.success) {
+                // 위치 정보를 가져올 수 없는 경우 사용자에게 알림
+                const shouldContinue = window.confirm(
+                    `${locationResult.error}\n\n위치 정보 없이 계속 진행하시겠습니까?`
+                );
+
+                if (!shouldContinue) {
+                    throw new Error('영수증 인증을 위해 위치 정보가 필요합니다.');
+                }
+            }
+
+            // 2. FormData 생성
             const formData = new FormData();
 
-            // Blob을 File로 변환해서 추가
+            // 이미지 파일 추가
             const imageFile = blobToFile(imageBlob, 'receipt.jpg');
             formData.append('receiptImage', imageFile);
 
+            // 위도, 경도만 추가
+            if (locationResult.success && locationResult.data) {
+                formData.append('latitude', locationResult.data.latitude.toString());
+                formData.append('longitude', locationResult.data.longitude.toString());
+
+                console.log('위치 정보 포함:', {
+                    latitude: locationResult.data.latitude,
+                    longitude: locationResult.data.longitude
+                });
+                console.log('위치 정확도 (참고용):', `${Math.round(locationResult.accuracy || 0)}m`);
+            } else {
+                console.warn('위치 정보 없이 API 호출');
+            }
+
             console.log('FormData 생성 완료, API 호출 시작');
 
+            // 3. API 호출
             const response = await apiClient.post('/api/receipts/preview', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
