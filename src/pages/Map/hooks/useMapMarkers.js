@@ -20,41 +20,50 @@ const CLUSTER_STYLES = [
   {
     width: "40px",
     height: "40px",
-    background: "#80c7bc",
+    background: "linear-gradient(135deg, #80c7bc, #6bb3a8)",
     borderRadius: "50%",
     color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
     fontSize: "14px",
     lineHeight: "40px",
-    border: "2px solid #fff",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+    border: "3px solid #fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   {
     width: "50px",
     height: "50px",
-    background: "#6bb3a8",
+    background: "linear-gradient(135deg, #6bb3a8, #5a9a8f)",
     borderRadius: "50%",
     color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
     fontSize: "16px",
     lineHeight: "50px",
-    border: "2px solid #fff",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+    border: "3px solid #fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   {
     width: "60px",
     height: "60px",
-    background: "#5a9a8f",
+    background: "linear-gradient(135deg, #5a9a8f, #4a8a7f)",
     borderRadius: "50%",
     color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
     fontSize: "18px",
     lineHeight: "60px",
-    border: "2px solid #fff",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+    border: "3px solid #fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 ];
 
@@ -121,6 +130,9 @@ export const useMarkers = () => {
         gridSize: 60,
         minClusterSize: 2,
         calculator: [10, 30, 50, 100, 200],
+        styles: CLUSTER_STYLES,
+        disableClickZoom: false,
+        hoverable: true,
       });
 
       window.kakao.maps.event.addListener(
@@ -162,16 +174,28 @@ export const useMarkers = () => {
             return;
           }
 
-          map.setBounds(bounds);
+          // 클러스터 클릭 시 부드러운 줌 애니메이션
+          map.setBounds(bounds, {
+            padding: [50, 50, 50, 50], // 상하좌우 패딩 추가
+          });
 
+          // 적절한 줌 레벨로 조정
           setTimeout(() => {
             const currentLevel = map.getLevel();
-            if (currentLevel < 1) {
-              map.setLevel(1);
-            } else if (currentLevel > 5) {
-              map.setLevel(5);
+            const markerCount = validMarkers.length;
+
+            // 마커 개수에 따라 적절한 줌 레벨 설정
+            let targetLevel;
+            if (markerCount <= 5) {
+              targetLevel = Math.min(currentLevel + 2, 5);
+            } else if (markerCount <= 15) {
+              targetLevel = Math.min(currentLevel + 1, 4);
+            } else {
+              targetLevel = Math.max(currentLevel - 1, 2);
             }
-          }, 100);
+
+            map.setLevel(targetLevel);
+          }, 300);
         }
       );
     } catch (error) {
@@ -254,20 +278,26 @@ export const useMarkers = () => {
 
   // 기존 마커들 정리
   const clearMarkers = useCallback(() => {
+    // 클러스터러에서 마커 제거
     if (clustererRef.current) {
       clustererRef.current.clear();
     }
 
+    // 개별 마커들도 정리 (클러스터러가 없는 경우를 대비)
     markersRef.current.forEach(({ marker }) => {
       if (marker) {
         marker.setMap(null);
       }
     });
+
+    // 인포윈도우들 닫기
     infowindowsRef.current.forEach((infowindow) => {
       if (infowindow) {
         infowindow.close();
       }
     });
+
+    // 참조 정리
     markersRef.current = [];
     infowindowsRef.current = [];
     clickedMarkerIdRef.current = null;
@@ -283,6 +313,9 @@ export const useMarkers = () => {
 
       clearMarkers();
 
+      // 클러스터러 초기화
+      initializeClusterer(map);
+
       const markers = [];
       stores.forEach((store) => {
         const markerData = createMarker(store, map, onStoreSelect);
@@ -293,11 +326,16 @@ export const useMarkers = () => {
         }
       });
 
-      markers.forEach((marker) => {
-        marker.setMap(map);
-      });
+      // 클러스터러가 있으면 클러스터러에 마커 추가, 없으면 지도에 직접 추가
+      if (clustererRef.current) {
+        clustererRef.current.addMarkers(markers);
+      } else {
+        markers.forEach((marker) => {
+          marker.setMap(map);
+        });
+      }
     },
-    [createMarker, clearMarkers]
+    [createMarker, clearMarkers, initializeClusterer]
   );
 
   // 선택된 가맹점 마커 강조
@@ -359,7 +397,7 @@ export const useMarkers = () => {
           selectedStore.longitude
         );
 
-        // 지도 중심을 선택된 마커로 이동
+        // 지도 중심을 선택된 마커로 이동 (부드러운 애니메이션)
         map.panTo(position);
 
         // 선택된 마커의 인포윈도우 열기
