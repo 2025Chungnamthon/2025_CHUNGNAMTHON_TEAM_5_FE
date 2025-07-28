@@ -6,7 +6,6 @@ const API_BASE_URL =
 class StoreApiService {
   // 전체 가맹점 목록 조회
   async getStores(params = {}) {
-    const token = useAuthStore.getState().accessToken;
     const response = await fetch(
       `${API_BASE_URL}/api/merchants${
         new URLSearchParams(params).toString()
@@ -15,7 +14,7 @@ class StoreApiService {
       }`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
@@ -36,7 +35,6 @@ class StoreApiService {
     radius = 1000,
     category = null,
   }) {
-    const token = useAuthStore.getState().accessToken;
     const params = {
       latitude,
       longitude,
@@ -49,7 +47,7 @@ class StoreApiService {
       ).toString()}`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
@@ -65,7 +63,6 @@ class StoreApiService {
 
   // 가맹점 검색
   async searchStores({ query, category = null, page = 1, size = 20 }) {
-    const token = useAuthStore.getState().accessToken;
     const params = {
       keyword: query,
       page,
@@ -76,7 +73,7 @@ class StoreApiService {
       `${API_BASE_URL}/api/search?${new URLSearchParams(params).toString()}`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
@@ -92,10 +89,9 @@ class StoreApiService {
 
   // 가맹점 상세 정보 조회
   async getStoreDetail(storeId) {
-    const token = useAuthStore.getState().accessToken;
     const response = await fetch(`${API_BASE_URL}/api/merchants/${storeId}`, {
       headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
+        "Content-Type": "application/json",
       },
     });
 
@@ -110,7 +106,6 @@ class StoreApiService {
 
   // 카테고리별 가맹점 조회
   async getStoresByCategory(category, params = {}) {
-    const token = useAuthStore.getState().accessToken;
     const queryParams = new URLSearchParams({
       category,
       ...params,
@@ -119,7 +114,7 @@ class StoreApiService {
       `${API_BASE_URL}/api/merchants?${queryParams}`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
@@ -135,10 +130,9 @@ class StoreApiService {
 
   // 카테고리 목록 조회
   async getCategories() {
-    const token = useAuthStore.getState().accessToken;
     const response = await fetch(`${API_BASE_URL}/api/stores/categories`, {
       headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
+        "Content-Type": "application/json",
       },
     });
 
@@ -153,12 +147,11 @@ class StoreApiService {
 
   // 키워드 기반 스토어 검색 (search bar용)
   async searchStoresByKeyword(keyword) {
-    const token = useAuthStore.getState().accessToken;
     const response = await fetch(
       `${API_BASE_URL}/api/search?keyword=${encodeURIComponent(keyword)}`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
@@ -174,7 +167,6 @@ class StoreApiService {
 
   // bounds 기반 가맹점 조회 (지도 영역 내 가맹점)
   async getStoresByBounds({ swLat, swLng, neLat, neLng }) {
-    const token = useAuthStore.getState().accessToken;
     const params = {
       swLat,
       swLng,
@@ -187,7 +179,7 @@ class StoreApiService {
       ).toString()}`,
       {
         headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+          "Content-Type": "application/json",
         },
       }
     );
